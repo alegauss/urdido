@@ -20,6 +20,7 @@ same. The plan is Block B of `../docs/ROADMAP.md` (VM1 to VM18).
 | `terminal-replay.mjs` | A Claude Code session replayed as a terminal scene from its own `stream-json` record: every line is real, nothing is staged | `shio/promo/bin/story-terminal.mjs` |
 | `videomaker/media.py` | The Python port of `media/ffmpeg.mjs`, the first module of the Python assembly; `tests/test_media.py` checks that it builds the same ffmpeg arguments | nothing yet |
 | `videomaker/captions.py` | Narration captions (SRT, VTT), a silent cut's chapter-title captions and the YouTube chapter list, in any language the video declares. Titles come from the script's `chapters[n].title` and `introTitle`, and otherwise from the recording's step titles | nothing yet (`story-video.mjs` reads the same script fields) |
+| `videomaker/cards/` | The card pages (`html.py`: the opening, chapter and closing cards, the backdrop and the two ranges of hills, and the parallax that slides them) in a declared theme, drawn by Playwright for Python (`render.py`). The module holds the layout only. The theme and words are each video's `demo/cards.json`, Tarnfell for the WordPress demo and Quilhara for Viglet Shio | nothing yet (`story-video.mjs` reads the same `cards.json`) |
 | `videomaker/audio/mix.py` | One language's narration over the music bed: the duck, the bed's trim to a reference level, sounds that come with the picture, and an iterated limiter to the loudness target. Every level is an argument, and the defaults are the WordPress demo's | nothing yet |
 
 ## The Python assembly
@@ -39,7 +40,8 @@ vertical cut) and diffs them against `test/golden/expected/`. Every step that mo
 `story-video.mjs` runs it before and after; a difference means the step changed the video.
 
 - What it compares: each build's timeline (`story-video.mjs` writes `parts/<name>.plan.json`;
-  `--plan` stops there), its captions and chapter list, the FCPXML and `finish.lua`, and the
+  `--plan` stops there), the page each card layer is drawn from (`cards/*.html`, fonts named by
+  file), its captions and chapter list, the FCPXML and `finish.lua`, and the
   finished files' lengths and streams.
 - The recordings are `test/golden/fixtures/*.json`, frozen timelines played over a synthetic
   WebM, so a re-record never moves the goldens. The cards never see a live store, and the
