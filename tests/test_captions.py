@@ -1,20 +1,19 @@
-"""captions.py writes the captions and chapter lists of VM1's six variants (VM4).
+"""captions.py writes the captions and chapter lists of VM1's six variants, byte for byte (VM4, VM25).
 
-Byte for byte, except a narration cue's time may be a millisecond off: see assert_same_captions.
-
-Each golden `*.plan.json` holds the takes as placed (their text included) and the chapter cues;
-the chapter titles are the recording's (the fixture beside the goldens) and the narration
-script's. The teaser's cues are not in any plan: they are the short cut's rule in
-`story-video.mjs`, a 2 s opening and 3 s of each chapter, which the goldens' lengths confirm.
+Each golden `*.plan.json` holds the takes as placed (their text included) and the chapter cues,
+and the teaser's own `<base>-30s.*.plan.json` holds its cues; the chapter titles are the
+recording's (the fixture beside the goldens) and the narration script's. story-video.mjs cuts
+the narration's cues from the takes' times as the plan keeps them, so every file is an exact
+oracle.
 """
 
 import json
-import re
 from pathlib import Path
 
 import pytest
 
 from videomaker import captions as c
+from golden_plans import main_plan
 
 VIDEO_MAKER = Path(__file__).parent.parent
 GOLDEN = VIDEO_MAKER / "test" / "golden"
@@ -36,8 +35,10 @@ def load(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def short_cues(chapters):
-    return [{"from": 2 + 3 * i, "to": 5 + 3 * i, "chapter": i} for i in range(len(chapters))]
+def teaser_cues(folder: Path):
+    """The teaser's cues, from its own plan; None for a variant with no teaser."""
+    plans = [p for p in folder.glob("*-30s.*.plan.json")]
+    return load(plans[0])["cues"] if plans else None
 
 
 def expected_captions(folder: Path) -> dict[str, str]:
@@ -52,17 +53,12 @@ def expected_captions(folder: Path) -> dict[str, str]:
 def test_variant_captions_equal_the_goldens(variant):
     fixture, script_file = VARIANTS[variant]
     folder = GOLDEN / "expected" / variant
-    plan = load(next(folder.glob("*.plan.json")))
+    plan = load(main_plan(folder))
     chapters = c.chapters_of(load(GOLDEN / "fixtures" / f"{fixture}.json"))
     script = load(NARRATION / script_file)
-    full = "chapter" not in plan
 
     written = c.caption_files(
-        plan,
-        chapters,
-        script,
-        short_cues=short_cues(chapters) if full else None,
-        title_languages=WORDPRESS_TITLES,
+        plan, chapters, script, short_cues=teaser_cues(folder), title_languages=WORDPRESS_TITLES,
     )
     expected = expected_captions(folder)
     assert sorted(written) == sorted(expected)
@@ -70,31 +66,9 @@ def test_variant_captions_equal_the_goldens(variant):
         assert_same_captions(written[name], text, name)
 
 
-_TIMES = re.compile(r"^(\d\d:\d\d:\d\d[,.]\d{3}) --> (\d\d:\d\d:\d\d[,.]\d{3})$")
-
-
-def _ms(stamp: str) -> int:
-    h, m, rest = stamp.split(":")
-    s, ms = re.split(r"[,.]", rest)
-    return ((int(h) * 60 + int(m)) * 60 + int(s)) * 1000 + int(ms)
-
-
 def assert_same_captions(written: str, expected: str, name: str):
-    """Equal line for line, except that a cue time may be a millisecond off.
-
-    The plan rounds each take's `at` and `length` to the millisecond, and story-video.mjs cut its
-    cues from the unrounded ones, so a boundary can land a millisecond apart (three in the pt-BR
-    story). Everything else, the text, the numbering and every other time, must be identical.
-    """
-    ours, theirs = written.split("\n"), expected.split("\n")
-    assert len(ours) == len(theirs), name
-    for n, (a, b) in enumerate(zip(ours, theirs), 1):
-        if a == b:
-            continue
-        ta, tb = _TIMES.match(a), _TIMES.match(b)
-        assert ta and tb, f"{name}:{n}: {a!r} != {b!r}"
-        for x, y in zip(ta.groups(), tb.groups()):
-            assert abs(_ms(x) - _ms(y)) <= 1, f"{name}:{n}: {a!r} != {b!r}"
+    """Equal, byte for byte."""
+    assert written == expected, name
 
 
 def test_stamp_rounds_halves_up():

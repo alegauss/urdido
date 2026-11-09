@@ -14,9 +14,10 @@ import opentimelineio as otio
 import pytest
 
 from videomaker import timeline as tl
+from golden_plans import main_plans
 
 GOLDEN = Path(__file__).parent.parent / "test" / "golden" / "expected"
-PLANS = sorted(GOLDEN.glob("*/*.plan.json"))
+PLANS = main_plans(GOLDEN)
 
 
 def load(path: Path):

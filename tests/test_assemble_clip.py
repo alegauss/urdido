@@ -21,6 +21,7 @@ from videomaker.cards import html
 from videomaker.narration import Takes
 from videomaker.sources import chaptered_recording
 from videomaker.timeline import plan
+from golden_plans import main_plan
 
 VIDEO_MAKER = Path(__file__).parent.parent
 GOLDEN = VIDEO_MAKER / "test" / "golden"
@@ -82,7 +83,7 @@ def compose_clip(variant: str, tmp_path: Path):
     from videomaker.cards.render import render
 
     fixture, vertical = VARIANTS[variant]
-    golden = load(next((GOLDEN / "expected" / variant).glob("*.plan.json")))
+    golden = load(main_plan(GOLDEN / "expected" / variant))
     frame = html.Frame(golden["size"]["width"], golden["size"]["height"])
     video = tmp_path / "video"
     parts = video / "parts"

@@ -13,6 +13,7 @@ import pytest
 
 from videomaker import captions
 from videomaker.cards import html
+from golden_plans import main_plan
 
 VIDEO_MAKER = Path(__file__).parent.parent
 GOLDEN = VIDEO_MAKER / "test" / "golden"
@@ -46,7 +47,7 @@ def test_pages_equal_the_js_cards(variant):
     folder = GOLDEN / "expected" / variant
     expected = {f.stem: f.read_bytes().decode("utf-8") for f in (folder / "cards").glob("*.html")}
     assert expected, f"no golden cards for {variant}: run the golden check with --update"
-    plan = load(next(folder.glob("*.plan.json")))
+    plan = load(main_plan(folder))
     frame = html.Frame(plan["size"]["width"], plan["size"]["height"])
     words = DECLARATION["words"][story][plan["language"]]
     chapters = captions.chapters_of(load(GOLDEN / "fixtures" / f"{fixture}.json"))
@@ -141,7 +142,7 @@ def test_pictures_match_the_js_cards(variant, tmp_path):
     from videomaker.cards.render import render
 
     story, fixture, script_file = VARIANTS[variant]
-    plan = load(next((GOLDEN / "expected" / variant).glob("*.plan.json")))
+    plan = load(main_plan(GOLDEN / "expected" / variant))
     frame = html.Frame(plan["size"]["width"], plan["size"]["height"])
     theme = html.Theme.load(DECLARATION["theme"], {"turing": str(TURING_WORDPRESS)})
     pages = html.pages(

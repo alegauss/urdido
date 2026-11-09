@@ -22,6 +22,7 @@ from videomaker.sources import chaptered_recording
 from videomaker.timeline import plan
 
 from test_assemble_clip import GOLDEN, NARRATION, TURING, WORDPRESS, _ready, load, portable, synthetic_recording
+from golden_plans import main_plan
 
 VARIANTS = {
     # variant: (fixture, story, language, recording folder, webm, script, takes folder, chapters)
@@ -57,7 +58,7 @@ def compose_full(variant: str, tmp_path: Path):
     from videomaker.cards.render import render
 
     fixture, story, language, folder, webm_name, script_file, takes_dir, count = VARIANTS[variant]
-    golden = load(next((GOLDEN / "expected" / variant).glob("*.plan.json")))
+    golden = load(main_plan(GOLDEN / "expected" / variant))
     frame = html.Frame(1920, 1080)
     video = tmp_path / "video"
     parts = video / "parts"

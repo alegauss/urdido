@@ -7,11 +7,12 @@ from pathlib import Path
 import pytest
 
 from videomaker.audio import mix as m
+from golden_plans import main_plan, main_plans
 
 VIDEO_MAKER = Path(__file__).parent.parent
 GOLDEN = VIDEO_MAKER / "test" / "golden" / "expected"
 WORDPRESS = VIDEO_MAKER.parent / "turing" / "wordpress"
-PLANS = sorted(GOLDEN.glob("*/*.plan.json"))
+PLANS = main_plans(GOLDEN)
 
 
 def load(path: Path):
@@ -48,30 +49,26 @@ def test_gain_follows_the_duck():
     assert m.duck_expression([], duck) == "0.4-0.200*(0)"
 
 
-def test_filtergraph_of_the_chapter_clip():
-    """The chapter-2 clip's graph, as voiceTrack in story-video.mjs writes it for its plan."""
-    plan = load(GOLDEN / "chapter-2" / "story-chapter-2.pt-BR.plan.json")
+GRAPHS = sorted(GOLDEN.glob("*/mix.*.graph.json"))
+
+
+@pytest.mark.parametrize("graph_file", GRAPHS, ids=lambda p: p.parent.name)
+def test_filtergraph_equals_the_one_story_video_ran(graph_file):
+    """The inputs and filtergraph story-video.mjs ran for a narrated language (VM25)."""
+    golden = load(graph_file)
+    language = graph_file.name.split(".")[1]
+    plan = load(main_plan(graph_file.parent))
     music = plan["music"]
-    total = sum(piece["length"] for piece in plan["pieces"])
     built = m.mix_graph(
-        m.takes_of(plan["spoken"]["pt-BR"]),
-        total,
-        bed=m.Bed("music.mp3", music["from"]),
+        m.takes_of(plan["spoken"][language]),
+        golden["total"],
+        sounds=[m.Sound(s["file"], s["from"], s["at"], s["length"]) for s in plan.get("sounds") or []],
+        bed=m.Bed(music["file"], music["from"]),
         trim_db=music["trimDb"],
         duck=duck_of(music),
     )
-    envelope = music["envelope"]["pt-BR"]
-    first, second = plan["spoken"]["pt-BR"]
-    assert built.inputs == [
-        "-i", first["file"], "-i", second["file"], "-stream_loop", "-1", "-i", "music.mp3",
-    ]
-    assert built.filters == [
-        f"[0:a]adelay={round(first['at'] * 1000)}:all=1[d0]",
-        f"[1:a]adelay={round(second['at'] * 1000)}:all=1[d1]",
-        f"[2:a]atrim=0:{total:.3f},volume=-5.28dB,volume='{envelope}':eval=frame,afade=t=in:d=2,"
-        f"afade=t=out:st={total - 3:.3f}:d=3,adelay=0:all=1[m]",
-        f"[d0][d1][m]amix=inputs=3:normalize=0,apad=whole_dur={total:.3f}[mix]",
-    ]
+    assert built.inputs == golden["inputs"]
+    assert built.filters == golden["graph"]
 
 
 def test_sounds_come_before_the_bed():
