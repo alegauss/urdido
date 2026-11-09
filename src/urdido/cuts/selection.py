@@ -26,7 +26,7 @@ from videomaker.assemble.scenes import ScenesVideo
 from videomaker.audio import mix
 from videomaker.cards.html import Frame
 from videomaker.cuts.render import VERTICAL_CAPTION_STYLE
-from videomaker.timeline import KEY, plan
+from videomaker.timeline import KEY, pieces as pieces_of, plan
 
 VERTICAL = Frame(1080, 1920)
 # The breaths a selection over its limit is allowed down to.
@@ -70,8 +70,7 @@ def selection(
         short = replace(short, placed=[], **TIGHT)
     timeline = short.compose(render=True)
 
-    pieces = [c.metadata[KEY]["file"] for track in timeline.video_tracks()
-              for c in track if isinstance(c, otio.schema.Clip)]
+    pieces = pieces_of(timeline)
     joined = short.media.concat(pieces, f"{name}-joined.mp4")
     total = mediamod.seconds(joined)
 

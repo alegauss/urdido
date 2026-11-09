@@ -31,7 +31,7 @@ from videomaker.cards import html
 from videomaker.jsnum import fixed
 from videomaker.narration import Takes
 from videomaker.sources import RecordingRefused, chaptered_recording
-from videomaker.timeline import from_plan, plan as plan_of
+from videomaker.timeline import from_plan, pieces as pieces_of, plan as plan_of
 
 TAB, NEWLINE = chr(9), chr(10)
 
@@ -307,7 +307,7 @@ class Build:
         self.write_plan(self.name, plan_of(timeline))
         if self.args.plan:
             return 0
-        pieces = [c.metadata["videomaker"]["file"] for t in timeline.video_tracks() for c in t if hasattr(c, "media_reference")]
+        pieces = pieces_of(timeline)
         joined = video.media.concat(pieces, f"{self.name}-joined.mp4")
         total = media.seconds(joined)
         placed = plan_of(timeline)["spoken"].get(self.language, [])

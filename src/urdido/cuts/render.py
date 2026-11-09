@@ -22,7 +22,7 @@ from videomaker.assemble.clip import ClipVideo
 from videomaker.assemble.video import FullVideo
 from videomaker.audio import mix
 from videomaker.jsnum import fixed
-from videomaker.timeline import KEY, Builder, plan
+from videomaker.timeline import KEY, Builder, pieces as pieces_of, plan
 
 TAB, NEWLINE = chr(9), chr(10)
 
@@ -254,8 +254,7 @@ class Renderer:
     def clip(self, builder: Builder) -> str:
         """A chapter clip: its pieces joined, its voice, its captions; burned in when vertical."""
         data = plan(builder.timeline)
-        files_in_order = [c.metadata[KEY]["file"] for track in builder.timeline.video_tracks()
-                          for _, c in _placed(track)]
+        files_in_order = pieces_of(builder.timeline)
         name = data["video"][: -len(f".{self.video.language}")]
         joined = self.m.concat(files_in_order, f"{name}-joined.mp4")
         total = mediamod.seconds(joined)

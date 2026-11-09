@@ -212,6 +212,13 @@ def _placed(track: otio.schema.Track):
         clock += length
 
 
+def pieces(timeline: otio.schema.Timeline) -> list[str]:
+    """The encoded files of every piece of picture, in the order they play: across the lanes,
+    by where each starts, never one lane after another."""
+    placed = [(start, clip) for track in timeline.video_tracks() for start, clip in _placed(track)]
+    return [clip.metadata[KEY]["file"] for _, clip in sorted(placed, key=lambda p: p[0])]
+
+
 def plan(timeline: otio.schema.Timeline) -> dict:
     """VM1's plan JSON, derived from the timeline (keys in writePlan's order)."""
     meta = timeline.metadata[KEY]

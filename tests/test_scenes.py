@@ -99,6 +99,10 @@ def test_the_portuguese_promo_assembles_every_line_over_its_scene(tmp_path):
     warps = [e for t in timeline.video_tracks() for c in t if hasattr(c, "effects") for e in c.effects
              if e.schema_name() == "LinearTimeWarp"]
     assert len(warps) == len(filmed)
+    # joined in the order they play, cards and scenes interleaved, never one lane after another
+    from videomaker.timeline import pieces
+
+    assert pieces(timeline) == [video.part(f"scene-{n}-{s.name}.mp4") for n, (s, *_) in enumerate(video.placed)]
 
 
 @needs_promo
