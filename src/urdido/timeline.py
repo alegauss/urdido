@@ -115,6 +115,13 @@ class Builder:
         """A piece a chapter clip joins as it is, with no lane of its own."""
         return self._piece(None, None, None, file, length)
 
+    def effect(self, clip: otio.schema.Clip, name: str, parameters: Mapping[str, Any]) -> None:
+        """An effect a piece carries with its parameters (a push-in's windows, a time map's
+        stretches), for an export or a renderer to read; the plan does not record it."""
+        effect = otio.schema.Effect(name=name, effect_name=f"videomaker.{name}")
+        effect.metadata[KEY] = dict(parameters)
+        clip.effects.append(effect)
+
     def dissolve(self, clip: otio.schema.Clip, into: str | None = None, out_of: str | None = None) -> None:
         """What a piece dissolves from (`out_of`, the still it fades out of) and into."""
         clip.metadata[KEY]["dissolve"] = {"out": out_of, "in": into}

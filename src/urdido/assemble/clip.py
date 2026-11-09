@@ -182,6 +182,8 @@ class ClipVideo:
             return None
         envelope = {}
         for track in b.timeline.audio_tracks():
+            if not track.name.startswith("A1 "):
+                continue  # the sounds and the bed are not narration
             takes = [
                 mix.Take(c.media_reference.target_url, c.metadata["videomaker"]["at"] - self.bed.start,
                          c.source_range.duration.to_seconds())
