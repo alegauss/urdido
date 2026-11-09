@@ -14,6 +14,8 @@ same. The plan is Block B of `../docs/ROADMAP.md` (VM1 to VM18).
 | Module | What it does | Used by |
 |---|---|---|
 | `media/ffmpeg.mjs` | ffmpeg run quietly or side by side in a bounded pool, the encoder (NVENC or x264, one keyframe each half second), a file's length, a mix's loudness, and per video context the cuts, held frames and joins | `turing/wordpress/bin/story-video.mjs` |
+| `narration/takes.mjs` | A narration's script, its lines, where each take lives, what the voice says (`pronounce`), the captions' text, and whether a take is current | both videos' `bin/narration-takes.mjs` |
+| `narration/buy.mjs` | Buys the takes through polyweave's `voice.lines`: plans, spends inside the budget, skips current takes | `shio/promo/bin/story-narration.mjs` (WordPress waits on polyweave PW691) |
 | `story-moves.mjs` | A visible pointer a headless recording would leave out, a quick hand-like move to what is clicked, a slow eased scroll | `shio/promo/bin/story-scenes.mjs` |
 | `terminal-replay.mjs` | A Claude Code session replayed as a terminal scene from its own `stream-json` record: every line is real, nothing is staged | `shio/promo/bin/story-terminal.mjs` |
 
@@ -36,7 +38,7 @@ vertical cut) and diffs them against `test/golden/expected/`. Every step that mo
 
 ## Where it is going
 
-`narration/`, `captions.mjs`, `audio/mix.mjs`, `cards/`, `timeline.mjs`,
+`captions.mjs`, `audio/mix.mjs`, `cards/`, `timeline.mjs`,
 `sources/` (a chaptered recording, scene clips, a terminal replay), `cuts/`, `motion/`, `edit/`,
 `export/fcpxml.mjs`, `publish/`, `recording/` and `cli.mjs`, with each video described by a
 `video.config.mjs`. The order and the reason for each step are in the roadmap.
