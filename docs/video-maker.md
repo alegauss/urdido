@@ -38,10 +38,15 @@ vertical cut) and diffs them against `test/golden/expected/`. Every step that mo
 
 ## Where it is going
 
-`captions.mjs`, `audio/mix.mjs`, `cards/`, `timeline.mjs`,
-`sources/` (a chaptered recording, scene clips, a terminal replay), `cuts/`, `motion/`, `edit/`,
-`export/fcpxml.mjs`, `publish/`, `recording/` and `cli.mjs`, with each video described by a
-`video.config.mjs`. The order and the reason for each step are in the roadmap.
+Recording stays JavaScript and the assembly becomes Python (decided 2026-11-09). Recording
+means the narration reader Turing's specs import, the recording driver and pointer
+(`recording/`), and the terminal replay. The assembly becomes the `videomaker` package:
+captions, the mix, themed cards, the sources (a chaptered recording, scene clips), the
+timeline as OpenTimelineIO, the cuts, the push-in and time maps, the Resolve export through
+OTIO's `fcp_xml` adapter, publishing, and `python -m videomaker build <video.toml>`. Each port
+is proved against the golden files before the assembler that uses it exists. Whether MLT
+replaces the ffmpeg filtergraphs for the render is measured on one chapter first. The order
+and the reason for each step are in the roadmap.
 
 ## Rules every module keeps
 
