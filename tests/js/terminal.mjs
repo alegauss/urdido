@@ -1,0 +1,42 @@
+// The Viglet Shio promo's terminal chapters as its declaration chooses them (VM11), beside the
+// selection story-terminal.mjs made by hand before it, as JSON for tests/test_terminal.py.
+//
+//   node terminal.mjs
+import { readFileSync } from 'node:fs';
+import { chooseLines, initLine, sessionLines } from '../../terminal-replay.mjs';
+
+const promo = new URL( '../../../shio/promo/', import.meta.url );
+const declared = JSON.parse( readFileSync( new URL( 'demo/agent/terminal.json', promo ), 'utf8' ) );
+const record = readFileSync( new URL( 'recordings/pt/agent.jsonl', promo ), 'utf8' );
+const prompt = readFileSync( new URL( 'demo/agent/prompt.pt-BR.md', promo ), 'utf8' ).trim();
+const lines = sessionLines( record, {
+	toolPrefix: declared.toolPrefix,
+	answerLines: declared.answerLines,
+} );
+const init = initLine( record, declared.plugin );
+
+const declaredChapters = Object.fromEntries(
+	Object.entries( declared.chapters ).map( ( [ id, selectors ] ) => [
+		id,
+		chooseLines( lines, selectors, { prompt, init } ),
+	] )
+);
+
+// The selection as story-terminal.mjs wrote it by hand before VM11, its typed note left out.
+const calls = ( tools ) => lines.filter( ( l ) => tools.includes( l.tool ) );
+const before = {
+	'chapter-3': [ ...lines.filter( ( l ) => l.tool === 'Skill' ), ...calls( [ 'shio_context' ] ) ],
+	'chapter-4': [ { kind: 'prompt', text: prompt } ],
+	'chapter-5': [
+		...calls( [ 'shio_find', 'shio_read' ] ).slice( 0, 6 ),
+		...lines.filter( ( l ) => l.kind === 'text' && /dry run|escrev|writ/i.test( l.text ) ),
+		...calls( [ 'shio_write' ] ),
+		...lines.filter( ( l ) => l.kind === 'error' ),
+	],
+	'chapter-6': [
+		...calls( [ 'shio_verify', 'shio_digest' ] ).slice( 0, 6 ),
+		...lines.filter( ( l ) => l.kind === 'text' ).slice( -1 ),
+	],
+};
+
+process.stdout.write( JSON.stringify( { declared: declaredChapters, before, init, record } ) );
