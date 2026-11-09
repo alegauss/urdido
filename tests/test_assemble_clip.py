@@ -76,8 +76,9 @@ def portable(value, folders):
     return value
 
 
-@pytest.mark.parametrize("variant", sorted(VARIANTS))
-def test_chapter_clip_plan_equals_the_golden(variant, tmp_path):
+def compose_clip(variant: str, tmp_path: Path):
+    """Chapter clip `variant` composed as the golden runner builds it: (builder, clip video,
+    script, golden plan, out folder)."""
     from videomaker.cards.render import render
 
     fixture, vertical = VARIANTS[variant]
@@ -110,6 +111,12 @@ def test_chapter_clip_plan_equals_the_golden(variant, tmp_path):
         parts=str(parts), bed=mix.Bed(str(NARRATION / "music.mp3")),
     )
     builder, _ = clip.build(golden["chapter"])
+    return builder, clip, script, golden, video
+
+
+@pytest.mark.parametrize("variant", sorted(VARIANTS))
+def test_chapter_clip_plan_equals_the_golden(variant, tmp_path):
+    builder, _, _, golden, video = compose_clip(variant, tmp_path)
     built = portable(plan(builder.timeline), [(str(video), "<video>"), (str(WORDPRESS), "<root>")])
     for key in golden:
         assert built[key] == golden[key], key

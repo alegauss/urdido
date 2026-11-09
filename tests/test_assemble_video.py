@@ -51,8 +51,9 @@ def wordpress_broll(developer: bool) -> tuple[list[str], list[str]]:
     return broll, footage
 
 
-@pytest.mark.parametrize("variant", sorted(VARIANTS))
-def test_full_video_plan_equals_the_golden(variant, tmp_path):
+def compose_full(variant: str, tmp_path: Path):
+    """Full video `variant` composed as the golden runner builds it: (builder, video, script,
+    golden plan, out folder)."""
     from videomaker.cards.render import render
 
     fixture, story, language, folder, webm_name, script_file, takes_dir, count = VARIANTS[variant]
@@ -95,7 +96,12 @@ def test_full_video_plan_equals_the_golden(variant, tmp_path):
         parts=str(parts), bed=mix.Bed(str(NARRATION / "music.mp3")),
         intro=intro, broll=broll, footage=footage,
     )
-    builder = built_video.compose()
+    return built_video.compose(), built_video, script, golden, video
+
+
+@pytest.mark.parametrize("variant", sorted(VARIANTS))
+def test_full_video_plan_equals_the_golden(variant, tmp_path):
+    builder, _, _, golden, video = compose_full(variant, tmp_path)
     built = portable(
         plan(builder.timeline),
         [(str(video), "<video>"), (str(tmp_path / "recordings"), "<recordings>"), (str(WORDPRESS), "<root>")],
