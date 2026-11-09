@@ -20,6 +20,7 @@ same. The plan is Block B of `../docs/ROADMAP.md` (VM1 to VM18).
 | `terminal-replay.mjs` | A Claude Code session replayed as a terminal scene from its own `stream-json` record: every line is real, nothing is staged | `shio/promo/bin/story-terminal.mjs` |
 | `videomaker/media.py` | The Python port of `media/ffmpeg.mjs`, the first module of the Python assembly; `tests/test_media.py` checks that it builds the same ffmpeg arguments | nothing yet |
 | `videomaker/captions.py` | Narration captions (SRT, VTT), a silent cut's chapter-title captions and the YouTube chapter list, in any language the video declares. Titles come from the script's `chapters[n].title` and `introTitle`, and otherwise from the recording's step titles | nothing yet (`story-video.mjs` reads the same script fields) |
+| `videomaker/audio/mix.py` | One language's narration over the music bed: the duck, the bed's trim to a reference level, sounds that come with the picture, and an iterated limiter to the loudness target. Every level is an argument, and the defaults are the WordPress demo's | nothing yet |
 
 ## The Python assembly
 
