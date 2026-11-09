@@ -29,10 +29,21 @@ export const polyweave = ( root, ...args ) =>
  *                                                       relative to the root; rewritten every run.
  * @param {?string}                    options.locale    One language only; all when null.
  * @param {boolean}                    options.dry       Plan, spend nothing.
- * @return {{planned: Array<{key: string, locale: string}>, current: Array}} What it bought (or
- *                                                       would buy) and what was current.
+ * @param {boolean}                    options.adopt     Take over the takes sound.speak bought for
+ *                                                       the same words, voice and model (PW691),
+ *                                                       buying none: a person's call, made after
+ *                                                       hearing the dry answer's `adoptable`.
+ * @return {{planned: Array<{key: string, locale: string}>, current: Array, adoptable: Array}}
+ *         What it bought (or would buy), what was current, and what it could adopt.
  */
-export const buy = ( { root, narration, linesFile, locale = null, dry = false } ) => {
+export const buy = ( {
+	root,
+	narration,
+	linesFile,
+	locale = null,
+	dry = false,
+	adopt = false,
+} ) => {
 	const { script, lines, spoken, dir } = narration;
 	const all = lines().flatMap( ( [ key, texts ] ) =>
 		Object.entries( texts ).map( ( [ language, text ] ) => ( {
@@ -55,7 +66,12 @@ export const buy = ( { root, narration, linesFile, locale = null, dry = false } 
 		linesFile,
 		...( locale ? [ '--locale', locale ] : [] ),
 		'--spend',
-		dry ? 'false' : 'true'
+		dry ? 'false' : 'true',
+		...( adopt ? [ '--adopt', 'true' ] : [] )
 	);
-	return { planned: answer.voice ?? [], current: answer.current ?? [] };
+	return {
+		planned: answer.voice ?? [],
+		current: answer.current ?? [],
+		adoptable: answer.adoptable ?? [],
+	};
 };
