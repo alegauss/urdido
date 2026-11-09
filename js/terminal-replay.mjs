@@ -128,7 +128,19 @@ html,body{margin:0;background:#0d1117;color:#e6edf3;font:22px/1.45 "Cascadia Mon
  * Films lines as a terminal: a prompt typed at `typeMs` a key, every other line shown after a
  * pause that grows with its length (`readMs` per line of text, at least `minMs`).
  */
-export async function filmTerminal(browser, { lines, title = "Claude Code", out, typeMs = 18, readMs = 650, minMs = 700, hold = 2500, size = { width: 1920, height: 1080 } }) {
+export async function filmTerminal(browser, { lines, title = "Claude Code", out, typeMs = 18, readMs = 650, minMs = 700, hold = 2500, size = { width: 1920, height: 1080 }, targetMs = null }) {
+  // Paced to a length (the lines spoken over the scene): the reading pauses stretch or shrink
+  // together, within reason, so the session reads at the narration's pace; whatever is left past
+  // that is held on the last screen.
+  const typed = lines.filter((l) => l.kind === "prompt").reduce((s, l) => s + l.text.length * typeMs + 900, 0);
+  const reading = lines.filter((l) => l.kind !== "prompt").reduce((s, l) => s + Math.max(minMs, readMs * l.text.split("\n").length), 0);
+  let scale = 1;
+  if (targetMs && reading > 0) {
+    scale = Math.min(4, Math.max(0.35, (targetMs - 800 - typed - hold) / reading));
+    hold = Math.max(hold, targetMs - 800 - typed - reading * scale);
+    readMs *= scale;
+    minMs *= scale;
+  }
   const { mkdirSync, readdirSync, renameSync, rmSync } = await import("node:fs");
   const { dirname, join } = await import("node:path");
   const tmp = `${out}.tmp`;

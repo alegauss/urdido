@@ -22,7 +22,8 @@ const declaredChapters = Object.fromEntries(
 	] )
 );
 
-// The selection as story-terminal.mjs wrote it by hand before VM11, its typed note left out.
+// The selection as story-terminal.mjs wrote it by hand before VM11, its typed note left out, and its
+// errors narrowed to Viglet Shio's own writing tools, as the declaration now asks.
 const calls = ( tools ) => lines.filter( ( l ) => tools.includes( l.tool ) );
 const before = {
 	'chapter-3': [ ...lines.filter( ( l ) => l.tool === 'Skill' ), ...calls( [ 'shio_context' ] ) ],
@@ -31,7 +32,7 @@ const before = {
 		...calls( [ 'shio_find', 'shio_read' ] ).slice( 0, 6 ),
 		...lines.filter( ( l ) => l.kind === 'text' && /dry run|escrev|writ/i.test( l.text ) ),
 		...calls( [ 'shio_write' ] ),
-		...lines.filter( ( l ) => l.kind === 'error' ),
+		...lines.filter( ( l ) => l.kind === 'error' && [ 'shio_write', 'shio_apply', 'shio_publish' ].includes( l.tool ) ),
 	],
 	'chapter-6': [
 		...calls( [ 'shio_verify', 'shio_digest' ] ).slice( 0, 6 ),
