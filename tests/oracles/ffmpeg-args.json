@@ -1,0 +1,446 @@
+{
+ "1920x1080@30-x264": {
+  "encode": [
+   "-vf",
+   "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,fps=30,format=yuv420p",
+   "-c:v",
+   "libx264",
+   "-preset",
+   "veryfast",
+   "-crf",
+   "20",
+   "-g",
+   "15",
+   "-keyint_min",
+   "15",
+   "-sc_threshold",
+   "0",
+   "-an"
+  ],
+  "videoCodec": {
+   "nvenc": [
+    "-c:v",
+    "h264_nvenc",
+    "-preset",
+    "p5",
+    "-rc",
+    "vbr",
+    "-cq",
+    "18",
+    "-b:v",
+    "0",
+    "-g",
+    "15",
+    "-no-scenecut",
+    "1"
+   ],
+   "x264": [
+    "-c:v",
+    "libx264",
+    "-preset",
+    "veryfast",
+    "-crf",
+    "18",
+    "-g",
+    "15",
+    "-keyint_min",
+    "15",
+    "-sc_threshold",
+    "0"
+   ]
+  },
+  "cutJob": {
+   "file": "<work>\\chapter-3.mp4",
+   "args": [
+    "-ss",
+    "12.500",
+    "-t",
+    "4.250",
+    "-i",
+    "take.webm",
+    "-vf",
+    "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,fps=30,format=yuv420p",
+    "-c:v",
+    "libx264",
+    "-preset",
+    "veryfast",
+    "-crf",
+    "20",
+    "-g",
+    "15",
+    "-keyint_min",
+    "15",
+    "-sc_threshold",
+    "0",
+    "-an",
+    "<work>\\chapter-3.mp4"
+   ]
+  },
+  "freeze": {
+   "file": "<work>\\held-1.mp4",
+   "calls": [
+    [
+     "-y",
+     "-loglevel",
+     "error",
+     "-ss",
+     "2.346",
+     "-i",
+     "clip.mp4",
+     "-frames:v",
+     "1",
+     "<work>\\held-1.png"
+    ],
+    [
+     "-y",
+     "-loglevel",
+     "error",
+     "-loop",
+     "1",
+     "-t",
+     "1.500",
+     "-i",
+     "<work>\\held-1.png",
+     "-vf",
+     "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,fps=30,format=yuv420p",
+     "-c:v",
+     "libx264",
+     "-preset",
+     "veryfast",
+     "-crf",
+     "20",
+     "-g",
+     "15",
+     "-keyint_min",
+     "15",
+     "-sc_threshold",
+     "0",
+     "-an",
+     "<work>\\held-1.mp4"
+    ]
+   ]
+  },
+  "concat": {
+   "file": "<work>\\joined.mp4",
+   "calls": [
+    [
+     "-y",
+     "-loglevel",
+     "error",
+     "-f",
+     "concat",
+     "-safe",
+     "0",
+     "-i",
+     "<work>\\joined.mp4.txt",
+     "-c",
+     "copy",
+     "<work>\\joined.mp4"
+    ]
+   ],
+   "list": "file '<work>/a.mp4'\nfile '<work>/b.mp4'",
+   "segments": [
+    "<work>\\a.mp4",
+    "<work>\\b.mp4"
+   ]
+  }
+ },
+ "1080x1920@30-nvenc": {
+  "encode": [
+   "-vf",
+   "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,fps=30,format=yuv420p",
+   "-c:v",
+   "h264_nvenc",
+   "-preset",
+   "p5",
+   "-rc",
+   "vbr",
+   "-cq",
+   "20",
+   "-b:v",
+   "0",
+   "-g",
+   "15",
+   "-no-scenecut",
+   "1",
+   "-an"
+  ],
+  "videoCodec": {
+   "nvenc": [
+    "-c:v",
+    "h264_nvenc",
+    "-preset",
+    "p5",
+    "-rc",
+    "vbr",
+    "-cq",
+    "18",
+    "-b:v",
+    "0",
+    "-g",
+    "15",
+    "-no-scenecut",
+    "1"
+   ],
+   "x264": [
+    "-c:v",
+    "libx264",
+    "-preset",
+    "veryfast",
+    "-crf",
+    "18",
+    "-g",
+    "15",
+    "-keyint_min",
+    "15",
+    "-sc_threshold",
+    "0"
+   ]
+  },
+  "cutJob": {
+   "file": "<work>\\chapter-3.mp4",
+   "args": [
+    "-ss",
+    "12.500",
+    "-t",
+    "4.250",
+    "-i",
+    "take.webm",
+    "-vf",
+    "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,fps=30,format=yuv420p",
+    "-c:v",
+    "h264_nvenc",
+    "-preset",
+    "p5",
+    "-rc",
+    "vbr",
+    "-cq",
+    "20",
+    "-b:v",
+    "0",
+    "-g",
+    "15",
+    "-no-scenecut",
+    "1",
+    "-an",
+    "<work>\\chapter-3.mp4"
+   ]
+  },
+  "freeze": {
+   "file": "<work>\\held-1.mp4",
+   "calls": [
+    [
+     "-y",
+     "-loglevel",
+     "error",
+     "-ss",
+     "2.346",
+     "-i",
+     "clip.mp4",
+     "-frames:v",
+     "1",
+     "<work>\\held-1.png"
+    ],
+    [
+     "-y",
+     "-loglevel",
+     "error",
+     "-loop",
+     "1",
+     "-t",
+     "1.500",
+     "-i",
+     "<work>\\held-1.png",
+     "-vf",
+     "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,fps=30,format=yuv420p",
+     "-c:v",
+     "h264_nvenc",
+     "-preset",
+     "p5",
+     "-rc",
+     "vbr",
+     "-cq",
+     "20",
+     "-b:v",
+     "0",
+     "-g",
+     "15",
+     "-no-scenecut",
+     "1",
+     "-an",
+     "<work>\\held-1.mp4"
+    ]
+   ]
+  },
+  "concat": {
+   "file": "<work>\\joined.mp4",
+   "calls": [
+    [
+     "-y",
+     "-loglevel",
+     "error",
+     "-f",
+     "concat",
+     "-safe",
+     "0",
+     "-i",
+     "<work>\\joined.mp4.txt",
+     "-c",
+     "copy",
+     "<work>\\joined.mp4"
+    ]
+   ],
+   "list": "file '<work>/a.mp4'\nfile '<work>/b.mp4'",
+   "segments": [
+    "<work>\\a.mp4",
+    "<work>\\b.mp4"
+   ]
+  }
+ },
+ "1280x720@25-x264": {
+  "encode": [
+   "-vf",
+   "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,fps=25,format=yuv420p",
+   "-c:v",
+   "libx264",
+   "-preset",
+   "veryfast",
+   "-crf",
+   "20",
+   "-g",
+   "15",
+   "-keyint_min",
+   "15",
+   "-sc_threshold",
+   "0",
+   "-an"
+  ],
+  "videoCodec": {
+   "nvenc": [
+    "-c:v",
+    "h264_nvenc",
+    "-preset",
+    "p5",
+    "-rc",
+    "vbr",
+    "-cq",
+    "18",
+    "-b:v",
+    "0",
+    "-g",
+    "15",
+    "-no-scenecut",
+    "1"
+   ],
+   "x264": [
+    "-c:v",
+    "libx264",
+    "-preset",
+    "veryfast",
+    "-crf",
+    "18",
+    "-g",
+    "15",
+    "-keyint_min",
+    "15",
+    "-sc_threshold",
+    "0"
+   ]
+  },
+  "cutJob": {
+   "file": "<work>\\chapter-3.mp4",
+   "args": [
+    "-ss",
+    "12.500",
+    "-t",
+    "4.250",
+    "-i",
+    "take.webm",
+    "-vf",
+    "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,fps=25,format=yuv420p",
+    "-c:v",
+    "libx264",
+    "-preset",
+    "veryfast",
+    "-crf",
+    "20",
+    "-g",
+    "15",
+    "-keyint_min",
+    "15",
+    "-sc_threshold",
+    "0",
+    "-an",
+    "<work>\\chapter-3.mp4"
+   ]
+  },
+  "freeze": {
+   "file": "<work>\\held-1.mp4",
+   "calls": [
+    [
+     "-y",
+     "-loglevel",
+     "error",
+     "-ss",
+     "2.346",
+     "-i",
+     "clip.mp4",
+     "-frames:v",
+     "1",
+     "<work>\\held-1.png"
+    ],
+    [
+     "-y",
+     "-loglevel",
+     "error",
+     "-loop",
+     "1",
+     "-t",
+     "1.500",
+     "-i",
+     "<work>\\held-1.png",
+     "-vf",
+     "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,fps=25,format=yuv420p",
+     "-c:v",
+     "libx264",
+     "-preset",
+     "veryfast",
+     "-crf",
+     "20",
+     "-g",
+     "15",
+     "-keyint_min",
+     "15",
+     "-sc_threshold",
+     "0",
+     "-an",
+     "<work>\\held-1.mp4"
+    ]
+   ]
+  },
+  "concat": {
+   "file": "<work>\\joined.mp4",
+   "calls": [
+    [
+     "-y",
+     "-loglevel",
+     "error",
+     "-f",
+     "concat",
+     "-safe",
+     "0",
+     "-i",
+     "<work>\\joined.mp4.txt",
+     "-c",
+     "copy",
+     "<work>\\joined.mp4"
+    ]
+   ],
+   "list": "file '<work>/a.mp4'\nfile '<work>/b.mp4'",
+   "segments": [
+    "<work>\\a.mp4",
+    "<work>\\b.mp4"
+   ]
+  }
+ }
+}

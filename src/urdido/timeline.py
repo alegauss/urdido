@@ -220,7 +220,9 @@ def plan(timeline: otio.schema.Timeline) -> dict:
         for start, clip in _placed(track):
             pieces.append((start, clip))
     pieces.sort(key=lambda p: p[0])
-    out: dict[str, Any] = {"video": meta["video"], "language": meta["language"], "size": dict(meta["size"])}
+    # OTIO's metadata keeps a dictionary's keys in an order of its own: writePlan's is restored here.
+    out: dict[str, Any] = {"video": meta["video"], "language": meta["language"],
+                           "size": {"width": meta["size"]["width"], "height": meta["size"]["height"]}}
     extra = dict(meta.get("extra", {}))
     if "chapter" in extra:
         out["chapter"] = extra.pop("chapter")
@@ -271,8 +273,24 @@ def plan(timeline: otio.schema.Timeline) -> dict:
     ]
     if "chapter" not in out:
         out["sounds"] = sounds
-    out["music"] = meta.get("music")
+    out["music"] = _music(meta.get("music"))
     return _rounded(out)
+
+
+def _music(music: Mapping | None) -> dict | None:
+    """The bed as story-video.mjs's musicPlan orders it."""
+    if music is None:
+        return None
+    order = ("file", "from", "trimDb", "volume", "duck", "loudness", "envelope")
+    out = {k: music[k] for k in order if k in music}
+    if "duck" in out:
+        out["duck"] = {k: out["duck"][k] for k in ("between", "ramp") if k in out["duck"]}
+    if "loudness" in out:
+        out["loudness"] = {k: out["loudness"][k] for k in ("target", "peak") if k in out["loudness"]}
+    if "envelope" in out:
+        out["envelope"] = dict(out["envelope"])
+    out.update({k: v for k, v in music.items() if k not in out})
+    return out
 
 
 def from_plan(data: Mapping[str, Any]) -> otio.schema.Timeline:

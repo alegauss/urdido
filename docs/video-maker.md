@@ -5,54 +5,63 @@ WordPress demo (`../turing/wordpress`), the Viglet Shio promo (`../shio/promo`) 
 after them. A video declares what it is (its narration, its scenes, its theme, its cuts); the
 framework records, voices and assembles it.
 
-It grows out of the WordPress demo's assembly (`turing/wordpress/bin/story-video.mjs`, about
-2,900 lines in one script), one module at a time, and each step keeps that video's output the
-same. The plan is Block B of `../docs/ROADMAP.md` (VM1 to VM18).
+A video is a declaration (`turing/wordpress/video.toml`, `developer.toml`,
+`shio/promo/video.toml`) built by one command:
+
+    python -m pip install -e "video-maker[test,cards]"     # once
+    python -m videomaker build turing/wordpress/video.toml --language pt-BR [--project]
+    python -m videomaker build turing/wordpress/video.toml --language pt-BR --cut chapter:2 [--vertical]
+    python -m videomaker build shio/promo/video.toml --language pt-BR [--cut short:c1]
+
+It grew out of the WordPress demo's 2,900-line assembly script, one module at a time, each step
+keeping that video's output the same, until the script was removed (VM17). Recording stays
+JavaScript; the assembly is the `videomaker` package. The plan was Block B of
+`../docs/ROADMAP.md`.
 
 ## What is here today
 
 | Module | What it does | Used by |
 |---|---|---|
-| `media/ffmpeg.mjs` | ffmpeg run quietly or side by side in a bounded pool, the encoder (NVENC or x264, one keyframe each half second), a file's length, a mix's loudness, and per video context the cuts, held frames and joins | `turing/wordpress/bin/story-video.mjs` |
 | `narration/takes.mjs` | A narration's script, its lines, where each take lives, what the voice says (`pronounce`), the captions' text, and whether a take is current | both videos' `bin/narration-takes.mjs` |
-| `narration/buy.mjs` | Buys the takes through polyweave's `voice.lines`: plans, spends inside the budget, skips current takes | `shio/promo/bin/story-narration.mjs` (WordPress waits on polyweave PW691) |
+| `narration/buy.mjs` | Buys the takes through polyweave's `voice.lines`: plans, spends inside the budget, skips current takes | both videos' `bin/story-narration.mjs` |
 | `story-moves.mjs` | A visible pointer a headless recording would leave out, a quick hand-like move to what is clicked, a slow eased scroll | `shio/promo/bin/story-scenes.mjs` |
+| `recording/seconds.mjs` | A media file's length, for the recording side (the narration reader, the scene listings) | `narration/takes.mjs`, `shio/promo/bin/cenas.mjs` |
 | `terminal-replay.mjs` | A Claude Code session replayed as a terminal scene from its own `stream-json` record: every line is real, nothing is staged. A video declares each chapter's lines as selectors (`chooseLines`: tools, kinds, patterns, first or last). `initLine` opens a chapter on the session's own start, showing the one declared plugin and nothing else of the machine | `shio/promo/bin/story-terminal.mjs`, from `shio/promo/demo/agent/terminal.json` |
-| `videomaker/media.py` | The Python port of `media/ffmpeg.mjs`, the first module of the Python assembly; `tests/test_media.py` checks that it builds the same ffmpeg arguments | nothing yet |
-| `videomaker/captions.py` | Narration captions (SRT, VTT), a silent cut's chapter-title captions and the YouTube chapter list, in any language the video declares. Titles come from the script's `chapters[n].title` and `introTitle`, and otherwise from the recording's step titles | nothing yet (`story-video.mjs` reads the same script fields) |
-| `videomaker/cards/` | The card pages (`html.py`: the opening, chapter and closing cards, the backdrop and the two ranges of hills, and the parallax that slides them) in a declared theme, drawn by Playwright for Python (`render.py`). The module holds the layout only. The theme and words are each video's `demo/cards.json`, Tarnfell for the WordPress demo and Quilhara for Viglet Shio | nothing yet (`story-video.mjs` reads the same `cards.json`) |
-| `videomaker/sources/` | The chapter model the timeline consumes (`Chapter`: number, title, clip, marks, pacing) and `chaptered_recording`, which reads a `chapters.json` as Turing's specs write it and refuses it as the JS does: no recording, another language, a test run, a missing chapter, a story newer than the recording. A focus mark without a box is a release | nothing yet (VM7's timeline) |
-| `motion/pushin.mjs`, `edit/stretch.mjs` | The push-in that follows the action (its windows, the curve, the zoompan filter, the moments and values an editor keys) and the time maps that cut a chapter's marked waits, as pure functions of the frame and the marks | `turing/wordpress/bin/story-video.mjs` |
-| `videomaker/motion/pushin.py`, `videomaker/edit/stretch.py` | Their Python ports, equal to the JS for every chapter of the fixtures (`tests/js/motion.mjs` prints the JS results) | nothing yet (VM7's timeline) |
+| `videomaker/build.py` | `python -m videomaker build <video.toml>`: reads the declaration and builds the full cut, the teaser, a chapter clip or its vertical cut, a scene-by-scene video or its shorts, the Resolve project, the stills and the transcript; `--plan` stops at the timeline, `--cards` draws the cards alone | `npm run story:video` in both videos |
+| `videomaker/media.py` | ffmpeg run quietly or in a bounded pool, the encoder (NVENC or x264, a keyframe each half second), a file's length, a mix's loudness, and per video context the cuts, held frames and joins; `tests/test_media.py` holds it to the arguments the JS built (`tests/oracles/`) | every module below |
+| `videomaker/captions.py` | Narration captions (SRT, VTT), a silent cut's chapter-title captions and the YouTube chapter list, in any language the video declares. Titles come from the script's `chapters[n].title` and `introTitle`, and otherwise from the recording's step titles | `videomaker/build.py` |
+| `videomaker/cards/` | The card pages (`html.py`: the opening, chapter and closing cards, the backdrop and the two ranges of hills, and the parallax that slides them) in a declared theme, drawn by Playwright for Python (`render.py`). The module holds the layout only. The theme and words are each video's `demo/cards.json`, Tarnfell for the WordPress demo and Quilhara for Viglet Shio | `videomaker/build.py` |
+| `videomaker/sources/` | The chapter model the timeline consumes (`Chapter`: number, title, clip, marks, pacing) and `chaptered_recording`, which reads a `chapters.json` as Turing's specs write it and refuses it as the JS does: no recording, another language, a test run, a missing chapter, a story newer than the recording. A focus mark without a box is a release | `videomaker/build.py` |
+| `videomaker/motion/pushin.py`, `videomaker/edit/stretch.py` | The push-in that follows the action and the time maps that cut a chapter's marked waits, as pure functions of the frame and the marks, equal to the JS they replaced for every chapter of the fixtures (`tests/oracles/motion.json`, frozen from the JS before it was removed) | `videomaker/build.py` |
 | `videomaker/timeline.py` | The timeline as an OpenTimelineIO `Timeline`. Lanes V1 (recording, held frames), V2 (cards) and V3 (shots) are video tracks; each language's takes, the sounds and the bed are audio tracks; chapters are markers, and the encoded file, stills, chapter and dissolves ride in clip metadata. A `Builder` places pieces one after another, `plan()` derives VM1's plan JSON, and `.otio` files round-trip | `videomaker/assemble` |
 | `videomaker/narration.py` | Reads a narration's takes as `narration/takes.mjs` does: each line's take, whether it is current (its provenance records the same spoken text, voice and model), and its length | `videomaker/assemble` |
-| `videomaker/assemble/clip.py` | One chapter as a clip of its own, composed on the timeline from the chapter model, the cards, the takes and the bed, with real encodes. `tests/test_assemble_clip.py` builds chapter 2 and its vertical cut as the golden runner does and gets the golden plans | nothing yet (VM9, VM17) |
-| `videomaker/assemble/video.py` | A full video on the timeline: the opening animation and its sound, title cards with shots cut at the narrator's pauses, each chapter's card and clip with its waits cut and its result held, the closing, the dissolves, and the push-ins and time maps as clip effects. Its work folder is the caller's, so two builds can each have their own. `tests/test_assemble_video.py` builds the English and Portuguese story and the developer walkthrough into their golden plans; it encodes for minutes, so it runs with `VIDEO_MAKER_FULL=1` | nothing yet (VM17) |
-| `videomaker/cuts/render.py` | Renders a composed video's cuts through one path: the full cut with its dissolves (only the blended half second encoded again), the 30 s teaser when the video declares one, a chapter clip, and its vertical cut with the captions burned in. Each narrated language is mixed over the bed, and the captions are muxed beside the voice. `tests/test_cuts.py` renders the six variants into the golden `outputs.txt`, captions and chapter lists (`VIDEO_MAKER_FULL=1`) | nothing yet (VM17) |
+| `videomaker/assemble/clip.py` | One chapter as a clip of its own, composed on the timeline from the chapter model, the cards, the takes and the bed, with real encodes. `tests/test_assemble_clip.py` builds chapter 2 and its vertical cut as the golden runner does and gets the golden plans | `videomaker/build.py` |
+| `videomaker/assemble/video.py` | A full video on the timeline: the opening animation and its sound, title cards with shots cut at the narrator's pauses, each chapter's card and clip with its waits cut and its result held, the closing, the dissolves, and the push-ins and time maps as clip effects. Its work folder is the caller's, so two builds can each have their own. `tests/test_assemble_video.py` builds the English and Portuguese story and the developer walkthrough into their golden plans; it encodes for minutes, so it runs with `VIDEO_MAKER_FULL=1` | `videomaker/build.py` |
+| `videomaker/cuts/render.py` | Renders a composed video's cuts through one path: the full cut with its dissolves (only the blended half second encoded again), the 30 s teaser when the video declares one, a chapter clip, and its vertical cut with the captions burned in. Each narrated language is mixed over the bed, and the captions are muxed beside the voice. `tests/test_cuts.py` renders the six variants into the golden `outputs.txt`, captions and chapter lists (`VIDEO_MAKER_FULL=1`) | `videomaker/build.py` |
 | `videomaker/sources/scenes.py`, `videomaker/edit/pacing.py`, `videomaker/assemble/scenes.py` | A video filmed scene by scene: `cenas.json` read into scenes (each clip measured from the file; `filmed: false` kept as such), `fit_to_line` (a short clip holds its last frame, a long one plays faster as a whole, nothing cut), and the composition with every line over its own scene as an OTIO clip with a time warp, or over a card held in the video's theme while the scene is unfilmed | the Viglet Shio promo (VM20) |
 | `videomaker/cuts/selection.py` | A short 9:16 cut made of chosen chapters of the 16:9 scenes: the long cut's scenes fitted to their lines, cropped to their centre (no focus box yet, VM16), cards drawn upright, captions burned in above the bottom fifth, and the voice over the short's own bed. Over its limit, it tightens the breaths and reports what is left over | the Viglet Shio shorts (`shio/promo/demo/shorts.json`, VM20) |
-| `videomaker/export/` | The DaVinci Resolve project: the `.otio` timeline handed over (it is the video's source of truth; Resolve receives a copy), beside a `media/` folder that holds every file it points at, the recording transcoded to H.264, the bed as one looped clip on A2, the captions and `finish.lua`. `python -m videomaker.export` makes it from a build's plan. Resolve does not read the push-in and time-map effects or the bed's ducking; that is a limit of the copy, and an edit there starts from the cut as rendered | `turing/wordpress/bin/story-video.mjs --project` |
-| `videomaker/publish/` | Publishes outside the video only where its `publish.json` says: the narration's transcript (a TypeScript module and a block between markers in a docs page, per language) and the chapter stills (for the declared story and language). `python -m videomaker.publish transcript` is what `npm run transcript` runs. The WordPress build also keeps the store pages it shows in `video/screens/<language>/` and reuses them until `--refresh-screens`, so it gives the same video whether or not the store is up | `turing/wordpress/bin/transcript.mjs`, `story-video.mjs` |
-| `videomaker/audio/mix.py` | One language's narration over the music bed: the duck, the bed's trim to a reference level, sounds that come with the picture, and an iterated limiter to the loudness target. Every level is an argument, and the defaults are the WordPress demo's | nothing yet |
+| `videomaker/export/` | The DaVinci Resolve project: the `.otio` timeline handed over (it is the video's source of truth; Resolve receives a copy), beside a `media/` folder that holds every file it points at, the recording transcoded to H.264, the bed as one looped clip on A2, the captions and `finish.lua`. `python -m videomaker.export` makes it from a build's plan, as `--project` does. Resolve does not read the push-in and time-map effects or the bed's ducking; that is a limit of the copy, and an edit there starts from the cut as rendered | `videomaker/build.py --project` |
+| `videomaker/publish/` | Publishes outside the video only where its `publish.json` says: the narration's transcript (a TypeScript module and a block between markers in a docs page, per language) and the chapter stills (for the declared story and language). `python -m videomaker.publish transcript` is what `npm run transcript` runs. The WordPress build also keeps the store pages it shows in `video/screens/<language>/` and reuses them until `--refresh-screens`, so it gives the same video whether or not the store is up | `turing/wordpress/bin/transcript.mjs`, `videomaker/build.py` |
+| `videomaker/audio/mix.py` | One language's narration over the music bed: the duck, the bed's trim to a reference level, sounds that come with the picture, and an iterated limiter to the loudness target. Every level is an argument, and the defaults are the WordPress demo's | `videomaker/build.py` |
 
 ## The Python assembly
 
 `video-maker/` is also a Python project (`pyproject.toml`, Python 3.12+, OpenTimelineIO). Run
-`python -m pip install -e "video-maker[test]"` once, then `pytest video-maker` from the
+`python -m pip install -e "video-maker[test,cards]"` once, then `pytest video-maker` from the
 repository root. The tests read VM1's goldens as data, so each port is proved against them
-before the assembler that uses it exists. `tests/js/ffmpeg-args.mjs` loads the JS module with
-`child_process` swapped for a recorder, which lets a test compare the arguments of both
-implementations without running ffmpeg.
+before the assembler that uses it exists. What the JS assembly computed before it was removed
+(the ffmpeg arguments, the push-in and the time maps) is frozen in `tests/oracles/`, so the ports
+stay held to it.
 
 ## The golden check
 
 `node video-maker/test/golden/run.mjs` rebuilds the WordPress demo's variants (the English and
 pt-BR story, the pt-BR one with its Resolve project, the developer walkthrough, chapter 2 and its
-vertical cut) and diffs them against `test/golden/expected/`. Every step that moves code out of
-`story-video.mjs` runs it before and after; a difference means the step changed the video.
+vertical cut) and diffs them against `test/golden/expected/`. It builds each variant with `python -m
+videomaker build` from the WordPress declarations; a difference means a change moved the video.
 
-- What it compares: each build's timeline (`story-video.mjs` writes `parts/<name>.plan.json`;
-  `--plan` stops there), the page each card layer is drawn from (`cards/*.html`, fonts named by
+- What it compares: each build's timeline (`parts/<name>.plan.json`; `--plan` stops there), the
+  teaser's plan and each narrated language's mix graph, the page each card layer is drawn from (`cards/*.html`, fonts named by
   file), its captions and chapter list, the FCPXML and `finish.lua`, and the
   finished files' lengths and streams.
 - The recordings are `test/golden/fixtures/*.json`, frozen timelines played over a synthetic

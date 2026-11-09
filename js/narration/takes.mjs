@@ -6,7 +6,7 @@
 // written words; `spoken()` is what the voice says and what a take's provenance records.
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { seconds } from '../media/ffmpeg.mjs';
+import { seconds } from '../recording/seconds.mjs';
 
 /**
  * A narration script, read from its file.

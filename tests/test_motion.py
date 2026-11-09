@@ -1,14 +1,11 @@
-"""The push-in and the time maps equal what the JS computes, for every chapter of the fixtures (VM13).
+"""The push-in and the time maps equal what the JS computed, for every chapter of the fixtures (VM13).
 
-`tests/js/motion.mjs` prints the JS results (motion/pushin.mjs and edit/stretch.mjs, which
-story-video.mjs imports); the Python ports are compared with them: the windows and stretches to
+`tests/oracles/motion.json` holds the JS results (motion/pushin.mjs and edit/stretch.mjs, frozen when
+the JS assembly was removed, VM17); the Python ports are compared with them: the windows and stretches to
 the last bit, the zoompan filter and the FCPXML keyframe values as the same strings.
 """
 
 import json
-import shutil
-import subprocess
-from functools import lru_cache
 from pathlib import Path
 
 import pytest
@@ -25,15 +22,10 @@ FRAMES = {
     "developer": (pushin.Frame(1920, 1080), False),
 }
 
-pytestmark = pytest.mark.skipif(not shutil.which("node"), reason="node is not on PATH")
-
-
-@lru_cache(maxsize=1)
 def js() -> dict:
-    out = subprocess.run(
-        ["node", str(HERE / "js" / "motion.mjs")], capture_output=True, text=True, check=True, encoding="utf-8"
-    )
-    return json.loads(out.stdout)
+    """What motion/pushin.mjs and edit/stretch.mjs computed, frozen before the JS assembly was
+    removed (VM17): the oracle these ports were proved against."""
+    return json.loads((HERE / "oracles" / "motion.json").read_text(encoding="utf-8"))
 
 
 def chapters_of(fixture: str, tmp: Path):

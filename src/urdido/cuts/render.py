@@ -12,7 +12,7 @@ import math
 import os
 import subprocess
 from dataclasses import dataclass, field
-from typing import Mapping, Sequence
+from typing import Callable, Mapping, Sequence
 
 import opentimelineio as otio
 
@@ -23,6 +23,8 @@ from videomaker.assemble.video import FullVideo
 from videomaker.audio import mix
 from videomaker.jsnum import fixed
 from videomaker.timeline import KEY, Builder, plan
+
+TAB, NEWLINE = chr(9), chr(10)
 
 # Where a vertical cut's captions sit, in libass's units for an SRT (288 to the frame's height):
 # above the bottom fifth, where Shorts, Reels and TikTok draw the title, the buttons and the
@@ -46,6 +48,10 @@ class Renderer:
     dissolve_seconds: float = 0.5
     teaser_intro: float = 2
     teaser_seconds: float = 3
+    # Where the build keeps what it decided (VM17): `write_plan(name, plan)` for the teaser's plan,
+    # `portable(text)` for the paths a mix graph names.
+    write_plan: "Callable[[str, dict], None] | None" = None
+    portable: "Callable[[str], str] | None" = None
 
     @property
     def m(self):
@@ -135,6 +141,8 @@ class Renderer:
             bed = None
             if music is not None and os.path.exists(music["file"]):
                 bed = mix.Bed(music["file"], music["from"])
+            if self.portable is not None:
+                self.write_graph(language, takes, total, sounds, bed, music)
             mix.voice_track(
                 takes, total, file, self.video.parts, sounds=sounds, bed=bed,
                 trim_db=music["trimDb"] if music else None, duck=self.video.duck,
@@ -142,6 +150,14 @@ class Renderer:
             )
             out.append((language, file))
         return out
+
+    def write_graph(self, language, takes, total, sounds, bed, music) -> None:
+        """The mix as it runs, its paths portable: the oracle the golden check holds (VM25)."""
+        built = mix.mix_graph(takes, total, sounds, bed, music["trimDb"] if music else 0.0, self.video.duck)
+        data = {"total": float(fixed(total, 3)), "inputs": [self.portable(a) for a in built.inputs],
+                "graph": [self.portable(f) for f in built.filters]}
+        with open(self.part(f"mix.{language}.graph.json"), "w", encoding="utf-8", newline="") as f:
+            f.write(json.dumps(data, ensure_ascii=False, indent=TAB) + NEWLINE)
 
     def write(self, files: Mapping[str, str]) -> None:
         for name, text in files.items():
@@ -199,6 +215,14 @@ class Renderer:
         voices = self.voices(builder.timeline, total, data["music"])
 
         short, short_cues = self.teaser_pieces() if teaser else (None, None)
+        if teaser and self.write_plan is not None:
+            self.write_plan(f"{self.video.name}-30s", {
+                "video": f"{self.video.name}-30s.{self.video.language}",
+                "language": self.video.language,
+                "size": {"width": self.video.frame.width, "height": self.video.frame.height},
+                "pieces": [{"file": f, "length": mediamod.seconds(f)} for f in short],
+                "cues": short_cues,
+            })
         files = self._captions(data, short_cues=short_cues)
         base = self.video.name
         video = self.finish(joined, base, voices, self._subtitles(base, data, files))

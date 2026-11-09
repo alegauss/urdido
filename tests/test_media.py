@@ -12,23 +12,14 @@ from videomaker import media as m
 
 HERE = Path(__file__).parent
 QUIET = ["-y", "-loglevel", "error"]
-needs_node = pytest.mark.skipif(not shutil.which("node"), reason="node is not on PATH")
 needs_ffmpeg = pytest.mark.skipif(
     not (shutil.which("ffmpeg") and shutil.which("ffprobe")), reason="ffmpeg is not on PATH"
 )
 
 
-def js_args(width, height, fps, work_dir, encoder):
-    """What ffmpeg.mjs builds, from tests/js/ffmpeg-args.mjs."""
-    context = json.dumps(
-        {"width": width, "height": height, "fps": fps, "workDir": str(work_dir), "encoder": encoder}
-    )
-    out = subprocess.run(
-        ["node", str(HERE / "js" / "ffmpeg-args.mjs"), context],
-        capture_output=True, text=True, check=True, encoding="utf-8",
-    )
-    return json.loads(out.stdout)
-
+# What media/ffmpeg.mjs built for each context, frozen before the JS assembly was removed (VM17):
+# the oracle this port was proved against.
+ORACLE = json.loads((HERE / "oracles" / "ffmpeg-args.json").read_text(encoding="utf-8"))
 
 CONTEXTS = [
     (1920, 1080, 30, "x264"),  # the long cut
@@ -37,11 +28,11 @@ CONTEXTS = [
 ]
 
 
-@needs_node
 @pytest.mark.parametrize("width,height,fps,encoder", CONTEXTS)
 def test_arguments_equal_ffmpeg_mjs(tmp_path, width, height, fps, encoder):
-    js = js_args(width, height, fps, tmp_path, encoder)
+    js = ORACLE[f"{width}x{height}@{fps}-{encoder}"]
     py = m.media(width, height, str(tmp_path), fps, encoder)
+    here = lambda path: path.replace(str(tmp_path), "<work>")  # noqa: E731
 
     assert py.encode == js["encode"]
     assert m.video_codec("nvenc", 18) == js["videoCodec"]["nvenc"]
@@ -49,20 +40,20 @@ def test_arguments_equal_ffmpeg_mjs(tmp_path, width, height, fps, encoder):
 
     # a card or chapter cut
     cut = py.cut_job("chapter-3.mp4", ["-ss", "12.500", "-t", "4.250", "-i", "take.webm"])
-    assert cut.file == js["cutJob"]["file"]
-    assert cut.args == js["cutJob"]["args"]
+    assert here(cut.file) == js["cutJob"]["file"]
+    assert [here(a) for a in cut.args] == js["cutJob"]["args"]
 
     # a held frame: the frame taken, then held
     freeze = py.freeze_jobs("clip.mp4", 2.3456, 1.5, "held-1")
-    assert freeze[-1].file == js["freeze"]["file"]
-    assert [QUIET + job.args for job in freeze] == js["freeze"]["calls"]
+    assert here(freeze[-1].file) == js["freeze"]["file"]
+    assert [QUIET + [here(a) for a in job.args] for job in freeze] == js["freeze"]["calls"]
 
     # a join
-    listing, join = py.concat_job(js["concat"]["segments"], "joined.mp4")
-    assert join.file == js["concat"]["file"]
-    assert [QUIET + join.args] == js["concat"]["calls"]
-    assert py.concat_list(js["concat"]["segments"]) == js["concat"]["list"]
-    assert Path(listing).read_text(encoding="utf-8") == js["concat"]["list"]
+    segments = [s.replace("<work>", str(tmp_path)) for s in js["concat"]["segments"]]
+    _, join = py.concat_job(segments, "joined.mp4")
+    assert here(join.file) == js["concat"]["file"]
+    assert [QUIET + [here(a) for a in join.args]] == js["concat"]["calls"]
+    assert here(py.concat_list(segments)).replace(str(tmp_path).replace(chr(92), "/"), "<work>") == js["concat"]["list"]
 
 
 def test_forced_encoder(monkeypatch):
