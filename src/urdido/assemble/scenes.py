@@ -74,28 +74,39 @@ class ScenesVideo:
         length; without, at the length its fit gives, nothing encoded."""
         b = Builder(f"{self.name}.{self.language}", self.language, self.frame.width, self.frame.height)
         b.speaks(self.language)
-        clock = 0.0
+        # First what each scene is: its lines, how long they need, its fit or its card.
+        planned = []
         pages = {}
         for n, scene in enumerate(self.scenes):
             takes = [t for name in self.lines_of(scene)
                      for t in self.takes.takes(name, [self.language], current_language=self.language)]
             need = self.need(takes)
-            if scene.filmed:
-                fit = fit_to_line(scene.seconds, need)
-                file = self.part(f"scene-{n}-{scene.name}.mp4")
-                if render:
-                    self.encode_fit(scene, fit, file)
+            file = self.part(f"scene-{n}-{scene.name}.mp4")
+            fit = fit_to_line(scene.seconds, need) if scene.filmed else None
+            still = None if scene.filmed else self.part(f"scene-{n}-{scene.name}.png")
+            if still:
+                pages[os.path.basename(still)[:-4]] = self.card_page(scene)
+            planned.append((scene, takes, need, file, fit, still))
+        if render:
+            # Every card drawn in one browser session, then every piece encoded side by side: they
+            # depend on nothing but their own scene or card.
+            if pages:
+                from videomaker.cards.render import render as draw
+
+                draw(pages, self.frame, self.parts)
+            mediamod.pool([
+                (lambda s=scene, f=fit, o=file: self.encode_fit(s, f, o)) if fit else
+                (lambda p=still, k=need, o=file: self.encode_still(p, k, o))
+                for scene, takes, need, file, fit, still in planned
+            ])
+        clock = 0.0
+        for scene, takes, need, file, fit, still in planned:
+            if fit:
                 length = mediamod.seconds(file) if render else fit.length(scene.seconds)
                 b.scene(scene.file, file, length, scene.seconds, fit.speed, fit.hold)
                 kind = "scene"
             else:
-                still = self.part(f"scene-{n}-{scene.name}.png")
-                pages[os.path.basename(still)[:-4]] = self.card_page(scene)
-                file = self.part(f"scene-{n}-{scene.name}.mp4")
-                length = need
-                if render:
-                    self.encode_card(still, need, file, pages)
-                    length = mediamod.seconds(file)
+                length = mediamod.seconds(file) if render else need
                 b.card(still, file, length)
                 kind = "card"
             at = clock + self.voice_lead
@@ -123,9 +134,6 @@ class ScenesVideo:
         encode[k] = f"{timing},{encode[k]}"
         mediamod.ffmpeg(["-i", scene.file, *encode, file])
 
-    def encode_card(self, still: str, length: float, file: str, pages: Mapping[str, str]) -> None:
-        from videomaker.cards.render import render
-
-        name = os.path.basename(still)[:-4]
-        render({name: pages[name]}, self.frame, self.parts)
+    def encode_still(self, still: str, length: float, file: str) -> None:
+        """A drawn card held for `length` seconds, encoded like every piece."""
         mediamod.ffmpeg(["-loop", "1", "-t", fixed(length, 3), "-i", still, *self.media.encode, file])

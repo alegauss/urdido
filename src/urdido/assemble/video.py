@@ -150,12 +150,17 @@ class FullVideo(ClipVideo):
             self._clock += length
             music_from = self._clock
 
-        chapter_clips = []
-        for n, chapter in enumerate(self.chapters, 1):
+        # Each chapter's clip and its push-ins, the build's heaviest encodes, made side by side
+        # before the timeline: they depend on nothing but the recording (as story-video.mjs did).
+        def chapter_clip(n: int, chapter) -> str:
             raw = self.media.cut(
                 f"chapter-{n}.mp4", ["-ss", fixed(chapter.clip.start, 2), "-to", fixed(chapter.clip.end, 2), "-i", self.webm]
             )
-            chapter_clips.append(self.follow(raw, chapter, f"chapter-{n}-followed.mp4"))
+            return self.follow(raw, chapter, f"chapter-{n}-followed.mp4")
+
+        chapter_clips = mediamod.pool(
+            [lambda n=n, c=c: chapter_clip(n, c) for n, c in enumerate(self.chapters, 1)]
+        )
 
         opening_shots = title_card(0, "intro", self.broll)
         for i, chapter in enumerate(self.chapters):
