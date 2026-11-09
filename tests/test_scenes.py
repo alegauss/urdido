@@ -7,6 +7,7 @@ tests that read them are skipped without them.
 import json
 import os
 import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -98,6 +99,30 @@ def test_the_portuguese_promo_assembles_every_line_over_its_scene(tmp_path):
     warps = [e for t in timeline.video_tracks() for c in t if hasattr(c, "effects") for e in c.effects
              if e.schema_name() == "LinearTimeWarp"]
     assert len(warps) == len(filmed)
+
+
+@needs_promo
+@pytest.mark.skipif(os.environ.get("VIDEO_MAKER_FULL") != "1", reason="set VIDEO_MAKER_FULL=1 to render")
+@pytest.mark.parametrize("cut", ["c1", "c2", "c3"])
+def test_the_short_cuts_build_from_the_long_cuts_scenes(cut, tmp_path):
+    """VM12: each short is its chapters' scenes, upright, with its voice and burned captions."""
+    from videomaker.cuts.selection import chapter_of, selection
+
+    declared = load(PROMO / "demo" / "shorts.json")
+    video = promo_video(tmp_path / "parts")
+    out = tmp_path / "video"
+    out.mkdir()
+    short = selection(video, cut, declared["cuts"][cut]["chapters"], str(PROMO / declared["music"]),
+                      str(out), limit=declared["limit"])
+    probe = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "stream=codec_type,width,height", "-of", "json", short.file],
+        capture_output=True, text=True, check=True,
+    ).stdout
+    streams = json.loads(probe)["streams"]
+    assert {"codec_type": "video", "width": 1080, "height": 1920} in streams
+    assert any(s["codec_type"] == "audio" for s in streams)
+    assert {chapter_of(s) for s in short.scenes} == set(declared["cuts"][cut]["chapters"])
+    print(f"{cut}: {short.length:.1f} s (limit {short.limit:g}, over by {short.over:.1f})")
 
 
 @needs_promo

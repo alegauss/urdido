@@ -113,6 +113,10 @@ class ScenesVideo:
         """The clip at its speed, its last frame held, encoded like every piece."""
         encode = list(self.media.encode)
         k = encode.index("-vf") + 1
+        if self.frame.height > self.frame.width:
+            # A 9:16 cut of a 16:9 scene (VM12): its centre, full height; a scene carries no focus
+            # box to follow.
+            encode[k] = f"crop=ih*{self.frame.width}/{self.frame.height}:ih,{encode[k]}"
         timing = f"setpts=PTS/{fixed(fit.speed, 4)}"
         if fit.hold > 0:
             timing += f",tpad=stop_mode=clone:stop_duration={fixed(fit.hold, 3)}"
