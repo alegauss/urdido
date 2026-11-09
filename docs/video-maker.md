@@ -68,11 +68,19 @@ Recording stays JavaScript and the assembly becomes Python (decided 2026-11-09).
 means the narration reader Turing's specs import, the recording driver and pointer
 (`recording/`), and the terminal replay. The assembly becomes the `videomaker` package:
 captions, the mix, themed cards, the sources (a chaptered recording, scene clips), the
-timeline as OpenTimelineIO, the cuts, the push-in and time maps, the Resolve export through
-OTIO's `fcp_xml` adapter, publishing, and `python -m videomaker build <video.toml>`. Each port
-is proved against the golden files before the assembler that uses it exists. Whether MLT
-replaces the ffmpeg filtergraphs for the render is measured on one chapter first. The order
-and the reason for each step are in the roadmap.
+timeline as OpenTimelineIO (the video's source of truth), the cuts, the push-in and time
+maps, the Resolve project as that `.otio` handed over, publishing, and `python -m videomaker
+build <video.toml>`. Each port is proved against the golden files before the assembler that
+uses it exists. The order and the reason for each step are in the roadmap.
+
+The render stays ffmpeg (VM24, 2026-11-09). `spikes/mlt_chapter.py` rendered chapter 2 of the
+pt-BR story both ways from the same inputs. MLT (`melt` 7.41) gave the same picture and, once
+normalised the same way, the same level (-14.1 LUFS, -2.0 dBTP). But one MLT pass took 55 s
+against 28 s for the whole ffmpeg path, and reaching the target took three whole renders
+(141 s), where ffmpeg re-encodes only the audio. It would replace about 170 lines with an XML
+writer of about 100 for one chapter's shape, none of it in the hard part, which the OTIO timeline
+already carries. Worth measuring again if a GPU render (MLT's movit) or an editor that reads
+MLT XML becomes a need.
 
 ## Rules every module keeps
 
