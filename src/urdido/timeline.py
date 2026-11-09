@@ -111,6 +111,19 @@ class Builder:
         """Shots played as they are (the opening, b-roll), on V3."""
         return [self._piece("V3", file, 0, file, length) for file, length in files]
 
+    def scene(self, clip: str, file: str, length: float, clip_seconds: float, speed: float,
+              hold: float) -> otio.schema.Clip:
+        """A scene clip fitted to its lines (VM10), on V1: the whole clip at `speed` (an OTIO
+        time warp), then its last frame held `hold` s."""
+        # The source range stays the span on the timeline (OTIO times a track by it, not by its
+        # effects); the clip's own length rides in the metadata beside the warp.
+        piece = self._piece("V1", clip, 0, file, length,
+                            fit={"speed": speed, "hold": hold, "clip": clip_seconds})
+        piece.effects.append(otio.schema.LinearTimeWarp(name="fit", time_scalar=speed))
+        if hold > 0:
+            piece.effects.append(otio.schema.FreezeFrame(name="hold"))
+        return piece
+
     def part(self, file: str, length: float) -> otio.schema.Clip:
         """A piece a chapter clip joins as it is, with no lane of its own."""
         return self._piece(None, None, None, file, length)
