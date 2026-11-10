@@ -72,6 +72,9 @@ class ScenesVideo:
             n = found.group(1)
             title = ((self.script["chapters"].get(n) or {}).get("title") or {}).get(self.language, n)
             return cardhtml.card(css, f"{w['chapter']} {n}", title, w["store"], pill=True)
+        if scene.name == "outro" and w.get("tryLinks"):
+            # The closing card the WordPress demo ends on: where to try it, the address big.
+            return cardhtml.links_card(self.theme, css, self.frame, w["tryIt"], w["tryTitle"], w["tryLinks"])
         return cardhtml.card(css, w["brand"], w["what"], w["line"])
 
     def compose(self, render: bool = False) -> Builder:

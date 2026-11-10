@@ -109,6 +109,55 @@ export function chooseLines(lines, selectors, { prompt, init } = {}) {
   return chosen;
 }
 
+const escape = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const inline = (s) => escape(s)
+  .replace(/`([^`]+)`/g, "<code>$1</code>")
+  .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+  .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<i>$2</i>");
+
+/**
+ * The agent's text as Claude Code shows it: its Markdown formatted (headings, bold, inline code,
+ * lists, tables), not its raw `**` and `|`, so a viewer who does not read Markdown reads the
+ * report. The words are the session's, untouched.
+ *
+ * @param {string} text The agent's text, Markdown.
+ * @return {string} HTML, escaped.
+ */
+export function markdownHtml(text) {
+  const out = [];
+  const rows = text.split("\n");
+  for (let i = 0; i < rows.length;) {
+    const row = rows[i];
+    if (/^\s*\|/.test(row)) {
+      const table = [];
+      while (i < rows.length && /^\s*\|/.test(rows[i])) table.push(rows[i++]);
+      const cells = (r) => r.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+      const body = table.filter((r) => !/^\s*\|[\s:|-]+\|\s*$/.test(r));
+      const [head, ...rest] = body;
+      out.push(`<table><tr>${cells(head).map((c) => `<th>${inline(c)}</th>`).join("")}</tr>${
+        rest.map((r) => `<tr>${cells(r).map((c, k) => `<${k ? "td" : "th"}>${inline(c)}</${k ? "td" : "th"}>`).join("")}</tr>`).join("")}</table>`);
+      continue;
+    }
+    if (/^\s*[-*] /.test(row)) {
+      const items = [];
+      while (i < rows.length && /^\s*[-*] /.test(rows[i])) items.push(rows[i++].replace(/^\s*[-*] /, ""));
+      out.push(`<ul>${items.map((t) => `<li>${inline(t)}</li>`).join("")}</ul>`);
+      continue;
+    }
+    if (/^\s*\d+\. /.test(row)) {
+      const items = [];
+      while (i < rows.length && /^\s*\d+\. /.test(rows[i])) items.push(rows[i++].replace(/^\s*\d+\. /, ""));
+      out.push(`<ol>${items.map((t) => `<li>${inline(t)}</li>`).join("")}</ol>`);
+      continue;
+    }
+    const heading = row.match(/^(#{1,6})\s+(.*)$/);
+    if (heading) out.push(`<h4>${inline(heading[2])}</h4>`);
+    else if (row.trim()) out.push(`<div>${inline(row)}</div>`);
+    i++;
+  }
+  return out.join("");
+}
+
 const PAGE = (title) => `<!doctype html><meta charset="utf-8"><style>
 html,body{margin:0;background:#0d1117;color:#e6edf3;font:22px/1.45 "Cascadia Mono","Consolas",monospace}
 .bar{height:44px;background:#161b22;display:flex;align-items:center;gap:10px;padding:0 18px;color:#8b949e;font:18px system-ui}
@@ -119,7 +168,14 @@ html,body{margin:0;background:#0d1117;color:#e6edf3;font:22px/1.45 "Cascadia Mon
 .call{color:#79c0ff}.call:before{content:"● ";color:#3fb950}
 .answer{color:#8b949e;border-left:3px solid #30363d;padding-left:14px}
 .error{color:#ffa198;border-left:3px solid #f85149;padding-left:14px}
-.text{color:#e6edf3}.text:before{content:"✻ ";color:#E85D04}
+.text{color:#e6edf3;white-space:normal;font:24px/1.5 system-ui,"Segoe UI",sans-serif;position:relative;padding-left:34px}
+.text:before{content:"✻";color:#E85D04;position:absolute;left:0;top:0;font-family:"Cascadia Mono",monospace}
+.text>*{margin:0 0 8px}.text b{color:#fff;font-weight:700}.text i{font-style:italic}
+.text code{font:21px "Cascadia Mono",Consolas,monospace;color:#d2a8ff;background:#161b22;padding:1px 7px;border-radius:5px}
+.text h4{font-size:26px;color:#fff;margin:6px 0 8px}
+.text ul,.text ol{padding-left:28px}.text li{margin:0 0 6px}.text li::marker{color:#E85D04}
+.text table{border-collapse:collapse;margin:6px 0 12px}.text th,.text td{border:1px solid #30363d;padding:6px 16px;text-align:left}
+.text tr:first-child th{background:#161b22;color:#8b949e;font-weight:600}
 .note{color:#8b949e;font-style:italic}
 .init{color:#8b949e}.init:before{content:"✓ ";color:#3fb950}
 </style><div class="bar"><i style="background:#f85149"></i><i style="background:#d29922"></i><i style="background:#3fb950"></i><span>${title}</span></div><div id="out"></div>`;
@@ -151,13 +207,14 @@ export async function filmTerminal(browser, { lines, title = "Claude Code", out,
   await page.setContent(PAGE(title));
   await page.waitForTimeout(800);
   for (const line of lines) {
-    await page.evaluate(({ kind, text }) => {
-      const p = document.createElement("p");
+    await page.evaluate(({ kind, text, html }) => {
+      const p = document.createElement(kind === "text" ? "div" : "p");
       p.className = `l ${kind}`;
       p.dataset.full = text;
-      p.textContent = kind === "prompt" ? "" : text;
+      if (kind === "text") p.innerHTML = html;
+      else p.textContent = kind === "prompt" ? "" : text;
       document.getElementById("out").append(p);
-    }, line);
+    }, { ...line, html: line.kind === "text" ? markdownHtml(line.text) : null });
     if (line.kind === "prompt") {
       await page.evaluate(async (ms) => {
         const p = [...document.querySelectorAll(".prompt")].pop();

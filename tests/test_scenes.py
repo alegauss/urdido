@@ -139,3 +139,11 @@ def test_the_portuguese_promo_renders_each_piece_to_its_lines(tmp_path):
     pieces = [video.part(f"scene-{n}-{s.name}.mp4") for n, (s, *_) in enumerate(video.placed)]
     joined = video.media.concat(pieces, "joined.mp4")
     assert media.seconds(joined) == pytest.approx(sum(p[3] for p in video.placed), abs=0.2)
+
+
+def test_the_outro_is_the_closing_card_with_the_address(tmp_path):
+    video = promo_video(tmp_path)
+    outro = next(s for s in video.scenes if s.name == "outro")
+    page = video.card_page(outro)
+    assert "shio.viglet.org" in page and 'class="link main"' in page
+    assert "Experimente" in page

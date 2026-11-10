@@ -3,7 +3,7 @@
 //
 //   node terminal.mjs
 import { readFileSync } from 'node:fs';
-import { chooseLines, initLine, sessionLines } from '../../terminal-replay.mjs';
+import { chooseLines, initLine, markdownHtml, sessionLines } from '../../terminal-replay.mjs';
 
 const promo = new URL( '../../../shio/promo/', import.meta.url );
 const declared = JSON.parse( readFileSync( new URL( 'demo/agent/terminal.json', promo ), 'utf8' ) );
@@ -40,4 +40,8 @@ const before = {
 	],
 };
 
-process.stdout.write( JSON.stringify( { declared: declaredChapters, before, init, record } ) );
+// The report that closes chapter 6, as the scene shows it (formatted, not raw Markdown).
+const report = declaredChapters[ 'chapter-6' ].at( -1 );
+const shown = markdownHtml( report.text );
+
+process.stdout.write( JSON.stringify( { declared: declaredChapters, before, init, record, shown } ) );

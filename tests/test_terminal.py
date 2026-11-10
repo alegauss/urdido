@@ -54,3 +54,15 @@ def test_the_init_line_shows_the_plugin_and_nothing_of_the_machine():
     assert "MCP plugin:shio:shio" in init["text"]
     for private in ("claude.ai", "\\", "/", "memory", "cowork", "Adobe", "Slack"):
         assert private not in init["text"], private
+
+
+def test_the_report_is_shown_formatted_not_as_markdown():
+    import re
+
+    shown = replay()["shown"]
+    assert "<table>" in shown and "<th>Trilha</th>" in shown
+    assert "<b>Verificação:</b>" in shown and shown.count("<li>") >= 8
+    assert "<code>/trilhas/pedra-do-vigia</code>" in shown
+    words = re.sub(r"<[^>]+>", " ", shown)
+    for raw in ("**", "|---", "| Trilha", "- **", "`"):
+        assert raw not in words, raw
