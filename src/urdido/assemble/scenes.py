@@ -19,6 +19,7 @@ from videomaker.edit.pacing import Fit, fit_to_line
 from videomaker.jsnum import fixed
 from videomaker.narration import Take, Takes
 from videomaker.sources.scenes import Scene
+from videomaker.assemble.video import Intro
 from videomaker.timeline import Builder
 
 _CHAPTER = re.compile(r"^chapter-(\d+)$")
@@ -40,7 +41,11 @@ class ScenesVideo:
     line_gap: float = 0.4
     voice_tail: float = 0.5
     card_seconds: float = 2.5
+    # The opening animation and where its usable part starts: played before the first scene with
+    # its own sound, the bed starting after it (as the WordPress demo's opening does).
+    intro: "Intro | None" = None
     placed: list = field(default_factory=list)  # (scene, kind, start, length, takes)
+    opening: float = 0.0  # how long the opening runs, where the bed starts
 
     def __post_init__(self):
         self.media = mediamod.media(self.frame.width, self.frame.height, self.parts, encoder=self.encoder)
@@ -100,6 +105,14 @@ class ScenesVideo:
                 for scene, takes, need, file, fit, still in planned
             ])
         clock = 0.0
+        if self.intro is not None:
+            opening = self.part("opening.mp4")
+            if render or not os.path.exists(opening):
+                self.media.cut("opening.mp4", ["-ss", fixed(self.intro.start, 3), "-i", self.intro.file])
+            length = mediamod.seconds(opening)
+            b.shots([(opening, length)])
+            b.sound(self.intro.file, self.intro.start, 0.0, length)
+            clock = self.opening = length
         for scene, takes, need, file, fit, still in planned:
             if fit:
                 length = mediamod.seconds(file) if render else fit.length(scene.seconds)

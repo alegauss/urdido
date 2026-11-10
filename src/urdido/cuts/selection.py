@@ -64,7 +64,8 @@ def selection(
     parts = os.path.join(video.parts, name)
     os.makedirs(parts, exist_ok=True)
     chosen = [s for s in video.scenes if chapter_of(s.name) in chapters]
-    short = replace(video, frame=VERTICAL, scenes=chosen, parts=parts, placed=[])
+    # A short opens straight on its chapters: no opening animation.
+    short = replace(video, frame=VERTICAL, scenes=chosen, parts=parts, placed=[], intro=None, opening=0.0)
     planned = short.compose(render=False)
     if _length(planned) > limit:
         short = replace(short, placed=[], **TIGHT)

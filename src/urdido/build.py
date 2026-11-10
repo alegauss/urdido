@@ -188,6 +188,17 @@ class Build:
             print(file)
         return 0
 
+    def intro(self):
+        """The opening animation the declaration names, when it is on disk (media is not versioned)."""
+        from videomaker.assemble.video import Intro
+
+        opening = self.decl.get("opening", {})
+        if not opening.get("intro") or not os.path.exists(self.path(opening["intro"])):
+            return None
+        meta = self.load(opening["intro_meta"]) if opening.get("intro_meta") and os.path.exists(
+            self.path(opening["intro_meta"])) else {}
+        return Intro(self.path(opening["intro"]), meta.get("from", 0))
+
     def draw_cards(self, pages: Mapping[str, str], frame: html.Frame) -> None:
         """Each card's page and its pictures, beside the parts (`preview-` ones with --cards)."""
         from videomaker.cards.render import render
@@ -290,7 +301,7 @@ class Build:
             name=self.name, language=self.language, frame=html.Frame(1920, 1080), scenes=scene_clips(listing),
             takes=Takes(script, self.path(self.decl["narration"]["takes"])), script=script, theme=theme,
             words=cards["words"][self.language], parts=str(self.parts),
-            encoder=os.environ.get("STORY_ENCODER") or media.detect_encoder(),
+            encoder=os.environ.get("STORY_ENCODER") or media.detect_encoder(), intro=self.intro(),
         )
         cut = self.args.cut
         if cut.startswith("short:"):
@@ -316,8 +327,10 @@ class Build:
             (self.out / f"{self.name}.{self.language}.{ext}").write_text(text, encoding="utf-8", newline="")
         voice = str(self.parts / f"voice.{self.language}.m4a")
         bed = self.path(self.decl["music"]["bed"])
+        sounds = [mix.Sound(video.intro.file, video.intro.start, 0.0, video.opening)] if video.intro else []
         mix.voice_track([mix.Take(p["file"], p["at"], p["length"]) for p in placed], total, voice, str(self.parts),
-                        bed=mix.Bed(bed) if os.path.exists(bed) else None, name=f"mix.{self.language}")
+                        sounds=sounds, bed=mix.Bed(bed, video.opening) if os.path.exists(bed) else None,
+                        name=f"mix.{self.language}")
         file = str(self.out / f"{self.name}.{self.language}.mp4")
         lang = video_decl["languages"][self.language]
         media.ffmpeg(["-i", joined, "-i", str(self.out / f"{self.name}.{self.language}.srt"), "-i", voice,
