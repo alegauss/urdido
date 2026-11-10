@@ -158,11 +158,12 @@ export function markdownHtml(text) {
   return out.join("");
 }
 
-const PAGE = (title) => `<!doctype html><meta charset="utf-8"><style>
+const PAGE = (title, zoom = 1, fromTop = false) => `<!doctype html><meta charset="utf-8"><style>
 html,body{margin:0;background:#0d1117;color:#e6edf3;font:22px/1.45 "Cascadia Mono","Consolas",monospace}
 .bar{height:44px;background:#161b22;display:flex;align-items:center;gap:10px;padding:0 18px;color:#8b949e;font:18px system-ui}
 .bar i{width:13px;height:13px;border-radius:50%;display:inline-block}
 #out{padding:22px 36px;height:calc(100vh - 88px);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+${fromTop ? "#out{justify-content:flex-start;padding-top:48px}" : ""}${zoom !== 1 ? `#out{zoom:${zoom}}` : ""}
 .l{white-space:pre-wrap;margin:0 0 10px}
 .prompt{color:#e6edf3}.prompt:before{content:"> ";color:#d2a8ff}
 .call{color:#79c0ff}.call:before{content:"● ";color:#3fb950}
@@ -182,9 +183,10 @@ html,body{margin:0;background:#0d1117;color:#e6edf3;font:22px/1.45 "Cascadia Mon
 
 /**
  * Films lines as a terminal: a prompt typed at `typeMs` a key, every other line shown after a
- * pause that grows with its length (`readMs` per line of text, at least `minMs`).
+ * pause that grows with its length (`readMs` per line of text, at least `minMs`). A short session
+ * reads better larger and from the top of the screen: `zoom` and `fromTop`.
  */
-export async function filmTerminal(browser, { lines, title = "Claude Code", out, typeMs = 18, readMs = 650, minMs = 700, hold = 2500, size = { width: 1920, height: 1080 }, targetMs = null }) {
+export async function filmTerminal(browser, { lines, title = "Claude Code", out, typeMs = 18, readMs = 650, minMs = 700, hold = 2500, size = { width: 1920, height: 1080 }, targetMs = null, zoom = 1, fromTop = false }) {
   // Paced to a length (the lines spoken over the scene): the reading pauses stretch or shrink
   // together, within reason, so the session reads at the narration's pace; whatever is left past
   // that is held on the last screen.
@@ -204,7 +206,7 @@ export async function filmTerminal(browser, { lines, title = "Claude Code", out,
   mkdirSync(tmp, { recursive: true });
   const ctx = await browser.newContext({ viewport: size, recordVideo: { dir: tmp, size } });
   const page = await ctx.newPage();
-  await page.setContent(PAGE(title));
+  await page.setContent(PAGE(title, zoom, fromTop));
   await page.waitForTimeout(800);
   for (const line of lines) {
     await page.evaluate(({ kind, text, html }) => {

@@ -6,7 +6,7 @@
 //   const moves = await storyMoves(page);   // before the first navigation
 //   await moves.click(locator);             // move to it, ring, click
 //   await moves.type(locator, "quilhara");  // move to it, click, type at a hand's pace
-//   await moves.glide(locator);             // scroll slowly until it shows
+//   await moves.glide(locator);             // scroll slowly (the page, or its dialog) until it shows
 //   await moves.scrollBy(900);              // scroll slowly by a distance
 
 /**
@@ -73,25 +73,53 @@ export async function storyMoves(page) {
   await page.addInitScript(pointer);
   let cursor = { x: 960, y: 540 };
 
-  /** Scroll slowly until the element sits in the window, all of it where it fits. */
-  const glide = async (locator) => {
-    const distance = await locator.evaluate((el) => {
+  /**
+   * Scroll slowly until the element sits in view, all of it where it fits. What scrolls is what
+   * holds the element: a dialog's own body when it is in one, else the page, so a modal is read on
+   * the way down and the page behind it stays still. With `ifHidden`, nothing moves when the
+   * element is already in view.
+   */
+  const glide = async (locator, { ifHidden = false } = {}) => {
+    await locator.evaluate((el, hiddenOnly) => {
+      let holder = el.parentElement;
+      while (holder && holder !== document.body && holder !== document.documentElement) {
+        const o = getComputedStyle(holder).overflowY;
+        if ((o === "auto" || o === "scroll" || o === "overlay") && holder.scrollHeight > holder.clientHeight + 1) break;
+        holder = holder.parentElement;
+      }
+      const inner = holder && holder !== document.body && holder !== document.documentElement ? holder : null;
       const box = el.getBoundingClientRect();
-      const bottom = box.bottom - window.innerHeight + 160;
-      return Math.min(bottom, box.top - 24);
-    });
-    if (Math.abs(distance) > 4) await scrollByEased(page, distance);
+      const view = inner ? inner.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+      if (hiddenOnly && box.top >= view.top && box.bottom <= view.bottom) return null;
+      const room = inner ? 24 : 160;
+      const distance = box.top < view.top ? box.top - view.top - 24
+        : Math.min(box.bottom - view.bottom + room, box.top - view.top - 24);
+      if (Math.abs(distance) <= 4) return null;
+      const from = inner ? inner.scrollTop : window.scrollY;
+      const most = inner ? inner.scrollHeight - inner.clientHeight
+        : document.documentElement.scrollHeight - window.innerHeight;
+      const d = Math.max(0, Math.min(from + distance, most)) - from;
+      const ms = Math.min(12000, Math.max(inner ? 1200 : 3000, (Math.abs(d) / 200) * 1000));
+      const to = (y) => (inner ? (inner.scrollTop = y) : window.scrollTo({ top: y, behavior: "instant" }));
+      return new Promise((done) => {
+        const t0 = performance.now();
+        const step = (t) => {
+          const k = Math.min(1, (t - t0) / ms);
+          to(from + d * (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2));
+          if (k < 1) window.requestAnimationFrame(step); else done(null);
+        };
+        window.requestAnimationFrame(step);
+      });
+    }, ifHidden);
   };
 
   /** The pointer moved to a control before it is used, so the eye follows it there. */
   const reach = async (locator) => {
     await locator.waitFor({ state: "visible" });
-    let box = await locator.boundingBox();
-    const { height } = page.viewportSize();
-    if (box && (box.y < 0 || box.y + box.height > height)) {
-      await glide(locator);
-      box = await locator.boundingBox();
-    }
+    // Out of view (of the page, or of the dialog it sits in): brought in slowly first, so the
+    // click never makes its holder jump.
+    await glide(locator, { ifHidden: true });
+    const box = await locator.boundingBox();
     if (!box) return;
     const to = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
     const ms = Math.min(900, Math.max(350, 250 + Math.hypot(to.x - cursor.x, to.y - cursor.y) * 0.45));
