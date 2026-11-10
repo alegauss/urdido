@@ -158,12 +158,18 @@ export function markdownHtml(text) {
   return out.join("");
 }
 
-const PAGE = (title, zoom = 1, fromTop = false) => `<!doctype html><meta charset="utf-8"><style>
-html,body{margin:0;background:#0d1117;color:#e6edf3;font:22px/1.45 "Cascadia Mono","Consolas",monospace}
-.bar{height:44px;background:#161b22;display:flex;align-items:center;gap:10px;padding:0 18px;color:#8b949e;font:18px system-ui}
+// The terminal is a window on a desktop, the way a screen recording of the app looks, filling the
+// top of the frame and leaving the bottom band (where a video's captions sit) to the desktop.
+const PAGE = (title, zoom = 1) => `<!doctype html><meta charset="utf-8"><style>
+html,body{margin:0;height:100%;color:#e6edf3;font:22px/1.45 "Cascadia Mono","Consolas",monospace;
+  background:radial-gradient(ellipse 80% 70% at 50% 30%,#1c2433 0%,#0b0f17 70%,#07090d 100%)}
+.win{position:absolute;left:5.5%;right:5.5%;top:3.5%;height:74%;display:flex;flex-direction:column;
+  background:#0d1117;border:1px solid #30363d;border-radius:14px;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.03)}
+.bar{flex:none;height:44px;background:#161b22;display:flex;align-items:center;gap:10px;padding:0 18px;color:#8b949e;font:18px system-ui}
 .bar i{width:13px;height:13px;border-radius:50%;display:inline-block}
-#out{padding:22px 36px;height:calc(100vh - 88px);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
-${fromTop ? "#out{justify-content:flex-start;padding-top:48px}" : ""}${zoom !== 1 ? `#out{zoom:${zoom}}` : ""}
+#out{flex:1;padding:26px 36px 10px;overflow:hidden}
+${zoom !== 1 ? `#out{zoom:${zoom}}` : ""}
 .l{white-space:pre-wrap;margin:0 0 10px}
 .prompt{color:#e6edf3}.prompt:before{content:"> ";color:#d2a8ff}
 .call{color:#79c0ff}.call:before{content:"● ";color:#3fb950}
@@ -179,14 +185,15 @@ ${fromTop ? "#out{justify-content:flex-start;padding-top:48px}" : ""}${zoom !== 
 .text tr:first-child th{background:#161b22;color:#8b949e;font-weight:600}
 .note{color:#8b949e;font-style:italic}
 .init{color:#8b949e}.init:before{content:"✓ ";color:#3fb950}
-</style><div class="bar"><i style="background:#f85149"></i><i style="background:#d29922"></i><i style="background:#3fb950"></i><span>${title}</span></div><div id="out"></div>`;
+</style><div class="win"><div class="bar"><i style="background:#f85149"></i><i style="background:#d29922"></i><i style="background:#3fb950"></i><span>${title}</span></div><div id="out"></div></div>`;
 
 /**
  * Films lines as a terminal: a prompt typed at `typeMs` a key, every other line shown after a
- * pause that grows with its length (`readMs` per line of text, at least `minMs`). A short session
- * reads better larger and from the top of the screen: `zoom` and `fromTop`.
+ * pause that grows with its length (`readMs` per line of text, at least `minMs`). The lines run
+ * from the top of the window, as in a terminal; one that does not fit is scrolled through slowly
+ * while it is read. A short session reads better larger: `zoom`.
  */
-export async function filmTerminal(browser, { lines, title = "Claude Code", out, typeMs = 18, readMs = 650, minMs = 700, hold = 2500, size = { width: 1920, height: 1080 }, targetMs = null, zoom = 1, fromTop = false }) {
+export async function filmTerminal(browser, { lines, title = "Claude Code", out, typeMs = 18, readMs = 650, minMs = 700, hold = 2500, size = { width: 1920, height: 1080 }, targetMs = null, zoom = 1 }) {
   // Paced to a length (the lines spoken over the scene): the reading pauses stretch or shrink
   // together, within reason, so the session reads at the narration's pace; whatever is left past
   // that is held on the last screen.
@@ -206,17 +213,34 @@ export async function filmTerminal(browser, { lines, title = "Claude Code", out,
   mkdirSync(tmp, { recursive: true });
   const ctx = await browser.newContext({ viewport: size, recordVideo: { dir: tmp, size } });
   const page = await ctx.newPage();
-  await page.setContent(PAGE(title, zoom, fromTop));
+  await page.setContent(PAGE(title, zoom));
   await page.waitForTimeout(800);
   for (const line of lines) {
-    await page.evaluate(({ kind, text, html }) => {
+    const wait = line.kind === "prompt" ? 0 : Math.max(minMs, readMs * line.text.split("\n").length);
+    await page.evaluate(({ kind, text, html, wait }) => {
+      const out = document.getElementById("out");
       const p = document.createElement(kind === "text" ? "div" : "p");
       p.className = `l ${kind}`;
       p.dataset.full = text;
       if (kind === "text") p.innerHTML = html;
       else p.textContent = kind === "prompt" ? "" : text;
-      document.getElementById("out").append(p);
-    }, { ...line, html: line.kind === "text" ? markdownHtml(line.text) : null });
+      out.append(p);
+      // The window keeps the newest line in view: a line that fits is scrolled to at once, as a
+      // terminal does; one taller than what is left is shown from its top and scrolled through,
+      // eased, over most of its reading time.
+      const end = out.scrollHeight - out.clientHeight;
+      if (end <= out.scrollTop) return;
+      const top = Math.min(end, p.offsetTop - out.offsetTop - 12);
+      if (top >= end || !wait) { out.scrollTop = end; return; }
+      out.scrollTop = Math.max(out.scrollTop, top);
+      const from = out.scrollTop, ms = wait * 0.8, t0 = performance.now() + wait * 0.1;
+      const step = (now) => {
+        const k = Math.max(0, Math.min(1, (now - t0) / ms));
+        out.scrollTop = from + (end - from) * (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2);
+        if (k < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }, { ...line, html: line.kind === "text" ? markdownHtml(line.text) : null, wait });
     if (line.kind === "prompt") {
       await page.evaluate(async (ms) => {
         const p = [...document.querySelectorAll(".prompt")].pop();
@@ -224,7 +248,7 @@ export async function filmTerminal(browser, { lines, title = "Claude Code", out,
       }, typeMs);
       await page.waitForTimeout(900);
     } else {
-      await page.waitForTimeout(Math.max(minMs, readMs * line.text.split("\n").length));
+      await page.waitForTimeout(wait);
     }
   }
   await page.waitForTimeout(hold);
