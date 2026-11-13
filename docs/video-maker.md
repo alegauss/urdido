@@ -46,6 +46,17 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+An illustrated history can also declare `source.kind = "illustrated"` and a
+`source.declaration` JSON, as `japode/wordpress/video.toml` does (VM35). It names
+every narration take in order, with weighted editorial beats, their factual
+sources and any licensed local media. Videos and portraits fill the frame by
+default, with transparent lower thirds; `presentation = "panel"` keeps a source
+beside the text. Dates and diagrams use the declared channel theme. Missing or
+stale takes, absent footage, incomplete credits and clips shorter than a beat
+are refused. The existing scene timeline supplies voice placement, mix and
+optional subtitles; the description derives chapter times and media credits.
+This path does not migrate Docker and Scion's existing footage pipelines (VM34).
+
 `video-maker/` is also a Python project (`pyproject.toml`, Python 3.12+, OpenTimelineIO). Run
 `python -m pip install -e "video-maker[test,cards]"` once, then `pytest video-maker` from the
 repository root. The tests read VM1's goldens as data, so each port is proved against them

@@ -293,15 +293,28 @@ class Build:
 
         video_decl = self.decl["video"]
         folder = video_decl["folders"][self.language]
-        listing = self.path(self.decl["source"]["listing"].replace("{folder}", folder))
         script = self.load(self.decl["narration"]["script"])
         cards = self.load(self.decl["cards"]["declaration"])
-        theme = html.Theme.load(cards["theme"], {"shio": self.roots["shio"]})
+        theme = html.Theme.load(cards["theme"], {"shio": self.roots["shio"], "root": str(self.here)})
+        takes = Takes(script, self.path(self.decl["narration"]["takes"]))
+        encoder = os.environ.get("STORY_ENCODER") or media.detect_encoder()
+        illustrated = self.decl["source"]["kind"] == "illustrated"
+        if illustrated:
+            if self.args.cut != "full" or self.args.vertical or self.args.project or self.args.cards:
+                raise SystemExit("illustrated videos currently support full cuts and --plan")
+            from videomaker.sources.illustrated import scenes as illustrations
+
+            document = self.load(self.decl["source"]["declaration"])
+            source_scenes = illustrations(document, takes, theme, self.language, str(self.here),
+                                         str(self.parts), render=not self.args.plan, encoder=encoder)
+        else:
+            listing = self.path(self.decl["source"]["listing"].replace("{folder}", folder))
+            source_scenes = scene_clips(listing)
         video = ScenesVideo(
-            name=self.name, language=self.language, frame=html.Frame(1920, 1080), scenes=scene_clips(listing),
-            takes=Takes(script, self.path(self.decl["narration"]["takes"])), script=script, theme=theme,
+            name=self.name, language=self.language, frame=html.Frame(1920, 1080), scenes=source_scenes,
+            takes=takes, script=script, theme=theme,
             words=cards["words"][self.language], parts=str(self.parts),
-            encoder=os.environ.get("STORY_ENCODER") or media.detect_encoder(), intro=self.intro(),
+            encoder=encoder, intro=self.intro(),
         )
         cut = self.args.cut
         if cut.startswith("short:"):
@@ -316,6 +329,10 @@ class Build:
             return 0
         timeline = video.compose(render=not self.args.plan)
         self.write_plan(self.name, plan_of(timeline))
+        if illustrated:
+            from videomaker.sources.illustrated import description
+
+            description(document, script, plan_of(timeline), self.language, self.out, self.name)
         if self.args.plan:
             return 0
         pieces = pieces_of(timeline)
@@ -330,6 +347,7 @@ class Build:
         sounds = [mix.Sound(video.intro.file, video.intro.start, 0.0, video.opening)] if video.intro else []
         mix.voice_track([mix.Take(p["file"], p["at"], p["length"]) for p in placed], total, voice, str(self.parts),
                         sounds=sounds, bed=mix.Bed(bed, video.opening) if os.path.exists(bed) else None,
+                        loudness=mix.Loudness(**self.decl.get("audio", {})),
                         name=f"mix.{self.language}")
         file = str(self.out / f"{self.name}.{self.language}.mp4")
         lang = video_decl["languages"][self.language]
