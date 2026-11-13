@@ -86,3 +86,17 @@ def test_an_alias_cannot_bypass_the_footage_reuse_limit():
     document['scenes']['outro'][0] = {**document['scenes']['outro'][0], 'asset': 'alias', 'layout': 'footage'}
     with pytest.raises(RecordingRefused, match='reuse exceeds 1'):
         validate(document, Voices(), 'pt-BR')
+
+
+def test_a_timed_caption_leaves_the_brand_mark_on_screen():
+    from videomaker.cards.html import Frame
+    from videomaker.sources.illustrated import page
+
+    theme = SimpleNamespace(colors={"text": "#fff", "muted": "#ccc", "accent": "#2BCB6B"},
+                            fonts={"display-800": "d.woff2", "text": "t.woff2"}, data={"background": "#000"})
+    document = {**story(), "brand": "JAPODE", "series": "S", "sources": {"original": {"label": "L", "url": "U"}}}
+    beat = {"kicker": "", "title": "Matt", "caption": "WordPress", "layout": "footage", "source": "original"}
+    mark = page({**beat, "caption": "", "title": "", "mark_only": True}, document, theme, Frame(1920, 1080), "logo", 1)
+    assert "<b>JAPODE</b>" in mark
+    assert "WordPress" not in mark
+    assert ".full:before{display:none}" in mark

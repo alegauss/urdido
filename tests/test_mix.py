@@ -112,3 +112,14 @@ def test_chapter_mix_lands_on_the_target(tmp_path):
         bed=bed, trim_db=music["trimDb"], duck=duck_of(music), loudness=loudness,
     )
     assert abs(measured - loudness.target) <= 0.3
+
+
+def test_a_bed_ending_in_silence_loops_from_where_its_music_stops():
+    log = ("[silencedetect] silence_start: 40.2\n[silencedetect] silence_end: 41.0 | silence_duration: 0.8\n"
+           "[silencedetect] silence_start: 211.978\n[silencedetect] silence_end: 220.055 | silence_duration: 8.08\n")
+    assert m.audible_end(log, 220.055) == pytest.approx(211.978)
+
+
+def test_a_bed_without_a_silent_tail_keeps_its_whole_length():
+    log = "[silencedetect] silence_start: 40.2\n[silencedetect] silence_end: 41.0 | silence_duration: 0.8\n"
+    assert m.audible_end(log, 220.0) == 220.0

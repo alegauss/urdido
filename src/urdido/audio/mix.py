@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import math
 import os
+import re
+import subprocess
 from dataclasses import dataclass, field
 from typing import Mapping, Sequence
 
@@ -116,6 +118,46 @@ def on_bed(placed: Sequence[Take], bed: Bed) -> list[Take]:
     return [Take(p.file, p.at - bed.start, p.length) for p in placed]
 
 
+_SILENCE = re.compile(r"silence_(start|end): (-?[\d.]+)")
+
+
+def audible_end(log: str, duration: float, tail: float = 0.25) -> float:
+    """Where a track's music stops: the start of a silence that runs to the file's end (a fade
+    and the empty seconds a licensed track ends on), else the file's whole length (VM49)."""
+    start = None
+    for kind, value in _SILENCE.findall(log):
+        if kind == "start":
+            start = float(value)
+        elif start is not None and float(value) < duration - tail:
+            start = None
+    return start if start is not None and start > 0 else duration
+
+
+def seamless_bed(bed: Bed, total: float, work_dir: str, crossfade: float = 3.0) -> Bed:
+    """The bed as one gapless track at least the video's length: its trailing silence cut and its
+    repeats joined by a crossfade, so looping never drops the music out (VM49)."""
+    duration = media.seconds(bed.file)
+    log = subprocess.run(
+        ["ffmpeg", "-hide_banner", "-i", bed.file, "-af", "silencedetect=noise=-40dB:d=0.5", "-f", "null", "-"],
+        stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8", errors="replace",
+    ).stderr
+    end = audible_end(log, duration)
+    need = total - bed.start
+    if end >= duration - 0.25 and duration >= need:
+        return bed  # plays once, with no silent tail to skip
+    usable = max(end - crossfade, 1.0)
+    copies = max(2, math.ceil((need - crossfade) / usable) + 1)
+    inputs = [arg for _ in range(copies) for arg in ("-t", f"{end:.3f}", "-i", bed.file)]
+    chain, last = [], "[0:a]"
+    for n in range(1, copies):
+        out = f"[x{n}]"
+        chain.append(f"{last}[{n}:a]acrossfade=d={_num(crossfade)}:c1=tri:c2=tri{out}")
+        last = out
+    out_file = os.path.join(work_dir, "bed.seamless.wav")
+    media.ffmpeg([*inputs, "-filter_complex", ";".join(chain), "-map", last, out_file])
+    return Bed(out_file, bed.start, bed.reference)
+
+
 def bed_trim(bed: Bed) -> float:
     """The gain, in dB, that brings the bed to its reference level; 0 when it cannot be read."""
     measured = media.measure_loudness(["-i", bed.file, "-af", "loudnorm=print_format=json"])
@@ -204,6 +246,8 @@ def voice_track(
     """
     if bed is not None and trim_db is None:
         trim_db = bed_trim(bed)
+    if bed is not None:
+        bed = seamless_bed(bed, total, work_dir)
     built = mix_graph(placed, total, sounds, bed, trim_db or 0.0, duck)
     mixed = os.path.join(work_dir, f"{name}.wav")
     media.ffmpeg([*built.inputs, "-filter_complex", built.filter_complex, "-map", "[mix]", "-t", f"{total:.3f}", mixed])

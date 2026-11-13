@@ -109,6 +109,8 @@ def page(beat: dict, document: dict, theme: Theme, frame: Frame, logo: str, numb
 .full footer{display:none}.full:before{content:'';position:absolute;inset:0;background:linear-gradient(transparent 55%,#000b)}
 .full.hero h1{font-size:78px;max-width:1500px}.full.hero main{bottom:160px}
 ''' if full else ""
+    if full and beat.get("mark_only"):
+        full_css += ".full:before{display:none}"  # the caption's shade leaves with the caption
     return f'''<!doctype html><meta charset="utf-8"><style>
 @font-face{{font-family:Display;src:url({theme.fonts['display-800']});font-weight:800}}
 @font-face{{font-family:Text;src:url({theme.fonts['text']})}}
@@ -166,6 +168,12 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
             content = page(beat, document, theme, frame, logo, n)
             pages[key] = content
             (out / f"{key}.html").write_text(content, encoding="utf-8")
+            if beat.get("overlay_seconds"):
+                # The caption leaves after overlay_seconds; the brand mark stays the whole beat.
+                mark = page({**beat, "caption": "", "title": "", "text": "", "mark_only": True},
+                            document, theme, frame, logo, n)
+                pages[f"{key}-mark"] = mark
+                content += mark
             asset = document.get("media", {}).get(beat.get("asset"))
             if asset:
                 file = (Path(folder) / asset["file"]).resolve()
@@ -214,8 +222,14 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
                     sizing = ("scale=1920:1080:force_original_aspect_ratio=decrease,"
                               "pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x0b1410") if asset.get("fit") == "contain" else "scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080"
                     graph = f"[1:v]setpts=PTS-STARTPTS,fps=30,{sizing},setsar=1[asset];"
-                enable = f":enable='lt(t,{beat['overlay_seconds']})'" if beat.get("overlay_seconds") else ""
-                graph += f"[asset][0:v]overlay=0:0:shortest=1{enable},format=yuv420p[v]"
+                if beat.get("overlay_seconds"):
+                    # The mark layer (input 2) stays; only the caption layer leaves on time.
+                    inputs += ["-loop", "1", "-framerate", "30", "-i", str(out / f"{key}-mark-text.png")]
+                    graph += ("[asset][2:v]overlay=0:0:shortest=1[marked];"
+                              f"[marked][0:v]overlay=0:0:shortest=1:enable='lt(t,{beat['overlay_seconds']})',"
+                              "format=yuv420p[v]")
+                else:
+                    graph += "[asset][0:v]overlay=0:0:shortest=1,format=yuv420p[v]"
             else:
                 fit = "decrease" if beat["layout"] == "picture" else "increase"
                 graph = f"[1:v]setpts=PTS-STARTPTS,scale=800:590:force_original_aspect_ratio={fit},pad=800:590:(ow-iw)/2:(oh-ih)/2:color=0x0b1410" if fit == "decrease" else "[1:v]setpts=PTS-STARTPTS,scale=800:590:force_original_aspect_ratio=increase,crop=800:590"
