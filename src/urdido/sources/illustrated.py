@@ -256,5 +256,6 @@ def description(document: dict, script: dict, plan: dict, language: str, out: Pa
             lines.append(asset["license_url"])
         if asset.get("section"):
             lines.append(f"Recorte da fonte original: {asset['section']}; sem áudio original; reenquadrado para esta edição.")
-    lines += ["", document["credits"], "Narração e trilha geradas com ElevenLabs."]
+    # A video whose music is licensed rather than generated says so in `generated` (VM38).
+    lines += ["", document["credits"], document.get("generated", "Narração e trilha geradas com ElevenLabs.")]
     (out / f"{name}.{language}.description.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")

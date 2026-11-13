@@ -348,11 +348,16 @@ class Build:
         for ext, text in (("srt", cap.srt(cues)), ("vtt", cap.vtt(cues))):
             (self.out / f"{self.name}.{self.language}.{ext}").write_text(text, encoding="utf-8", newline="")
         voice = str(self.parts / f"voice.{self.language}.m4a")
-        bed = self.path(self.decl["music"]["bed"])
+        music = self.decl["music"]
+        bed = self.path(music["bed"])
         sounds = [mix.Sound(video.intro.file, video.intro.start, 0.0, video.opening)] if video.intro else []
+        # A narrated explainer may want its bed quieter than the default (VM38): `reference` is the
+        # bed's LUFS before the duck, `between` / `under` its gain beside and under the voice.
+        duck = mix.Duck(**{k: music[k] for k in ("between", "under", "ramp") if k in music})
         mix.voice_track([mix.Take(p["file"], p["at"], p["length"]) for p in placed], total, voice, str(self.parts),
-                        sounds=sounds, bed=mix.Bed(bed, video.opening) if os.path.exists(bed) else None,
-                        loudness=mix.Loudness(**self.decl.get("audio", {})),
+                        sounds=sounds,
+                        bed=mix.Bed(bed, video.opening, music.get("reference", -18.0)) if os.path.exists(bed) else None,
+                        loudness=mix.Loudness(**self.decl.get("audio", {})), duck=duck,
                         name=f"mix.{self.language}")
         file = str(self.out / f"{self.name}.{self.language}.mp4")
         lang = video_decl["languages"][self.language]

@@ -5,6 +5,7 @@ import pytest
 
 from videomaker.sources.illustrated import validate
 from videomaker.sources.illustrated import beat_frames
+from videomaker.sources.illustrated import description
 from videomaker.sources.model import RecordingRefused
 
 
@@ -61,6 +62,20 @@ def test_the_three_second_limit_includes_photos_and_filmed_static_pages():
                  {"title": "Page", "layout": "footage", "static": True}]:
         with pytest.raises(RecordingRefused, match="exceeds 3 seconds"):
             beat_frames([beat], 91, 3)
+
+
+def test_licensed_music_is_not_credited_as_generated(tmp_path):
+    document = {**story(), "title": "T", "description": "D", "credits": "C", "media": {},
+                "sources": {"original": {"label": "L", "url": "U"}}}
+    script = {"chapters": {}}
+    plan = {"spoken": {"pt-BR": [{"at": 0}]}}
+    description(document, script, plan, "pt-BR", tmp_path, "v")
+    assert "Narração e trilha geradas com ElevenLabs." in (tmp_path / "v.pt-BR.description.txt").read_text("utf-8")
+    document["generated"] = "Narração gerada com ElevenLabs."
+    description(document, script, plan, "pt-BR", tmp_path, "v")
+    text = (tmp_path / "v.pt-BR.description.txt").read_text("utf-8")
+    assert "Narração gerada com ElevenLabs." in text
+    assert "trilha geradas" not in text
 
 
 def test_an_alias_cannot_bypass_the_footage_reuse_limit():
