@@ -211,7 +211,9 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
                     else:
                         graph = "[1:v]setpts=PTS-STARTPTS,split[bg][fg];[bg]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,boxblur=30:2,eq=brightness=-0.2[back];[fg]scale=1920:1080:force_original_aspect_ratio=decrease[front];[back][front]overlay=(W-w)/2:(H-h)/2,setsar=1[asset];"
                 else:
-                    graph = "[1:v]setpts=PTS-STARTPTS,fps=30,scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,setsar=1[asset];"
+                    sizing = ("scale=1920:1080:force_original_aspect_ratio=decrease,"
+                              "pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x0b1410") if asset.get("fit") == "contain" else "scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080"
+                    graph = f"[1:v]setpts=PTS-STARTPTS,fps=30,{sizing},setsar=1[asset];"
                 enable = f":enable='lt(t,{beat['overlay_seconds']})'" if beat.get("overlay_seconds") else ""
                 graph += f"[asset][0:v]overlay=0:0:shortest=1{enable},format=yuv420p[v]"
             else:
