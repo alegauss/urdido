@@ -339,6 +339,11 @@ class Build:
         joined = video.media.concat(pieces, f"{self.name}-joined.mp4")
         total = media.seconds(joined)
         placed = plan_of(timeline)["spoken"].get(self.language, [])
+        if self.decl.get("highlights"):
+            from videomaker.keywords import overlay
+
+            joined = overlay(joined, placed, self.load(self.decl["highlights"]["declaration"]),
+                             self.parts, self.path(self.decl["highlights"]["fonts"]), encoder)
         cues = cap.narration_cues(placed)
         for ext, text in (("srt", cap.srt(cues)), ("vtt", cap.vtt(cues))):
             (self.out / f"{self.name}.{self.language}.{ext}").write_text(text, encoding="utf-8", newline="")

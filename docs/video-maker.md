@@ -57,6 +57,13 @@ are refused. The existing scene timeline supplies voice placement, mix and
 optional subtitles; the description derives chapter times and media credits.
 This path does not migrate Docker and Scion's existing footage pipelines (VM34).
 
+VM36 adds explicit beat lengths (`seconds`), a declared `max_static_seconds`
+limit that also covers photos and filmed static pages, and `edit.json` with the
+measured shot schedule. Word-timed highlights are declared in `[highlights]`;
+`python -m videomaker.narration_words <video-root>` keeps hash-checked transcripts
+for them. Missing spoken anchors are refused rather than given guessed times.
+Footage may opt into motion interpolation through its `smooth` media field.
+
 `video-maker/` is also a Python project (`pyproject.toml`, Python 3.12+, OpenTimelineIO). Run
 `python -m pip install -e "video-maker[test,cards]"` once, then `pytest video-maker` from the
 repository root. The tests read VM1's goldens as data, so each port is proved against them

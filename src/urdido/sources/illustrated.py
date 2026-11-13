@@ -10,6 +10,7 @@ import hashlib
 import html
 import json
 import math
+from collections import Counter
 from pathlib import Path
 
 from videomaker import media
@@ -26,6 +27,15 @@ def validate(document: dict, takes: Takes, language: str) -> list[tuple[str, lis
     if list(declared) != list(takes.lines):
         raise RecordingRefused("illustrated scenes must name every narration take, in script order")
     rows = []
+    counts = Counter()
+    for beats in declared.values():
+        for beat in beats:
+            if beat.get("asset"):
+                counts[document.get("media", {}).get(beat["asset"], {}).get("file", beat["asset"])] += 1
+    for key, asset in document.get("media", {}).items():
+        limit = document.get("asset_use_limits", {}).get(key, document.get("max_asset_uses"))
+        if limit is not None and counts[asset["file"]] > limit:
+            raise RecordingRefused(f"{key}: footage reuse exceeds {limit} appearances")
     for name, beats in declared.items():
         voiced = takes.takes(name, [language], current_language=language)
         if len(voiced) != 1:
@@ -47,6 +57,27 @@ def validate(document: dict, takes: Takes, language: str) -> list[tuple[str, lis
     return rows
 
 
+def beat_frames(beats: list[dict], total: int, max_static: float | None = None) -> list[int]:
+    """Fixed short cards leave their remaining narration time to moving footage."""
+    fixed = {i: round(b["seconds"] * 30) for i, b in enumerate(beats) if "seconds" in b}
+    free = [i for i in range(len(beats)) if i not in fixed]
+    remaining = total - sum(fixed.values())
+    if remaining < 0 or (not free and remaining):
+        raise RecordingRefused("beat durations do not fit their narration take")
+    weights = [beats[i].get("weight", 1) for i in free]
+    edges = [round(remaining * sum(weights[:i]) / sum(weights)) for i in range(len(free) + 1)] if free else [0]
+    lengths = dict(fixed)
+    lengths.update({n: edges[i + 1] - edges[i] for i, n in enumerate(free)})
+    result = [lengths[i] for i in range(len(beats))]
+    for beat, frames in zip(beats, result):
+        if frames < 30:
+            raise RecordingRefused("a beat must last at least one second")
+        static = beat.get("static", beat.get("layout", "date") != "footage")
+        if static and max_static is not None and frames > math.floor(max_static * 30):
+            raise RecordingRefused(f"static beat {beat['title']!r} exceeds {max_static:g} seconds")
+    return result
+
+
 def page(beat: dict, document: dict, theme: Theme, frame: Frame, logo: str, number: int) -> str:
     esc = lambda s: html.escape(str(s), quote=True)
     source = document["sources"][beat["source"]]
@@ -59,7 +90,9 @@ def page(beat: dict, document: dict, theme: Theme, frame: Frame, logo: str, numb
     if layout == "record":
         graphic = '<div class="vinyl"><div class="label">JAZZ<br>+<br>CODE</div></div>'
     if layout == "date":
-        graphic = f'<div class="date">{esc(beat.get("big", ""))}</div>'
+        big = beat.get("big", "")
+        size = ' style="font-size:110px;letter-spacing:-4px"' if len(big) > 6 else ""
+        graphic = f'<div class="date"{size}>{esc(big)}</div>'
     if layout == "quote":
         graphic = f'<blockquote>“{esc(beat.get("quote", ""))}”</blockquote><p class="attribution">{esc(beat.get("by", ""))}</p>'
     if layout in {"footage", "picture"}:
@@ -91,7 +124,7 @@ h1{{font:800 72px/1.12 Display;margin:28px 0;letter-spacing:-2px;overflow-wrap:b
 .text{{font:30px/1.55 Text;color:{c['muted']};max-width:690px}}
 .rule{{width:100px;height:7px;background:{c['accent']};margin-bottom:24px}}
 .graphic{{position:relative;text-align:center;min-width:0}}
-.date{{font:800 190px/.95 Display;color:{c['accent']};letter-spacing:-10px;overflow-wrap:break-word}}
+.date{{font:800 190px/.95 Display;color:{c['accent']};letter-spacing:-10px;white-space:nowrap;overflow-wrap:normal}}
 .tiles{{display:flex;flex-direction:column;gap:24px;text-align:left}}
 .tile{{border:1px solid #2bcb6b55;background:#183326aa;border-radius:20px;padding:28px 32px;display:flex;align-items:center;gap:26px}}
 .tile span{{font:800 25px Display;color:{c['accent']}}}.tile strong{{font:800 32px Display}}
@@ -119,14 +152,13 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
     logo_path = (Path(folder) / document["logo"]).resolve()
     mime = "image/svg+xml" if logo_path.suffix == ".svg" else "image/png"
     logo = f"data:{mime};base64," + base64.b64encode(logo_path.read_bytes()).decode()
-    pages, jobs, result = {}, [], []
+    pages, jobs, result, audit = {}, [], [], []
+    clock = 0
     n = 0
     for name, beats, take in rows:
         total_frames = math.ceil((0.4 + take.length + 0.5) * 30)
-        weights = [beat.get("weight", 1) for beat in beats]
-        edges = [round(total_frames * sum(weights[:i]) / sum(weights)) for i in range(len(beats) + 1)]
-        for i, beat in enumerate(beats):
-            frames = edges[i + 1] - edges[i]
+        lengths = beat_frames(beats, total_frames, document.get("max_static_seconds"))
+        for i, (beat, frames) in enumerate(zip(beats, lengths)):
             if frames < 30:
                 raise RecordingRefused(f"{name}: too many beats for the spoken take")
             n += 1
@@ -145,7 +177,12 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
                     raise RecordingRefused(f"{name}: the footage is shorter than the requested beat")
                 asset = {**asset, "path": str(file), "sha256": hashlib.sha256(file.read_bytes()).hexdigest()}
             jobs.append((key, content, frames, beat, asset))
+            audit.append({"take": name, "beat": key, "at": clock / 30, "seconds": frames / 30,
+                          "static": beat.get("static", beat.get("layout", "date") != "footage"),
+                          "asset": beat.get("asset")})
+            clock += frames
         result.append(Scene(name, str(out / f"{name}.mp4"), total_frames / 30, "illustrated"))
+    (out / "edit.json").write_text(json.dumps({"beats": audit, "total": clock / 30}, indent=2) + "\n", encoding="utf-8")
     if not render:
         return result
     # Existing cards renderer waits for local fonts; no website is restaged or recorded here.
@@ -154,7 +191,7 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
         key, content, frames, beat, asset = job
         file = out / f"{key}.mp4"
         stamp = out / f"{key}.sha256"
-        digest = hashlib.sha256((("full-frame-v2" if asset else "stable-card-v3") + content + str(frames) + encoder + json.dumps([beat, asset], sort_keys=True)).encode()).hexdigest()
+        digest = hashlib.sha256((("cfr-motion-v4" if asset else "stable-card-v3") + content + str(frames) + encoder + json.dumps([beat, asset], sort_keys=True)).encode()).hexdigest()
         if file.exists() and stamp.exists() and stamp.read_text() == digest:
             return
         inputs = ["-i", str(out / f"{key}.png")]
@@ -169,10 +206,14 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
                 inputs += ["-ss", str(beat.get("at", 0)), "-i", asset["path"]]
             if full:
                 if beat["layout"] == "picture":
-                    graph = "[1:v]setpts=PTS-STARTPTS,split[bg][fg];[bg]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,boxblur=30:2,eq=brightness=-0.2[back];[fg]scale=1920:1080:force_original_aspect_ratio=decrease[front];[back][front]overlay=(W-w)/2:(H-h)/2,setsar=1[asset];"
+                    if asset.get("plain_background"):
+                        graph = "[1:v]setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x0b1410,setsar=1[asset];"
+                    else:
+                        graph = "[1:v]setpts=PTS-STARTPTS,split[bg][fg];[bg]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,boxblur=30:2,eq=brightness=-0.2[back];[fg]scale=1920:1080:force_original_aspect_ratio=decrease[front];[back][front]overlay=(W-w)/2:(H-h)/2,setsar=1[asset];"
                 else:
-                    graph = "[1:v]setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,setsar=1[asset];"
-                graph += "[asset][0:v]overlay=0:0:shortest=1,format=yuv420p[v]"
+                    graph = "[1:v]setpts=PTS-STARTPTS,fps=30,scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,setsar=1[asset];"
+                enable = f":enable='lt(t,{beat['overlay_seconds']})'" if beat.get("overlay_seconds") else ""
+                graph += f"[asset][0:v]overlay=0:0:shortest=1{enable},format=yuv420p[v]"
             else:
                 fit = "decrease" if beat["layout"] == "picture" else "increase"
                 graph = f"[1:v]setpts=PTS-STARTPTS,scale=800:590:force_original_aspect_ratio={fit},pad=800:590:(ow-iw)/2:(oh-ih)/2:color=0x0b1410" if fit == "decrease" else "[1:v]setpts=PTS-STARTPTS,scale=800:590:force_original_aspect_ratio=increase,crop=800:590"

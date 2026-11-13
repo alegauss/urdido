@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 from dataclasses import dataclass, field
 from typing import Mapping, Sequence
 
@@ -90,7 +91,7 @@ class ScenesVideo:
                      for t in self.takes.takes(name, [self.language], current_language=self.language)]
             need = self.need(takes)
             file = self.part(f"scene-{n}-{scene.name}.mp4")
-            fit = fit_to_line(scene.seconds, need) if scene.filmed else None
+            fit = fit_to_line(scene.seconds, scene.seconds if scene.source == "illustrated" else need) if scene.filmed else None
             still = None if scene.filmed else self.part(f"scene-{n}-{scene.name}.png")
             if still:
                 pages[os.path.basename(still)[:-4]] = self.card_page(scene)
@@ -138,6 +139,11 @@ class ScenesVideo:
 
     def encode_fit(self, scene: Scene, fit: Fit, file: str) -> None:
         """The clip at its speed, its last frame held, encoded like every piece."""
+        if scene.source == "illustrated" and fit.speed == 1 and not fit.hold:
+            # These clips were already composed at the exact output frame rate and size.
+            # Keep their frame cadence instead of stretching and encoding them a second time.
+            shutil.copyfile(scene.file, file)
+            return
         encode = list(self.media.encode)
         k = encode.index("-vf") + 1
         if self.frame.height > self.frame.width:
