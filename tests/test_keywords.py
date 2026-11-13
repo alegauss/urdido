@@ -4,6 +4,7 @@ import json
 import pytest
 
 from videomaker.keywords import cues
+from videomaker.keywords import write_ass
 from videomaker.sources.model import RecordingRefused
 
 
@@ -33,6 +34,14 @@ def test_replaced_audio_refuses_stale_word_times(tmp_path):
     take.write_bytes(b"replacement take")
     with pytest.raises(RecordingRefused, match="stale word times"):
         cues(placed, {"intro": [{"show": "Mike Little"}]})
+
+
+def test_highlights_can_be_lifted_above_the_player_captions(tmp_path):
+    style = {"font": "F", "color": "#2BCB6B"}
+    write_ass(tmp_path / "a.ass", [], style)
+    assert ",2,130,130,85,1" in (tmp_path / "a.ass").read_text("utf-8")
+    write_ass(tmp_path / "b.ass", [], {**style, "margin": 260})
+    assert ",2,130,130,260,1" in (tmp_path / "b.ass").read_text("utf-8")
 
 
 def test_missing_name_does_not_get_a_guessed_time(tmp_path):
