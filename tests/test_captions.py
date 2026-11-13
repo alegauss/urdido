@@ -113,3 +113,36 @@ def test_a_third_language_needs_no_code():
     assert files["story.es.chapters.txt"] == "0:00 Apertura\n1:01 1. Llega\n"
     assert "1. Llega" in files["story.es.srt"]
     assert "1. Arrives" in files["story.en.srt"]
+
+
+def _words(*pairs):
+    return [{"text": t, "start": s, "end": s + 0.3} for t, s in pairs]
+
+
+def test_a_translation_follows_its_spoken_sentences():
+    from videomaker.captions import translated_cues
+
+    placed = {"at": 10.0, "length": 6.0, "text": "[warmly] Um parágrafo é um bloco. Uma imagem é outro."}
+    # The transcript punctuates the first end with a comma: the sentence's own last word still ends it.
+    words = _words(("Um", 0.0), ("parágrafo", 0.5), ("é", 1.0), ("um", 1.3), ("bloco,", 1.6),
+                   ("uma", 3.0), ("imagem", 3.4), ("é", 3.9), ("outro.", 4.2))
+    cues = translated_cues(placed, words, ["A paragraph is a block.", "An image is another."])
+    assert [c.text for c in cues] == ["A paragraph is a block.", "An image is another."]
+    assert cues[0].start == pytest.approx(10.0) and cues[0].end == pytest.approx(13.0)
+    assert cues[1].start == pytest.approx(13.0) and cues[1].end > 14.5
+
+
+def test_a_translation_must_have_one_sentence_per_spoken_sentence():
+    from videomaker.captions import translated_cues
+
+    placed = {"at": 0.0, "length": 2.0, "text": "Sério! Mesmo."}
+    with pytest.raises(ValueError, match="1 translated sentences for 2 spoken"):
+        translated_cues(placed, _words(("Sério!", 0.0), ("Mesmo.", 1.0)), ["Really!"])
+
+
+def test_a_long_sentence_is_shared_evenly_with_no_stray_word():
+    from videomaker.captions import _balanced
+
+    cues = _balanced("And it all started with a program that stopped getting updates and a blog comment.", 42)
+    assert len(cues) == 2
+    assert all(len(c.replace("\n", " ")) > 25 for c in cues)

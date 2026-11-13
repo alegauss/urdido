@@ -107,6 +107,108 @@ def caption_cues(placed: Mapping, width: int = CAPTION_WIDTH) -> list[Cue]:
     return cues
 
 
+_SENTENCE = re.compile(r"(?<=[.!?])\s+")
+_CLOSES = re.compile(r"[.!?…]['\"”’)]*$")
+
+
+def sentences(text: str) -> list[str]:
+    """A line's sentences, its stage directions out."""
+    return [s for s in _SENTENCE.split(_TAGS.sub("", text).strip()) if s]
+
+
+def _rows(text: str, width: int) -> list[str]:
+    rows: list[str] = []
+    for word in (w for w in _SPACE.split(text) if w):
+        if rows and _units(f"{rows[-1]} {word}") <= width:
+            rows[-1] = f"{rows[-1]} {word}"
+        else:
+            rows.append(word)
+    return rows
+
+
+def _bare(word: str) -> str:
+    return re.sub(r"[^\w]", "", word.lower())
+
+
+def _balanced(text: str, width: int) -> list[str]:
+    """A sentence as cues of at most two rows, its words shared evenly between the cues, so no
+    cue is left with one stray word."""
+    rows = _rows(text, width)
+    count = math.ceil(len(rows) / 2)
+    if count <= 1:
+        return ["\n".join(rows)]
+    words = text.split()
+    size = _units(text) / count
+    chunks, current = [], []
+    for word in words:
+        if current and _units(" ".join(current + [word])) > size * (len(chunks) + 1) - _units(" ".join(sum(chunks, [])))\
+                and len(chunks) < count - 1:
+            chunks.append(current)
+            current = []
+        current.append(word)
+    chunks.append(current)
+    return ["\n".join(_rows(" ".join(c), width)) for c in chunks]
+
+
+def sentence_ends(spoken: Sequence[str], words: Sequence[Mapping], length: float) -> list[int]:
+    """The index of the transcript word that ends each spoken sentence.
+
+    Each end is looked for in time: the sentence's share of the line's characters says about when
+    it ends, and the word chosen is, in order of preference, one that closes a sentence and is the
+    sentence's own last word, one that closes a sentence, or the word nearest that moment. The
+    transcript writes numbers its own way ("27" for "vinte e sete"), so counting words drifts."""
+    total = sum(_units(s) for s in spoken) or 1
+    ends, seen, last = [], 0, -1
+    for n, sentence in enumerate(spoken):
+        seen += _units(sentence)
+        if n == len(spoken) - 1:
+            ends.append(len(words) - 1)
+            continue
+        guess = seen / total * length
+        remaining = len(spoken) - n - 1
+        pool = range(last + 1, len(words) - remaining)
+        own = _bare(sentence.split()[-1])
+        window = [i for i in pool if abs(words[i]["end"] - guess) < 3.0]
+        closing = [i for i in window if _CLOSES.search(words[i]["text"])]
+        # The transcript may punctuate differently ("bloco," where the script ends a sentence).
+        own_word = [i for i in window if _bare(words[i]["text"]) == own]
+        matching = [i for i in own_word if i in closing]
+        near = lambda i: abs(words[i]["end"] - guess)  # noqa: E731
+        chosen = min(matching or own_word or closing or list(pool), key=near)
+        ends.append(chosen)
+        last = chosen
+    return ends
+
+
+def translated_cues(placed: Mapping, words: Sequence[Mapping], translation: Sequence[str],
+                    width: int = CAPTION_WIDTH) -> list[Cue]:
+    """Captions in a language the take is not spoken in (VM53): one translated sentence per spoken
+    sentence, on screen from when its spoken sentence starts until the next one does, so a short
+    sentence ("Sério!") stays long enough to read. Inside a sentence, its cues share the time by
+    length."""
+    spoken = sentences(str(placed.get("text") or ""))
+    if len(spoken) != len(translation):
+        raise ValueError(f"{len(translation)} translated sentences for {len(spoken)} spoken ones: "
+                         f"{spoken[0][:40]!r}…")
+    if len(words) < len(spoken):
+        raise ValueError("a translated caption needs the take's word timings")
+    ends = sentence_ends(spoken, words, placed["length"])
+    starts = [0] + [e + 1 for e in ends[:-1]]
+    cues = []
+    for n, (first, text) in enumerate(zip(starts, translation)):
+        start_t = placed["at"] + words[first]["start"]
+        end_t = placed["at"] + (words[starts[n + 1]]["start"] if n + 1 < len(starts)
+                                else max(words[-1]["end"], min(placed["length"], words[-1]["end"] + 1.5)))
+        blocks = _balanced(text, width)
+        size = sum(_units(b) for b in blocks) or 1
+        t = start_t
+        for block in blocks:
+            nxt = t + (end_t - start_t) * _units(block) / size
+            cues.append(Cue(t, nxt, block))
+            t = nxt
+    return cues
+
+
 def narration_cues(placed: Iterable[Mapping], width: int = CAPTION_WIDTH) -> list[Cue]:
     """One language's takes as cues, in the order they are heard."""
     return [cue for take in sorted(placed, key=lambda p: p["at"]) for cue in caption_cues(take, width)]

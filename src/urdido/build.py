@@ -94,6 +94,30 @@ class Build:
         file.write_text(text, encoding="utf-8", newline="")
         return file
 
+    def translated_captions(self, placed) -> list[tuple[str, str]]:
+        """The `[captions.translations.<language>]` the video declares (VM53): captions in a
+        language it is not narrated in, timed sentence by sentence to the spoken takes. Writes
+        `<name>.<language>.srt` and `.vtt`; returns (ISO 639-2 track code, srt path) per language."""
+        out = []
+        for language, spec in self.decl.get("captions", {}).get("translations", {}).items():
+            table = self.load(spec["file"])
+            cues = []
+            for take in placed:
+                audio = self.path(take["file"])
+                stem = os.path.splitext(os.path.basename(audio))[0]
+                if stem not in table:
+                    raise SystemExit(f"captions.{language}: no translation for the take {stem}")
+                with open(os.path.splitext(audio)[0] + ".words.json", encoding="utf-8") as f:
+                    words = json.load(f)["words"]
+                try:
+                    cues += cap.translated_cues(take, words, table[stem])
+                except ValueError as e:
+                    raise SystemExit(f"captions.{language}, {stem}: {e}")
+            for ext, text in (("srt", cap.srt(cues)), ("vtt", cap.vtt(cues))):
+                (self.out / f"{self.name}.{language}.{ext}").write_text(text, encoding="utf-8", newline="")
+            out.append((spec.get("track", language), str(self.out / f"{self.name}.{language}.srt")))
+        return out
+
     def load(self, declared: str):
         with open(self.path(declared), encoding="utf-8") as f:
             return json.load(f)
@@ -347,6 +371,7 @@ class Build:
         cues = cap.narration_cues(placed)
         for ext, text in (("srt", cap.srt(cues)), ("vtt", cap.vtt(cues))):
             (self.out / f"{self.name}.{self.language}.{ext}").write_text(text, encoding="utf-8", newline="")
+        extra = self.translated_captions(placed)
         voice = str(self.parts / f"voice.{self.language}.m4a")
         music = self.decl["music"]
         bed = self.path(music["bed"])
@@ -362,9 +387,14 @@ class Build:
         file = str(self.out / f"{self.name}.{self.language}.mp4")
         lang = video_decl["languages"][self.language]
         media.ffmpeg(["-i", joined, "-i", str(self.out / f"{self.name}.{self.language}.srt"), "-i", voice,
-                      "-map", "0:v", "-map", "2:a", "-map", "1", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k",
+                      *[a for _, srt in extra for a in ("-i", srt)],
+                      "-map", "0:v", "-map", "2:a", "-map", "1",
+                      *[a for i in range(len(extra)) for a in ("-map", str(3 + i))],
+                      "-c:v", "copy", "-c:a", "aac", "-b:a", "160k",
                       "-c:s", "mov_text", "-metadata:s:v:0", "language=und", "-metadata:s:a:0", f"language={lang}",
-                      "-metadata:s:s:0", f"language={lang}", file])
+                      "-metadata:s:s:0", f"language={lang}",
+                      *[a for i, (track, _) in enumerate(extra) for a in (f"-metadata:s:s:{i + 1}", f"language={track}")],
+                      file])
         print(file)
         return 0
 
