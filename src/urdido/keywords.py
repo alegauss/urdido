@@ -9,6 +9,9 @@ from pathlib import Path
 
 from videomaker.sources.model import RecordingRefused
 
+HIGHLIGHT_FONT_SIZE = 76
+HIGHLIGHT_OUTLINE = 18
+
 
 def fold(text: str) -> str:
     return re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFKD", text.lower()))
@@ -107,7 +110,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Key,{style['font']},76,&H00111111,&H00111111,{box},&H00000000,0,0,0,0,100,100,0,0,3,18,0,2,130,130,{margin},1
+Style: Key,{style['font']},{HIGHLIGHT_FONT_SIZE},&H00111111,&H00111111,{box},&H00000000,0,0,0,0,100,100,0,0,3,{HIGHLIGHT_OUTLINE},0,2,130,130,{margin},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text

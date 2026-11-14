@@ -46,6 +46,22 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Builds reserve the bottom 20% of the frame for player captions by default
+(VM48). Configure the expected player's band and response in the video declaration:
+
+```toml
+[captions.safe_area]
+bottom = 0.20 # fraction of frame height
+action = "warn" # warn, error, or off
+```
+
+The card renderer measures visible labels and marks in the browser and writes
+`caption-safe-area.json` beside its PNGs. Highlights get
+`parts/highlights.safe-area.json`, checking the ASS margin and outline against
+the same band. Reports identify each label, its bounds and crossing distance.
+`error` refuses unsafe output; `warn` keeps the render and announces the report.
+The default is a conservative review bound; set it for the player being targeted.
+
 `python -m videomaker storyboard inspect <storyboard.json>` prints the current
 SHA-256 and beat IDs (VM46). On a legacy storyboard, run `storyboard assign-ids`
 with `--expected-sha256 <hash>` once. IDs stay with their beats through later

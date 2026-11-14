@@ -399,15 +399,19 @@ class Build:
             return 0
         timeline = video.compose(render=not self.args.plan)
         self.write_plan(self.name, plan_of(timeline))
+        highlights = []
+        if self.decl.get("highlights"):
+            from videomaker.keywords import cues as highlight_cues
+            from videomaker.safety import highlights as safe_highlights
+
+            highlight_decl = self.load(self.decl["highlights"]["declaration"])
+            highlights = highlight_cues(plan_of(timeline)["spoken"].get(self.language, []), highlight_decl["lines"])
+            safe_highlights(highlight_decl["style"], highlights, self.parts / "highlights.safe-area.json")
         if illustrated:
             from videomaker.sources.illustrated import description
-            from videomaker.keywords import cues as highlight_cues
             from videomaker.labels import check as check_labels
 
             description(document, script, plan_of(timeline), self.language, self.out, self.name)
-            highlights = highlight_cues(plan_of(timeline)["spoken"].get(self.language, []),
-                                        self.load(self.decl["highlights"]["declaration"])["lines"]) \
-                if self.decl.get("highlights") else []
             edit = self.load(str(self.parts / "illustrated" / "edit.json"))
             check_labels(document, edit, highlights, video.opening)
         if self.args.plan:
@@ -473,7 +477,10 @@ def main(argv: list[str] | None = None) -> int:
     a = p.parse_args(argv)
     build = Build(Path(a.declaration), a)
     kind = build.decl["source"]["kind"]
-    result = build.chaptered() if kind == "chaptered" else build.scenes()
+    from videomaker.safety import configured
+
+    with configured(build.decl.get("captions", {}).get("safe_area", {})):
+        result = build.chaptered() if kind == "chaptered" else build.scenes()
     if result == 0:
         build.write_inputs()
     if result == 0 and build.revision:
