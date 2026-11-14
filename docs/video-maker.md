@@ -46,6 +46,15 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Thumbnail layouts can use `videomaker.thumbnail.fit_title` to fit measured
+title lines to a declared subject-free box (VM54). Japode's layout keeps the
+title inside its right-hand column, reducing from `title_size` as needed down
+to `title_min_size` (default 64). `title_left` declares the column's left edge.
+Set these fields under `[thumbnail.words.<language>]` in the video declaration.
+A title that still does not fit is refused before writing the JPG. The
+`.fit.json` sidecar records the chosen size, each line's measured bounds and
+the rendered image's SHA-256.
+
 Illustrated builds produce a description of at most 5,000 UTF-16 units and a
 full `.credits.json` sidecar (VM52). The first paragraph comes from the
 storyboard's `description`, or `[description] summary` in `video.toml`.

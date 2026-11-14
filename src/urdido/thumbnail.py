@@ -37,6 +37,30 @@ from pathlib import Path
 from videomaker import media
 
 
+def fit_title(page, box: tuple[float, float, float, float], *, max_size: int,
+              min_size: int = 64, selector: str = "h1") -> dict:
+    """VM54 / PW699: fit actual title-line extents to the layout's subject-free box."""
+    left, top, right, bottom = box
+    if any(not isinstance(size, int) or isinstance(size, bool) for size in (min_size, max_size)) \
+            or not (0 <= left < right and 0 <= top < bottom and 1 <= min_size <= max_size):
+        raise ValueError("thumbnail: invalid title box or font-size limits")
+    title = page.locator(selector)
+    page.evaluate("() => document.fonts.ready")
+    for size in range(int(max_size), int(min_size) - 1, -1):
+        title.evaluate("(el, size) => el.style.fontSize = size + 'px'", size)
+        lines = title.evaluate("""el => [...el.childNodes].flatMap(node => {
+            if (!node.textContent.trim()) return [];
+            const range = document.createRange(); range.selectNodeContents(node);
+            return [...range.getClientRects()].filter(r => r.width && r.height).map(r =>
+                ({text: node.textContent, x:r.x, y:r.y, width:r.width, height:r.height}));
+        })""")
+        if all(line["x"] >= left and line["y"] >= top and line["x"] + line["width"] <= right
+               and line["y"] + line["height"] <= bottom for line in lines):
+            return {"box": list(box), "font_size": size, "max_size": max_size, "min_size": min_size, "lines": lines}
+    raise ValueError(f"thumbnail: title does not fit its subject-free column {left:g}..{right:g} "
+                     f"at {min_size}px; shorten the title or revise the declared text box")
+
+
 def crop_filter(box: list[float]) -> str:
     """An ffmpeg crop for a box given as fractions of the frame (left, top, right, bottom)."""
     left, top, right, bottom = box
