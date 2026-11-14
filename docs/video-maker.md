@@ -46,6 +46,30 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Review motion in an illustrated cut without exporting the whole picture (VM57 / PW713):
+
+```powershell
+python -m videomaker build japode/wordpress/video.toml --language pt-BR --preview take:intro
+python -m videomaker build japode/wordpress/video.toml --language pt-BR --preview beat:intro-2 --context-before 1 --context-after 2
+python -m videomaker build japode/wordpress/video.toml --language pt-BR --preview 'cue:intro:WordPress' --preview-occurrence 1
+python -m videomaker build japode/wordpress/video.toml --language pt-BR --preview time:20:28
+```
+
+`beat:` accepts a persistent storyboard ID or a positional key from the review
+sheet. Repeated spoken phrases require an occurrence. Context is clamped to the
+cut and the interval expands to complete production frames at 30 fps. Add `--plan`
+to resolve the interval without rendering its picture. Outputs live under
+`video/previews/<interval>/`, with captions, QA and a `.preview.json` mapping
+frames, beats and cue times back to production. A declared revision uses a separate
+preview package key. The publishing MP4 and its captions remain intact.
+
+Only overlapping beat pictures are rendered, using the production compositor and
+cache. The full opening may be prepared to determine its exact production length.
+The full production audio mix is reused or prepared before trimming, retaining its
+ducking, normalization and music fades. Highlights keep their original animation
+clock even when they began before the preview. Narration and translated subtitles
+retain their production placement as soft tracks.
+
 Illustrated `build` and `build --plan` run the same read-only preflight before
 browser rendering or encoder detection (VM56 / PW712). It collects independent
 errors in narration provenance, transcript hashes and ordering, highlight anchors,

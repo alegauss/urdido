@@ -68,6 +68,9 @@ class Build:
             from videomaker.revisions import Revision
 
             cut = args.cut + ("-vertical" if args.vertical else "")
+            if getattr(args, "preview", None):
+                cut = "preview-" + hashlib.sha256(json.dumps([args.preview, args.context_before, args.context_after,
+                                                            args.preview_occurrence]).encode()).hexdigest()[:12]
             self.revision = Revision(self.out, self.name, self.language, cut, revision)
             self.out = self.revision.folder
         self.parts = self.out / "parts"
@@ -121,28 +124,35 @@ class Build:
         self.checked.append(file)
         return file
 
+    def translated_tracks(self, placed):
+        """Pure production cue timing, shared by publishing and VM57 motion previews."""
+        tracks = []
+        for language, spec in self.decl.get("captions", {}).get("translations", {}).items():
+            from videomaker.keywords import word_record
+
+            table = self.load(spec["file"])
+            cues = []
+            for take in placed:
+                audio = self.path(take["file"])
+                stem = Path(audio).stem
+                if stem not in table:
+                    raise SystemExit(f"captions.{language}: no translation for the take {stem}")
+                try:
+                    cues += cap.translated_cues(take, word_record(Path(audio)), table[stem])
+                except ValueError as e:
+                    raise SystemExit(f"captions.{language}, {stem}: {e}")
+            tracks.append((language, spec.get("track", language), cues))
+        return tracks
+
     def translated_captions(self, placed) -> list[tuple[str, str]]:
         """The `[captions.translations.<language>]` the video declares (VM53): captions in a
         language it is not narrated in, timed sentence by sentence to the spoken takes. Writes
         `<name>.<language>.srt` and `.vtt`; returns (ISO 639-2 track code, srt path) per language."""
         out = []
-        for language, spec in self.decl.get("captions", {}).get("translations", {}).items():
-            table = self.load(spec["file"])
-            cues = []
-            for take in placed:
-                audio = self.path(take["file"])
-                stem = os.path.splitext(os.path.basename(audio))[0]
-                if stem not in table:
-                    raise SystemExit(f"captions.{language}: no translation for the take {stem}")
-                with open(os.path.splitext(audio)[0] + ".words.json", encoding="utf-8") as f:
-                    words = json.load(f)["words"]
-                try:
-                    cues += cap.translated_cues(take, words, table[stem])
-                except ValueError as e:
-                    raise SystemExit(f"captions.{language}, {stem}: {e}")
+        for language, track, cues in self.translated_tracks(placed):
             for ext, text in (("srt", cap.srt(cues)), ("vtt", cap.vtt(cues))):
                 (self.out / f"{self.name}.{language}.{ext}").write_text(text, encoding="utf-8", newline="")
-            out.append((spec.get("track", language), str(self.out / f"{self.name}.{language}.srt")))
+            out.append((track, str(self.out / f"{self.name}.{language}.srt")))
         return out
 
     def load(self, declared: str):
@@ -379,6 +389,10 @@ class Build:
                 raise SystemExit("illustrated videos currently support full cuts and --plan")
             from videomaker.sources.illustrated import scenes as illustrations
 
+            if getattr(self.args, "preview", None):
+                from videomaker.preview import render
+
+                return render(self, document, script, cards, theme, takes, encoder)
             source_scenes = illustrations(document, takes, theme, self.language, str(self.here),
                                          str(self.parts), render=not self.args.plan, encoder=encoder)
         else:
@@ -440,18 +454,7 @@ class Build:
         for ext, text in (("srt", cap.srt(cues)), ("vtt", cap.vtt(cues))):
             (self.out / f"{self.name}.{self.language}.{ext}").write_text(text, encoding="utf-8", newline="")
         extra = self.translated_captions(placed)
-        voice = str(self.parts / f"voice.{self.language}.m4a")
-        music = self.decl["music"]
-        bed = self.path(music["bed"])
-        sounds = [mix.Sound(video.intro.file, video.intro.start, 0.0, video.opening)] if video.intro else []
-        # A narrated explainer may want its bed quieter than the default (VM38): `reference` is the
-        # bed's LUFS before the duck, `between` / `under` its gain beside and under the voice.
-        duck = mix.Duck(**{k: music[k] for k in ("between", "under", "ramp") if k in music})
-        mix.voice_track([mix.Take(p["file"], p["at"], p["length"]) for p in placed], total, voice, str(self.parts),
-                        sounds=sounds,
-                        bed=mix.Bed(bed, video.opening, music.get("reference", -18.0)) if os.path.exists(bed) else None,
-                        loudness=mix.Loudness(**self.decl.get("audio", {})), duck=duck,
-                        name=f"mix.{self.language}")
+        voice = self.scene_voice(video, placed, total)
         file = str(self.out / f"{self.name}.{self.language}.mp4")
         lang = video_decl["languages"][self.language]
         mux_args = ["-i", joined, "-i", str(self.out / f"{self.name}.{self.language}.srt"), "-i", voice,
@@ -469,6 +472,22 @@ class Build:
         print(self.checked_output(file, illustrated=illustrated))
         return 0
 
+    def scene_voice(self, video, placed, total):
+        """Use the full production mix even when VM57 reviews only a short interval."""
+        voice = str(self.parts / f"voice.{self.language}.m4a")
+        music = self.decl["music"]
+        bed = self.path(music["bed"])
+        sounds = [mix.Sound(video.intro.file, video.intro.start, 0.0, video.opening)] if video.intro else []
+        # A narrated explainer may want its bed quieter than the default (VM38): `reference` is the
+        # bed's LUFS before the duck, `between` / `under` its gain beside and under the voice.
+        duck = mix.Duck(**{k: music[k] for k in ("between", "under", "ramp") if k in music})
+        mix.voice_track([mix.Take(p["file"], p["at"], p["length"]) for p in placed], total, voice, str(self.parts),
+                        sounds=sounds,
+                        bed=mix.Bed(bed, video.opening, music.get("reference", -18.0)) if os.path.exists(bed) else None,
+                        loudness=mix.Loudness(**self.decl.get("audio", {})), duck=duck,
+                        name=f"mix.{self.language}")
+        return voice
+
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="python -m videomaker build", description=__doc__,
@@ -482,9 +501,15 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--plan", action="store_true", help="stop once the timeline is decided")
     p.add_argument("--refresh-screens", action="store_true", help="take the store's pages again")
     p.add_argument("--revision", help="keep an immutable package under this revision (overrides video.revision)")
+    p.add_argument("--preview", help="illustrated motion review: take:NAME, beat:ID, cue:TAKE:PHRASE or time:START:END")
+    p.add_argument("--context-before", type=float, default=0, help="seconds before the preview selection")
+    p.add_argument("--context-after", type=float, default=0, help="seconds after the preview selection")
+    p.add_argument("--preview-occurrence", type=int, help="1-based spoken-cue occurrence when the phrase repeats")
     a = p.parse_args(argv)
     build = Build(Path(a.declaration), a)
     kind = build.decl["source"]["kind"]
+    if a.preview and kind != "illustrated":
+        raise SystemExit("--preview requires an illustrated source")
     from videomaker.safety import configured
 
     with cache.configured(build.parts / f"cache.{build.language}.json", enabled=kind == "illustrated" and not a.plan), \

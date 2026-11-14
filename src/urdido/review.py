@@ -82,7 +82,7 @@ def sheet(document: dict, edit: dict, placed: list[dict], highlights: list[dict]
                      f'<img src="{esc(row["image"])}" alt="{esc(row["beat"])}">'
                      + "".join(f'<p><b>{esc(k)}:</b> {esc(v)}</p>' for k, v in details.items())
                      + '<p>Human review: confirm person, event and topic against the source. '
-                     'Motion previews: VM57 (not yet available).</p></article>')
+                     f'Motion review: <code>build VIDEO.toml --language LANGUAGE --preview beat:{esc(row["beat"])}</code>.</p></article>')
     (review / "review.json").write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     file = review / "index.html"
     file.write_text('<!doctype html><meta charset="utf-8"><title>Shot review</title>'

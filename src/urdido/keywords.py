@@ -138,7 +138,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     file.write_text(head + "\n".join(events) + "\n", encoding="utf-8")
 
 
-def overlay(joined: str, placed: list[dict], declaration: dict, parts: Path, fonts: str, encoder: str) -> str:
+def overlay(joined: str, placed: list[dict], declaration: dict, parts: Path, fonts: str, encoder: str,
+            *, window: tuple[float, float] | None = None, origin: float = 0) -> str:
     from videomaker import media
     from videomaker import cache
 
@@ -148,7 +149,12 @@ def overlay(joined: str, placed: list[dict], declaration: dict, parts: Path, fon
     (parts / "keywords.json").write_text(json.dumps(timed, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     path = lambda p: str(p).replace("\\", "/").replace(":", r"\:").replace("'", r"\'")
     output = str(parts / "highlighted.mp4")
-    args = ["-i", joined, "-vf", f"subtitles='{path(ass)}':fontsdir='{path(fonts)}'",
+    effect = f"subtitles='{path(ass)}':fontsdir='{path(fonts)}'"
+    if window:
+        start, end = window
+        effect = (f"trim=start={start - origin:.9f}:end={end - origin:.9f},"
+                  f"setpts=PTS-STARTPTS+{start:.9f}/TB,{effect},setpts=PTS-STARTPTS")
+    args = ["-i", joined, "-vf", effect,
             *media.video_codec(encoder, 20), "-pix_fmt", "yuv420p", "-an", output]
     cache.run("highlights", [output], args, lambda: media.ffmpeg(args),
               inputs=[__file__, media.__file__, joined, ass, fonts], tools=["ffmpeg"])

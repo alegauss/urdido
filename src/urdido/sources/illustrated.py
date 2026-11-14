@@ -189,7 +189,7 @@ footer span{{font:21px Text;color:#9bbba7;max-width:1460px}}footer b{{margin-lef
 
 
 def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: str,
-           parts: str, *, render: bool, encoder: str) -> list[Scene]:
+           parts: str, *, render: bool, encoder: str, beat_keys: set[str] | None = None) -> list[Scene]:
     rows = validate(document, takes, language)
     frame = Frame(1920, 1080)
     out = Path(parts) / "illustrated"
@@ -237,7 +237,12 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
     if not render:
         return result
     # Existing cards renderer waits for local fonts; no website is restaged or recorded here.
-    draw(pages, frame, str(out))
+    if beat_keys is not None:
+        jobs = [job for job in jobs if job[0] in beat_keys]
+        pages = {key: content for key, content in pages.items()
+                 if key in beat_keys or (key.endswith("-mark") and key[:-5] in beat_keys)}
+    if pages:
+        draw(pages, frame, str(out))
     def encode(job):
         key, content, frames, beat, asset = job
         file = out / f"{key}.mp4"
@@ -285,6 +290,8 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
         cache.run("illustrated clip", [file], args, lambda: media.ffmpeg(args),
                   inputs=[__file__, media.__file__, *sources], tools=["ffmpeg"])
     media.pool([lambda job=job: encode(job) for job in jobs])
+    if beat_keys is not None:
+        return result  # VM57: previews reuse the exact production beat clips, without full-take joins.
     for scene, (_, beats, _) in zip(result, rows):
         listing = out / f"{scene.name}.concat.txt"
         listing.write_text("".join(f"file '{scene.name}-{i}.mp4'\n" for i in range(len(beats))), encoding="utf-8")
