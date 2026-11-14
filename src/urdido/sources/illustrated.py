@@ -35,7 +35,7 @@ def validate(document: dict, takes: Takes, language: str) -> list[tuple[str, lis
                 counts[document.get("media", {}).get(beat["asset"], {}).get("file", beat["asset"])] += 1
     for key, asset in document.get("media", {}).items():
         limit = document.get("asset_use_limits", {}).get(key, document.get("max_asset_uses"))
-        if limit is not None and counts[asset["file"]] > limit:
+        if not document.get("repetition", {}).get("replace_file_counts") and limit is not None and counts[asset["file"]] > limit:
             raise RecordingRefused(f"{key}: footage reuse exceeds {limit} appearances")
     for name, beats in declared.items():
         voiced = takes.takes(name, [language], current_language=language)

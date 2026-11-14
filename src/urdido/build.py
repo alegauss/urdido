@@ -382,6 +382,9 @@ class Build:
             from videomaker.preflight import illustrated as preflight
 
             script, cards, document = preflight(self)
+            from videomaker.repetition import publish
+
+            publish(self.repetition_report, self.parts / f"{self.name}.{self.language}.repetition.json")
         else:
             script = self.load(self.decl["narration"]["script"])
             cards = self.load(self.decl["cards"]["declaration"])

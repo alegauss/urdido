@@ -46,6 +46,35 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Illustrated preflight measures visual repetition before rendering (VM59 / PW712).
+`parts/<name>.<language>.repetition.json` records source intervals, screen time,
+adjacency, reuse gaps, overlapping ranges, category shares and affected beat IDs.
+Source aliases and byte-identical copies share budgets. Different exports of one
+source may declare the same `source_id` and their original `source_offset` seconds;
+their intervals are compared in that source's clock. Filenames and source URLs
+do not supply an inferred identity or activity category.
+
+Declare `categories` on beats or media assets; a beat overrides its asset's labels.
+Reviewed catalogue ranges may carry these labels too. Category shares use the full
+cut's duration, including cards and opening. Untagged media time is reported as
+`unclassified_media_seconds`. Budgets stay opt-in:
+
+```json
+{"repetition":{"action":"warn","max_overlap_seconds":0,"min_gap_seconds":8,"max_adjacent":2,"max_source_seconds":30,"max_category_share":{"typing":0.3},"sources":{"navigation":{"min_gap_seconds":0,"max_adjacent":4}}}}
+```
+
+`action` is `warn`, `error` or `off`. The overlap limit applies to each pair of
+source appearances; source time is their total screen time. Per-source overrides
+apply to all aliases of the named media asset; contradictory alias overrides fail.
+Existing file-count limits remain active unless `replace_file_counts: true` is
+declared alongside a new budget. Distinct, non-overlapping navigation ranges can
+then pass without raising a file-count limit.
+
+Justified exceptions use `exceptions: [{"rule":"adjacent","beats":["beat-a","beat-b"],"reason":"Continuous tutorial"}]`.
+Rules are `overlap`, `gap`, `adjacent`, `source_seconds` and `category_share`.
+Every affected beat must be named. Exceptions remain visible in the report;
+the checker never replaces footage or invents category labels.
+
 Keep media candidates and review decisions in a reusable catalogue (VM58 / PW714):
 
 ```powershell

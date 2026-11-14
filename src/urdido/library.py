@@ -53,6 +53,7 @@ def imported(file, metadata, catalogue):
               "retrieved_at": metadata.get("retrieved_at"), "imported_at": datetime.now(timezone.utc).isoformat(),
               "rights": {"status": "unknown"}, "ranges": [], "imported_metadata": metadata}
     result["kind"] = "video" if result["measurements"]["duration"] is not None else "picture"
+    result.update({key: metadata[key] for key in ("source_id", "source_offset") if key in metadata})
     for path in (Path(str(file) + ".prov.json"), file.with_suffix(".prov.json")):
         if path.is_file():
             record = json.loads(path.read_text("utf-8-sig"))
@@ -93,7 +94,7 @@ def validate(candidate):
         decision(item)
         if item.get("status") not in {"accepted", "rejected"}:
             raise ValueError("range status is accepted or rejected")
-        for key in ("people", "events"):
+        for key in ("people", "events", "categories"):
             if not isinstance(item.get(key, []), list) or not all(isinstance(v, str) for v in item.get(key, [])):
                 raise ValueError(f"confirmed {key} must be a list of names")
         if candidate.get("kind") == "picture":
@@ -153,7 +154,7 @@ def review(data, key, record):
     prior = copy.deepcopy(candidate)
     common = {k: record[k] for k in ("reviewer", "date", "reason")}
     fields = {k: v for k, v in record.get("metadata", {}).items()
-              if k in {"url", "title", "author", "license", "license_url"}}
+              if k in {"url", "title", "author", "license", "license_url", "source_id", "source_offset"}}
     if any(candidate.get(k) != value for k, value in fields.items()) and "rights" not in record:
         candidate["rights"] = {"status": "unknown"}
     candidate.update(fields)
@@ -183,9 +184,10 @@ def resolve_asset(asset, folder, load=None):
     file = (catalogue.parent / candidate["file"]).resolve()
     if file_hash(file) != candidate["sha256"]:
         raise RecordingRefused(f"{asset['candidate']}: library media changed; import and review the current bytes")
-    inherited = {k: candidate[k] for k in ("url", "title", "author", "license", "license_url", "retrieved_at", "provenance")
+    inherited = {k: candidate[k] for k in ("url", "title", "author", "license", "license_url", "retrieved_at", "provenance", "source_id", "source_offset")
                  if candidate.get(k) is not None}
     return {**inherited, "file": str(file), "people": selected.get("people", []), "events": selected.get("events", []),
+            "categories": selected.get("categories", []),
             **{k: asset[k] for k in ("fit", "plain_background", "brand_mark") if k in asset},
             "library_binding": {"catalogue": str(catalogue), "candidate": asset["candidate"], "range": selected,
                                 "sha256": candidate["sha256"], "rights": candidate["rights"], "kind": candidate["kind"]}}

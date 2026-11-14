@@ -238,6 +238,13 @@ def illustrated(build):
                 # collects fatal conflicts, without emitting the same warning twice.
                 with warnings.catch_warnings(record=True):
                     check(source_file, "labels", lambda: labels(document, {"beats": audit}, timed, opening or 0))
+        if not findings:
+            from videomaker.repetition import inspect, enforce
+
+            report = check(source_file, "repetition", lambda: inspect(document, {"beats": audit}, build.here, opening or 0))
+            if report is not None:
+                build.repetition_report = report
+                check(source_file, "repetition", lambda: enforce(report))
     if findings:
         raise PreflightRefused(findings)
     return script, cards, document
