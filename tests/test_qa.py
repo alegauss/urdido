@@ -79,3 +79,34 @@ def test_changed_output_is_refused_vm39(movie, monkeypatch):
     with pytest.raises(RuntimeError, match="changed during measurement"):
         qa.report(movie)
     assert not movie.with_suffix(".qa.json").exists()
+
+
+def test_build_loads_illustrated_edit_report_vm66(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from videomaker.build import Build
+
+    (tmp_path / "video.toml").write_text(
+        '[video]\nname="test"\nlanguages={en="eng"}\n'
+        '[source]\ndeclaration="storyboard.json"\n'
+        '[narration]\nscript="script.json"\n', encoding="utf-8")
+    (tmp_path / "script.json").write_text('{}', encoding="utf-8")
+    (tmp_path / "storyboard.json").write_text('{"media":{}}', encoding="utf-8")
+    monkeypatch.setenv("STORY_VIDEO_DIR", str(tmp_path / "video"))
+    build = Build(tmp_path / "video.toml", SimpleNamespace(language="en"))
+    folder = build.parts / "illustrated"
+    folder.mkdir()
+    edit = {"beats": [{"asset": "clip", "static": False, "seconds": 2}]}
+    (folder / "edit.json").write_text(json.dumps(edit), encoding="utf-8")
+    file = build.out / "test.en.mp4"
+    captions = file.with_suffix(".srt")
+    captions.write_text("Captions", encoding="utf-8")
+    seen = {}
+
+    def capture(output, **kwargs):
+        seen.update(kwargs)
+        assert output == str(file)
+
+    monkeypatch.setattr(qa, "report", capture)
+    assert build.checked_output(str(file), illustrated=True) == str(file)
+    assert seen["edit"] == edit
+    assert captions in seen["text_files"]

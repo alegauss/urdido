@@ -98,7 +98,7 @@ class Build:
         """VM39: no finished export is announced until its measured sidecar exists."""
         from videomaker.qa import report
 
-        edit = self.load(str(self.parts / "edit.json")) if illustrated else None
+        edit = self.load(str(self.parts / "illustrated" / "edit.json")) if illustrated else None
         highlights = self.load(self.decl["highlights"]["declaration"]) \
             if illustrated and self.decl.get("highlights") else None
         assets = self.load(self.decl["source"]["declaration"]).get("media", {}) if illustrated else None
