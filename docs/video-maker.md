@@ -46,6 +46,14 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+For illustrated videos, `build --plan` also writes `video/review/index.html`
+and `review.json` (VM41). Each beat has a source-midpoint still or its production
+card, the overlapping hash-checked narration words, production captions,
+highlights, source range and declared `people`, `events` and `topics` tags.
+Missing or stale word times are refused before drawing the sheet. Source stills
+show the original media; the production overlays are listed beside them.
+Check identity and context against the sources; motion review remains VM57.
+
 To keep a reviewed cut, set `revision = "v3"` in `[video]` or pass
 `--revision v3` to `build` (VM40). The complete build writes into
 `video/revisions/<name>.<language>.<cut>/v3/`: video, subtitles, description

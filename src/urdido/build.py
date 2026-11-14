@@ -384,6 +384,16 @@ class Build:
 
             description(document, script, plan_of(timeline), self.language, self.out, self.name)
         if self.args.plan:
+            if illustrated:
+                from videomaker.keywords import cues as highlight_cues
+                from videomaker.review import sheet
+
+                highlights = highlight_cues(plan_of(timeline)["spoken"].get(self.language, []),
+                                            self.load(self.decl["highlights"]["declaration"])["lines"]) \
+                    if self.decl.get("highlights") else []
+                print(sheet(document, self.load(str(self.parts / "illustrated" / "edit.json")),
+                            plan_of(timeline)["spoken"].get(self.language, []), highlights,
+                            self.here, self.parts, self.out, opening=video.opening))
             return 0
         pieces = pieces_of(timeline)
         joined = video.media.concat(pieces, f"{self.name}-joined.mp4")
