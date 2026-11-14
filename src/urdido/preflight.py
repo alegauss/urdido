@@ -46,6 +46,7 @@ def illustrated(build):
         return check(build.path(declared), field, lambda: build.load(declared))
 
     script = load(build.decl.get("narration", {}).get("script"), "narration.script")
+    aliases = check(build.here, "narration.aliases", lambda: keywords.aliases(script, build.language)) if script else None
     cards = load(build.decl.get("cards", {}).get("declaration"), "cards.declaration")
     document = load(build.decl.get("source", {}).get("declaration"), "source.declaration")
     if document is not None:
@@ -131,7 +132,7 @@ def illustrated(build):
                             issue(build.path(highlight_spec["declaration"]), f"lines.{name}.{i}.duration",
                                   "highlight duration must be finite and positive", name)
                         def match():
-                            return keywords.matches(transcript, item.get("hear", item["show"]), cursor)
+                            return keywords.matches(transcript, item.get("hear", item["show"]), cursor, aliases=aliases)
                         candidates = check(build.path(highlight_spec["declaration"]), f"lines.{name}.{i}.hear", match, name)
                         if candidates:
                             cursor = candidates[0][1]
@@ -173,7 +174,7 @@ def illustrated(build):
                           lambda: page(beat, document, theme, Frame(1920, 1080), "preflight", i + 1), name, key)
                 if "from_word" in beat and name in words:
                     check(source_file, f"scenes.{name}.{i}.from_word",
-                          lambda: keywords.anchor(Path(voices[name].file), beat["from_word"]), name, key)
+                          lambda: keywords.anchor(Path(voices[name].file), beat["from_word"], aliases=aliases), name, key)
                 asset = document.get("media", {}).get(beat.get("asset"))
                 if asset is not None:
                     if not asset.get("file"):
@@ -189,7 +190,7 @@ def illustrated(build):
             take = voices[name]
             lengths = check(source_file, f"scenes.{name}.timing",
                             lambda: anchored_frames(beats, math.ceil((0.4 + take.length + 0.5) * 30), take.file,
-                                                    document.get("max_static_seconds")), name)
+                                                    document.get("max_static_seconds"), aliases=aliases), name)
             if lengths:
                 placed.append({"file": take.file, "at": (opening or 0) + clock / 30 + 0.4,
                                "length": take.length, "text": take.text})
@@ -232,7 +233,7 @@ def illustrated(build):
             import warnings
 
             timed = check(build.path(highlight_spec["declaration"]), "lines",
-                          lambda: keywords.cues(placed, highlights["lines"]))
+                          lambda: keywords.cues(placed, highlights["lines"], aliases=aliases))
             if timed is not None:
                 # The production check still publishes review warnings. Preflight only
                 # collects fatal conflicts, without emitting the same warning twice.

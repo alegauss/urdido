@@ -428,10 +428,12 @@ class Build:
         highlights = []
         if self.decl.get("highlights"):
             from videomaker.keywords import cues as highlight_cues
+            from videomaker.keywords import aliases as declared_aliases
             from videomaker.safety import highlights as safe_highlights
 
             highlight_decl = self.load(self.decl["highlights"]["declaration"])
-            highlights = highlight_cues(plan_of(timeline)["spoken"].get(self.language, []), highlight_decl["lines"])
+            highlights = highlight_cues(plan_of(timeline)["spoken"].get(self.language, []), highlight_decl["lines"],
+                                       aliases=declared_aliases(script, self.language))
             safe_highlights(highlight_decl["style"], highlights, self.parts / "highlights.safe-area.json")
         if illustrated:
             from videomaker.sources.illustrated import description
@@ -454,9 +456,11 @@ class Build:
         placed = plan_of(timeline)["spoken"].get(self.language, [])
         if self.decl.get("highlights"):
             from videomaker.keywords import overlay
+            from videomaker.keywords import aliases as declared_aliases
 
             joined = overlay(joined, placed, self.load(self.decl["highlights"]["declaration"]),
-                             self.parts, self.path(self.decl["highlights"]["fonts"]), encoder)
+                             self.parts, self.path(self.decl["highlights"]["fonts"]), encoder,
+                             aliases=declared_aliases(script, self.language))
         cues = cap.narration_cues(placed)
         for ext, text in (("srt", cap.srt(cues)), ("vtt", cap.vtt(cues))):
             (self.out / f"{self.name}.{self.language}.{ext}").write_text(text, encoding="utf-8", newline="")

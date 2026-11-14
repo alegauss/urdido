@@ -39,7 +39,7 @@ export const takes = ( { script, dir } ) => {
 	const spoken = ( language, text ) =>
 		Object.entries( script.pronounce?.[ language ] ?? {} ).reduce(
 			( said, [ word, sound ] ) =>
-				said.replace( new RegExp( String.raw`\b${ word }\b`, 'g' ), sound ),
+				said.replace( new RegExp( String.raw`\b${ word.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' ) }\b`, 'g' ), () => sound ),
 			text
 		);
 	return {

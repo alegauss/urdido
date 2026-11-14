@@ -21,14 +21,17 @@ def word_record(file: Path) -> list[dict]:
     record = file.with_suffix(".words.json")
     if not record.exists():
         raise RecordingRefused(f"{file.stem}: missing word times; run videomaker.narration_words")
-    words = json.loads(record.read_text(encoding="utf-8"))
+    words = json.loads(record.read_text(encoding="utf-8-sig"))
     from videomaker.cache import file_hash
 
     if words["sha256"] != file_hash(file):
         raise RecordingRefused(f"{file.stem}: stale word times; transcribe the current take")
-    transcript = words["words"]
+    return validate_words(words["words"], file.stem)
+
+
+def validate_words(transcript, name):
     if not isinstance(transcript, list) or not transcript:
-        raise RecordingRefused(f"{file.stem}: word times must contain spoken words")
+        raise RecordingRefused(f"{name}: word times must contain spoken words")
     previous = 0
     for word in transcript:
         try:
@@ -38,35 +41,63 @@ def word_record(file: Path) -> list[dict]:
         except (KeyError, TypeError):
             valid = False
         if not valid:
-            raise RecordingRefused(f"{file.stem}: malformed or unordered word times; review the transcript")
+            raise RecordingRefused(f"{name}: malformed or unordered word times; review the transcript")
         previous = start
     return transcript
 
 
-def matches(words: list[dict], phrase: str, start: int = 0) -> list[tuple[int, int]]:
-    target = fold(phrase)
+def aliases(script, language):
+    """VM60: declared pronunciation and reviewed ASR spellings, never fuzzy guesses."""
+    result = {key: [value] for key, value in script.get("pronounce", {}).get(language, {}).items()}
+    for key, values in script.get("alignment_aliases", {}).get(language, {}).items():
+        result.setdefault(key, []).extend([values] if isinstance(values, str) else values)
+    return result
+
+
+def normalizer(declared):
+    forms = {}
+    for key, values in (declared or {}).items():
+        canonical = fold(key)
+        values = [values] if isinstance(values, str) else values
+        for value in [key, *values]:
+            if not isinstance(value, str) or not fold(value) or not canonical:
+                raise RecordingRefused("spoken aliases need nonempty literal words")
+            form = fold(value)
+            if form in forms and forms[form] != canonical:
+                raise RecordingRefused(f"ambiguous spoken alias {value!r}; declare one canonical name")
+            forms[form] = canonical
+    pattern = re.compile("|".join(re.escape(form) for form in sorted(forms, key=len, reverse=True))) if forms else None
+    normalize = lambda text: pattern.sub(lambda match: forms[match[0]], text) if pattern else text
+    ratio = max([1, *[len(form) / len(canonical) for form, canonical in forms.items()]])
+    return normalize, ratio
+
+
+def matches(words: list[dict], phrase: str, start: int = 0, *, aliases=None) -> list[tuple[int, int]]:
+    normalize, ratio = normalizer(aliases)
+    target = normalize(fold(phrase))
     if not target:
         raise RecordingRefused("word anchor must contain a spoken word")
     tokens = [fold(w["text"]) for w in words]
     found = []
     for i in range(start, len(tokens)):
         joined, j = "", i
-        while j < len(tokens) and len(joined) < len(target):
+        while j < len(tokens) and len(joined) <= math.ceil(len(target) * ratio):
             joined += tokens[j]
             j += 1
-        if joined == target:
-            found.append((i, j))
+            if normalize(joined) == target:
+                found.append((i, j))
+                break
     return found
 
 
-def anchor(file: Path, spec: str | dict) -> float:
+def anchor(file: Path, spec: str | dict, *, aliases=None) -> float:
     """VM42: resolve one explicit occurrence, refusing a guessed match."""
     spec = {"text": spec} if isinstance(spec, str) else spec
     words = word_record(file)
     text = spec["text"]
-    found = matches(words, text)
+    found = matches(words, text, aliases=aliases)
     if spec.get("context"):
-        contexts = matches(words, spec["context"])
+        contexts = matches(words, spec["context"], aliases=aliases)
         found = [(i, j) for i, j in found if any(a <= i and j <= b for a, b in contexts)]
     occurrence = spec.get("occurrence")
     if occurrence is not None:
@@ -78,7 +109,7 @@ def anchor(file: Path, spec: str | dict) -> float:
     return words[found[0][0]]["start"]
 
 
-def cues(placed: list[dict], lines: dict) -> list[dict]:
+def cues(placed: list[dict], lines: dict, *, aliases=None) -> list[dict]:
     result = []
     for take in placed:
         file = Path(take["file"])
@@ -90,7 +121,7 @@ def cues(placed: list[dict], lines: dict) -> list[dict]:
         tokens = [(fold(w["text"]), w["start"], w["end"]) for w in words]
         cursor, found = 0, []
         for item in wanted:
-            candidates = matches(words, item.get("hear", item["show"]), cursor)
+            candidates = matches(words, item.get("hear", item["show"]), cursor, aliases=aliases)
             match = candidates[0] if candidates else None
             if match is None:
                 raise RecordingRefused(f"{name}: keyword anchor {item.get('hear', item['show'])!r} not heard")
@@ -139,11 +170,11 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
 
 def overlay(joined: str, placed: list[dict], declaration: dict, parts: Path, fonts: str, encoder: str,
-            *, window: tuple[float, float] | None = None, origin: float = 0) -> str:
+            *, window: tuple[float, float] | None = None, origin: float = 0, aliases=None) -> str:
     from videomaker import media
     from videomaker import cache
 
-    timed = cues(placed, declaration["lines"])
+    timed = cues(placed, declaration["lines"], aliases=aliases)
     ass = parts / "keywords.ass"
     write_ass(ass, timed, declaration["style"])
     (parts / "keywords.json").write_text(json.dumps(timed, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

@@ -88,7 +88,7 @@ def beat_frames(beats: list[dict], total: int, max_static: float | None = None) 
 
 
 def anchored_frames(beats: list[dict], total: int, audio: str,
-                    max_static: float | None = None) -> list[int]:
+                    max_static: float | None = None, *, aliases=None) -> list[int]:
     """VM42: word times fix boundaries; normal weights fill each bounded interval."""
     from videomaker.keywords import anchor
 
@@ -98,7 +98,7 @@ def anchored_frames(beats: list[dict], total: int, audio: str,
             continue
         if i == 0:
             raise RecordingRefused("the first beat starts at the take origin; put a beat before a word anchor")
-        boundaries[i] = round((0.4 + anchor(Path(audio), beat["from_word"])) * 30)
+        boundaries[i] = round((0.4 + anchor(Path(audio), beat["from_word"], **({"aliases": aliases} if aliases else {}))) * 30)
     result = []
     ordered = sorted(boundaries)
     for left, right in zip(ordered, ordered[1:]):
@@ -191,6 +191,7 @@ footer span{{font:21px Text;color:#9bbba7;max-width:1460px}}footer b{{margin-lef
 def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: str,
            parts: str, *, render: bool, encoder: str, beat_keys: set[str] | None = None) -> list[Scene]:
     from videomaker.library import check_range, resolve
+    from videomaker.keywords import aliases as declared_aliases
 
     document = resolve(document, folder)
     rows = validate(document, takes, language)
@@ -205,7 +206,8 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
     n = 0
     for name, beats, take in rows:
         total_frames = math.ceil((0.4 + take.length + 0.5) * 30)
-        lengths = anchored_frames(beats, total_frames, take.file, document.get("max_static_seconds"))
+        lengths = anchored_frames(beats, total_frames, take.file, document.get("max_static_seconds"),
+                                  aliases=declared_aliases(takes.script, language))
         for i, (beat, frames) in enumerate(zip(beats, lengths)):
             if frames < 30:
                 raise RecordingRefused(f"{name}: too many beats for the spoken take")

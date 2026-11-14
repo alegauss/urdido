@@ -5,34 +5,52 @@ import argparse
 import hashlib
 import json
 import os
+import tempfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from videomaker.narration import Takes
 
 
-def transcribe(file: Path, language: str) -> str:
+def transcribe(file: Path, language: str, *, base_url="https://api.elevenlabs.io", key_env="ELEVENLABS_API_KEY") -> str:
     import requests
 
-    sha = hashlib.sha256(file.read_bytes()).hexdigest()
+    from videomaker.keywords import word_record, validate_words
+    from videomaker.sources.model import RecordingRefused
+
+    body = file.read_bytes()
+    sha = hashlib.sha256(body).hexdigest()
     record = file.with_suffix(".words.json")
-    if record.exists() and json.loads(record.read_text(encoding="utf-8"))["sha256"] == sha:
+    try:
+        word_record(file)
         return f"current {file.stem}"
-    with file.open("rb") as audio:
-        response = requests.post(
-            "https://api.elevenlabs.io/v1/speech-to-text",
-            headers={"xi-api-key": os.environ["ELEVENLABS_API_KEY"]},
-            data={"model_id": "scribe_v1", "language_code": language, "timestamps_granularity": "word"},
-            files={"file": audio}, timeout=120,
-        )
+    except (RecordingRefused, ValueError, KeyError):
+        pass
+    response = requests.post(
+        base_url.rstrip("/") + "/v1/speech-to-text",
+        headers={"xi-api-key": os.environ[key_env]},
+        data={"model_id": "scribe_v1", "language_code": language, "timestamps_granularity": "word"},
+        files={"file": (file.name, body, "audio/mpeg")}, timeout=120,
+    )
     response.raise_for_status()
     answer = response.json()
     words = [{k: word[k] for k in ("text", "start", "end")}
              for word in answer.get("words", []) if word.get("type") == "word"]
     if not words:
         raise RuntimeError(f"{file}: transcription returned no timed words")
-    record.write_text(json.dumps({"sha256": sha, "service": "ElevenLabs Scribe v1", "words": words},
-                                 ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    validate_words(words, file.stem)
+    if hashlib.sha256(file.read_bytes()).hexdigest() != sha:
+        raise RuntimeError(f"{file}: audio changed during transcription; result was not saved")
+    descriptor, path = tempfile.mkstemp(prefix=record.name + ".", suffix=".tmp", dir=record.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="") as stream:
+            json.dump({"sha256": sha, "service": "ElevenLabs Scribe v1", "words": words}, stream, ensure_ascii=False, indent=2)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(path, record)
+    finally:
+        Path(path).unlink(missing_ok=True)
     return f"transcribed {file.stem}: {len(words)} words"
 
 

@@ -3,6 +3,11 @@
 
 import sys
 
+if len(sys.argv) >= 2 and sys.argv[1] == "prepare":
+    from videomaker.prepare import main as prepare
+
+    sys.exit(prepare(sys.argv[2:]))
+
 if len(sys.argv) >= 2 and sys.argv[1] == "library":
     from videomaker.library import main as library
 

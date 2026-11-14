@@ -14,7 +14,7 @@ from videomaker.sources.model import RecordingRefused
 from videomaker.timeline import plan
 
 
-def select(selector, shots, placed, total, *, before=0, after=0, occurrence=None):
+def select(selector, shots, placed, total, *, before=0, after=0, occurrence=None, aliases=None):
     """Resolve one unambiguous selection, then expand and snap outwards to 30 fps."""
     if any(not math.isfinite(value) or value < 0 for value in (before, after)):
         raise RecordingRefused("preview context must be finite and nonnegative")
@@ -37,9 +37,9 @@ def select(selector, shots, placed, total, *, before=0, after=0, occurrence=None
         take = found[0]
         file = Path(take["file"])
         spec = {"text": phrase, **({"occurrence": occurrence} if occurrence is not None else {})}
-        local = keywords.anchor(file, spec)
+        local = keywords.anchor(file, spec, aliases=aliases)
         words = keywords.word_record(file)
-        first, last = next(pair for pair in keywords.matches(words, phrase) if words[pair[0]]["start"] == local)
+        first, last = next(pair for pair in keywords.matches(words, phrase, aliases=aliases) if words[pair[0]]["start"] == local)
         start, end = take["at"] + local, take["at"] + words[last - 1]["end"]
     else:
         raise RecordingRefused("preview selects take:NAME, beat:ID, cue:TAKE:PHRASE or time:START:END")
@@ -71,7 +71,7 @@ def render(build, document, script, cards, theme, takes, encoder):
               "start": opening_frame_time + s["at"], "end": opening_frame_time + s["at"] + s["seconds"]} for s in edit["beats"]]
     start, end = select(build.args.preview, shots, placed, total,
                         before=build.args.context_before, after=build.args.context_after,
-                        occurrence=build.args.preview_occurrence)
+                        occurrence=build.args.preview_occurrence, aliases=keywords.aliases(script, build.language))
     chosen = [s for s in shots if s["start"] < end - 1e-7 and s["end"] > start + 1e-7]
     identity = hashlib.sha256(json.dumps([build.language, start, end]).encode()).hexdigest()[:12]
     folder = build.out if build.revision else build.out / "previews" / identity
@@ -96,7 +96,7 @@ def render(build, document, script, cards, theme, takes, encoder):
         subtitles.append((track, str(folder / f"{build.name}.{language}.srt")))
     highlight_spec = build.decl.get("highlights")
     declaration = build.load(highlight_spec["declaration"]) if highlight_spec else None
-    timed = keywords.cues(placed, declaration["lines"]) if declaration else []
+    timed = keywords.cues(placed, declaration["lines"], aliases=keywords.aliases(script, build.language)) if declaration else []
     report["highlights"] = [{**c, "production_at": c["at"], "production_end": c["end"],
                              "at": c["at"] - start, "end": c["end"] - start}
                             for c in timed if c["at"] < end and c["end"] > start]
@@ -118,7 +118,7 @@ def render(build, document, script, cards, theme, takes, encoder):
     joined = runtime.concat(pieces, "selected.mp4")
     if declaration:
         picture = keywords.overlay(joined, placed, declaration, parts, build.path(highlight_spec["fonts"]), encoder,
-                                   window=(start, end), origin=origin)
+                                   window=(start, end), origin=origin, aliases=keywords.aliases(script, build.language))
     else:
         picture = str(parts / "picture.mp4")
         args = ["-i", joined, "-vf", f"trim=start={start-origin:.9f}:end={end-origin:.9f},setpts=PTS-STARTPTS",

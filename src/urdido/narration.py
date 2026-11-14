@@ -39,7 +39,7 @@ class Takes:
         """What the voice says: each word of `pronounce` spelled as it sounds."""
         said = text
         for word, sound in (self.script.get("pronounce", {}).get(language) or {}).items():
-            said = re.sub(rf"\b{word}\b", sound, said)
+            said = re.sub(rf"\b{re.escape(word)}\b", lambda _: sound, said)
         return said
 
     def take_file(self, language: str, name: str) -> str:
@@ -49,10 +49,20 @@ class Takes:
         record = f"{file}.prov.json"
         if text is None or not (os.path.exists(file) and os.path.exists(record)):
             return False
-        with open(record, encoding="utf-8") as f:
+        with open(record, encoding="utf-8-sig") as f:
             prov = json.load(f)
+        recorded_hash = (prov.get("artefact") or {}).get("sha256")
+        if recorded_hash:
+            from videomaker.cache import file_hash
+
+            if recorded_hash != file_hash(file):
+                return False
+        settings = {"stability": "stability", "similarity": "similarity_boost", "style": "style", "speed": "speed"}
+        for key, field in settings.items():
+            if self.script.get(key) is not None and (prov.get("details") or {}).get("delivery", {}).get(field) != float(self.script[key]):
+                return False
         return (
-            prov.get("prompt") == self.spoken(language, text)
+            str(prov.get("prompt", "")).strip() == self.spoken(language, text).strip()
             and (prov.get("details") or {}).get("voice") == self.script["voice"]
             and (prov.get("engine") or {}).get("model") == self.script["model"]
         )

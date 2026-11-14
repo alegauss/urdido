@@ -46,6 +46,45 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Prepare narration changes together with their word times and anchor review (VM60 / PW703):
+
+```powershell
+python -m videomaker prepare japode/wordpress/video.toml --language pt-BR --take outro
+python -m videomaker prepare japode/wordpress/video.toml --language pt-BR --take outro --authorize-take outro --execute --max-cost 0.1
+```
+
+The default command only plans; it makes no paid calls. It reuses the existing
+opening gate and Polyweave's `voice.lines` price plan, preserving the declared
+voice, model, delivery settings and pronunciation map. `--take` and
+`--authorize-take` may be repeated. Execution submits a purchase file containing
+only authorized changed takes, then transcribes their missing or stale word
+records. Current takes and valid transcripts are reused. Media hashes in voice
+provenance are checked when present, and a changed file is not treated as current.
+
+`--max-cost` bounds the combined configured estimate in the quoted service unit,
+also respecting the voice plan's remaining project ceiling. Configure the current
+Scribe rate under `[service.<profile>.prices.scribe_v1]` in `polyweave.toml`, with
+`per` set to `second`, `minute` or `hour` and a nonnegative `rate`. No transcription
+price is assumed. The duration of a newly generated take is known only after voice
+generation; its transcription is checked against the remaining estimate before
+the request. A stopped transcription keeps the generated take for the next run.
+These are estimates from service configuration; the separate Scribe bridge remains
+until PW703 supplies word times through Polyweave.
+
+Reports and immutable attempt records live in `.polyweave/prepare/<plan>/`.
+They list changed takes, price information, affected beats, anchored beats,
+highlight labels, translated caption tracks and following takes whose times may
+move. A report distinguishes prepared takes from missing steps or anchor review.
+The command leaves scripts and highlight declarations untouched.
+
+Word anchors and highlights share exact aliases from `pronounce` and optional
+`alignment_aliases` in the narration script. For example,
+`"alignment_aliases":{"pt-BR":{"Hello Dolly":["Relodol"]}}` declares a reviewed
+ASR spelling without changing what the narrator says. Missing or ambiguous matches
+show candidate spans from the actual transcript for review. Similarity suggestions
+never become accepted cue times. Transcription saves a hash of the uploaded bytes
+atomically and refuses a result if its audio changed during the request.
+
 Illustrated preflight measures visual repetition before rendering (VM59 / PW712).
 `parts/<name>.<language>.repetition.json` records source intervals, screen time,
 adjacency, reuse gaps, overlapping ranges, category shares and affected beat IDs.
