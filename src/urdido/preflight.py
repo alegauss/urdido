@@ -48,6 +48,20 @@ def illustrated(build):
     script = load(build.decl.get("narration", {}).get("script"), "narration.script")
     cards = load(build.decl.get("cards", {}).get("declaration"), "cards.declaration")
     document = load(build.decl.get("source", {}).get("declaration"), "source.declaration")
+    if document is not None:
+        from videomaker.library import check_range, resolve_asset
+
+        for key, asset in document.get("media", {}).items():
+            if "library" in asset:
+                resolved = check(build.path(build.decl["source"]["declaration"]), f"media.{key}.library",
+                                 lambda: resolve_asset(asset, build.here, build.load))
+                if resolved is not None:
+                    document["media"][key] = resolved
+        for beats in document.get("scenes", {}).values():
+            for beat in beats:
+                binding = document.get("media", {}).get(beat.get("asset"), {}).get("library_binding")
+                if binding:
+                    beat.setdefault("at", binding["range"].get("start", 0))
     highlight_spec = build.decl.get("highlights", {})
     highlights = load(highlight_spec.get("declaration"), "highlights.declaration") if highlight_spec else None
     translations = [(lang, spec, load(spec.get("file"), f"captions.translations.{lang}.file"))
@@ -185,6 +199,8 @@ def illustrated(build):
                     asset = document.get("media", {}).get(beat.get("asset"))
                     if not asset or not asset.get("file"):
                         continue
+                    check(source_file, f"scenes.{name}.{i}.range", lambda: check_range(beat, asset, frames), name,
+                          beat.get("id", f"{name}-{i}"))
                     file = build.here / asset["file"]
                     key = beat.get("id", f"{name}-{i}")
                     if file.is_file() and beat.get("layout") == "footage":

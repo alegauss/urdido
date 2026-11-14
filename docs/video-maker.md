@@ -46,6 +46,53 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Keep media candidates and review decisions in a reusable catalogue (VM58 / PW714):
+
+```powershell
+python -m videomaker library import-storyboard japode/wordpress/media-library.json --source japode/wordpress/storyboard.json --expected-sha256 new
+python -m videomaker library inspect japode/wordpress/media-library.json --query browsing
+python -m videomaker library preview japode/wordpress/media-library.json --id browsing --expected-sha256 SHA --root japode/wordpress --out .polyweave/library-browsing
+python -m videomaker library sheet japode/wordpress/media-library.json --out japode/wordpress/video/library/index.html
+python -m videomaker library review japode/wordpress/media-library.json --id browsing --expected-sha256 SHA --record review.json
+```
+
+`inspect` supplies the current SHA-256 for each mutation. `import` accepts one
+local `--file`, an unused `--id` and optional `--metadata` JSON. `fetch` delegates
+to Polyweave `stock.fetch` with `--stock-id`, `--service`, `--kind`, `--root` and
+an unused `--out`, retaining its provenance and credits record. Video previews
+delegate to `reference.register` and `reference.frames`. Sheets show native media,
+verified contact sheets, measurements, declared rights and recorded decisions.
+
+Imports start with `rights.status = "unknown"` and no approved ranges, including
+imports from an existing storyboard. The WordPress catalogue contains its current
+media in that state. Original metadata and sidecar provenance remain available;
+names in filenames or imported tags do not become confirmed identities. Import
+time is separate from the source's retrieval time. A changed source needs a new
+candidate ID, preserving the previous candidate and its rejection history.
+
+A review JSON records `reviewer`, ISO `date`, `reason`, optional `rights` and
+`ranges`. Rights statuses are `unknown`, `uncertain`, `approved` or `restricted`.
+An approved entry needs source URL, title, author and declared license. Each video
+range needs a unique `id`, source `start`/`end` seconds and `accepted` or `rejected`
+status. A picture decision uses `whole: true`. Optional `people` and `events` on
+the reviewed range hold the explicitly confirmed names. Replacing decisions keeps
+their previous values in `reviews`; contradictory accepted/rejected ranges fail.
+Source metadata corrections without a new rights decision reset rights to unknown.
+
+Select a reviewed range in the storyboard without copying its credits:
+
+```json
+{"media":{"selected":{"library":"media-library.json","candidate":"candidate-id","range":"range-id","fit":"contain"}}}
+```
+
+The beat uses `asset: "selected"` and `footage` or `picture` layout. Its default
+source start comes from the accepted range; an explicit `at` and the entire shot
+must remain inside that range. Preflight requires approved rights, an accepted
+range and the recorded media hash. It inherits source metadata and confirmed names
+and includes the catalogue in the build's input manifest. Visual fit and brand
+placement may be overridden. The catalogue does not modify existing storyboard
+selections when importing candidates.
+
 Review motion in an illustrated cut without exporting the whole picture (VM57 / PW713):
 
 ```powershell

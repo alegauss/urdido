@@ -116,7 +116,11 @@ class Build:
         edit = self.load(str(self.parts / "illustrated" / "edit.json")) if illustrated else None
         highlights = self.load(self.decl["highlights"]["declaration"]) \
             if illustrated and self.decl.get("highlights") else None
-        assets = self.load(self.decl["source"]["declaration"]).get("media", {}) if illustrated else None
+        assets = None
+        if illustrated:
+            from videomaker.library import resolve
+
+            assets = resolve(self.load(self.decl["source"]["declaration"]), self.here, self.load).get("media", {})
         texts = [Path(self.path(self.decl["narration"]["script"]))]
         texts.extend(p for suffix in (".srt", ".vtt") if (p := Path(file).with_suffix(suffix)).exists())
         report(file, edit=edit, highlights=highlights, assets=assets, text_files=texts,
