@@ -97,3 +97,18 @@ def test_capture_records_hash_and_refuses_changed_containers_vm44(instance, monk
     current[:] = [{"ID": "recreated"}]
     with pytest.raises(RuntimeError, match="containers changed"):
         instance.capture(visit)
+
+
+def test_readiness_retries_connection_closed_during_server_start_vm44(instance, monkeypatch):
+    from http.client import RemoteDisconnected
+    from urllib.error import HTTPError
+
+    instance.spec["ready_status"] = [401]
+    answers = iter([RemoteDisconnected("server starting"), HTTPError("http://localhost", 401, "ready", {}, None)])
+
+    def request(*args, **kwargs):
+        raise next(answers)
+
+    monkeypatch.setattr("videomaker.instances.urlopen", request)
+    monkeypatch.setattr("videomaker.instances.time.sleep", lambda seconds: None)
+    instance.wait()

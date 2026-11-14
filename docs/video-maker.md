@@ -61,6 +61,13 @@ polyweave's `capture.web` and writes an `.instance.json` sidecar with the
 fixture generation, actual image IDs and the recording's hash. Reset is
 explicit; capture never resets an instance implicitly. Modern WordPress is
 declared in `japode/wordpress/instances/wordpress.compose.yaml`.
+The historical fixture is `wordpress071` in the same video declaration;
+its source archive hash, PHP compatibility shim and native-installer setup are
+versioned beside its Compose file. The Viglet Shio promo declares `shio` and
+uses the fixture in its existing JavaScript recording script. `fresh` creates
+a fixture or explicitly resets its existing generation; `status` verifies a
+ready fixture for continued filming. Optional `startup_logs_service` keeps the
+actual Compose startup answer and application log for the recorded terminal.
 
 Illustrated plans and builds refuse a spoken highlight while a beat's caption
 is visible (VM43), including duplicate labels. `overlay_seconds` ends that

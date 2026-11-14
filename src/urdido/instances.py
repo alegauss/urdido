@@ -30,6 +30,7 @@ class Instance:
         self.record = self.root / ".instances" / f"{name}.json"
         self.name = name
         self.spec_sha = hashlib.sha256(json.dumps(self.spec, sort_keys=True).encode()).hexdigest()
+        self.startup = None
 
     def run(self, *args: str) -> str:
         try:
@@ -37,6 +38,9 @@ class Instance:
                                     cwd=self.root, capture_output=True, text=True, encoding="utf-8", check=True)
         except subprocess.CalledProcessError as error:
             raise RuntimeError(f"instance Docker command failed: {error.stderr}") from None
+        if args and args[0] == "up":
+            self.startup = {"command": subprocess.list2cmdline(result.args),
+                            "answered": result.stdout + result.stderr}
         return result.stdout
 
     def containers(self) -> list[dict]:
@@ -64,7 +68,7 @@ class Instance:
                     status = response.status
             except HTTPError as error:
                 status = error.code
-            except (URLError, TimeoutError):
+            except (URLError, OSError):
                 status = None
             if status in expected:
                 return
@@ -103,6 +107,12 @@ class Instance:
         data.update(ready=True, containers=containers, images=inspect.stdout.splitlines(),
                     instance_spec_sha256=self.spec_sha,
                     compose_sha256=hashlib.sha256(self.compose.read_bytes()).hexdigest(), url=self.spec["url"])
+        if self.spec.get("startup_logs_service"):
+            args = ("logs", "--no-color", "--no-log-prefix", self.spec["startup_logs_service"])
+            logs = self.run(*args)
+            data["startup"] = {**self.startup, "logs": logs,
+                               "logs_command": subprocess.list2cmdline([
+                                   "docker", "compose", "-p", self.project, "-f", str(self.compose), *args])}
         self.record.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
         return data
 
@@ -112,6 +122,13 @@ class Instance:
             raise RuntimeError("instance has not been created by video-maker")
         self.run("down", "--volumes", "--remove-orphans")
         self.record.unlink()
+
+    def status(self) -> dict:
+        data = self.owned()
+        if not data or not data.get("ready") or self.containers() != data["containers"] \
+                or data.get("instance_spec_sha256") != self.spec_sha:
+            raise RuntimeError("instance is not ready or its containers changed; run instance up/reset")
+        return data
 
     def capture(self, visit: Path):
         raw = visit.read_bytes()
@@ -124,10 +141,7 @@ class Instance:
         out = (self.root / web["out"]).resolve()
         out.relative_to(self.root)
         before = out.stat().st_mtime_ns if out.exists() else None
-        data = self.owned()
-        if not data or not data.get("ready") or self.containers() != data["containers"] \
-                or data.get("instance_spec_sha256") != self.spec_sha:
-            raise RuntimeError("instance is not ready or its containers changed; run instance up/reset")
+        data = self.status()
         self.wait()
         # PW710: capture.web's strict web schema does not yet accept instance.
         compatible = re.sub(r"(?m)^[ \t]*instance[ \t]*=.*(?:\n|$)", "", source, count=1)
@@ -160,7 +174,7 @@ class Instance:
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["plan", "up", "reset", "down", "capture"])
+    parser.add_argument("action", choices=["plan", "up", "fresh", "reset", "down", "capture", "status"])
     parser.add_argument("declaration", type=Path)
     parser.add_argument("name")
     parser.add_argument("--visit", type=Path)
@@ -170,12 +184,14 @@ def main(argv=None):
         print(json.dumps(instance.plan(), indent=2))
     elif args.action == "down":
         instance.down()
+    elif args.action == "status":
+        print(json.dumps(instance.status(), indent=2))
     elif args.action == "capture":
         if not args.visit:
             parser.error("capture requires --visit")
         print(instance.capture(args.visit))
     else:
-        if args.action == "reset":
+        if args.action == "reset" or args.action == "fresh" and instance.record.exists():
             instance.down()
         print(json.dumps(instance.up(), indent=2))
     return 0
