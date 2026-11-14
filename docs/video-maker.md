@@ -46,6 +46,22 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+`python -m videomaker instance plan <video.toml> <name>` shows a declared
+product fixture without running Docker (VM44). `[instances.<name>]` names
+`compose`, `url`, optional `ready`, `ready_status` and `timeout`, and `setup`
+as lists of Compose arguments. `up` starts it and runs setup once; `reset`
+removes that fixture's volumes and starts a new generation; `down` removes it.
+Compose files must use project-owned containers, networks and volumes.
+
+For a visit with `[web] instance = "<name>"`, run
+`instance capture <video.toml> <name> --visit <visit.web.toml>`.
+The visit must use that instance's origin, and its running container IDs must
+match the successful setup record. The command delegates recording to
+polyweave's `capture.web` and writes an `.instance.json` sidecar with the
+fixture generation, actual image IDs and the recording's hash. Reset is
+explicit; capture never resets an instance implicitly. Modern WordPress is
+declared in `japode/wordpress/instances/wordpress.compose.yaml`.
+
 Illustrated plans and builds refuse a spoken highlight while a beat's caption
 is visible (VM43), including duplicate labels. `overlay_seconds` ends that
 visibility on full-frame footage and pictures. A highlight crossing a cut

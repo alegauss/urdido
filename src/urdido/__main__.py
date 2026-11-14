@@ -3,6 +3,11 @@
 
 import sys
 
+if len(sys.argv) >= 2 and sys.argv[1] == "instance":
+    from videomaker.instances import main as instance
+
+    sys.exit(instance(sys.argv[2:]))
+
 if len(sys.argv) >= 2 and sys.argv[1] == "thumbnail":
     from videomaker.thumbnail import main as thumbnail
 
