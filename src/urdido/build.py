@@ -53,13 +53,22 @@ class Build:
             else str((self.here / ".." / ".." / ".." / "shio" / "latest").resolve()),
         }
         self.out = Path(self.roots["video"])
-        self.parts = self.out / "parts"
-        self.parts.mkdir(parents=True, exist_ok=True)
         self.language = args.language
         video = self.decl["video"]
         self.name = video["name"]
         if self.language not in video["languages"]:
             raise SystemExit(f"videomaker build: {self.name} speaks {', '.join(video['languages'])}, not {self.language}")
+        self.revision = None
+        self.checked: list[str] = []
+        revision = getattr(args, "revision", None) or video.get("revision")
+        if revision and not (getattr(args, "plan", False) or getattr(args, "cards", False)):
+            from videomaker.revisions import Revision
+
+            cut = args.cut + ("-vertical" if args.vertical else "")
+            self.revision = Revision(self.out, self.name, self.language, cut, revision)
+            self.out = self.revision.folder
+        self.parts = self.out / "parts"
+        self.parts.mkdir(parents=True, exist_ok=True)
 
     # -- paths -----------------------------------------------------------------------------------
 
@@ -105,6 +114,7 @@ class Build:
         texts = [Path(self.path(self.decl["narration"]["script"]))]
         texts.extend(p for suffix in (".srt", ".vtt") if (p := Path(file).with_suffix(suffix)).exists())
         report(file, edit=edit, highlights=highlights, assets=assets, text_files=texts)
+        self.checked.append(file)
         return file
 
     def translated_captions(self, placed) -> list[tuple[str, str]]:
@@ -426,7 +436,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--cards", action="store_true", help="draw the cards alone, as previews, and stop")
     p.add_argument("--plan", action="store_true", help="stop once the timeline is decided")
     p.add_argument("--refresh-screens", action="store_true", help="take the store's pages again")
+    p.add_argument("--revision", help="keep an immutable package under this revision (overrides video.revision)")
     a = p.parse_args(argv)
     build = Build(Path(a.declaration), a)
     kind = build.decl["source"]["kind"]
-    return build.chaptered() if kind == "chaptered" else build.scenes()
+    result = build.chaptered() if kind == "chaptered" else build.scenes()
+    if result == 0 and build.revision:
+        print(build.revision.complete(build.checked))
+    return result

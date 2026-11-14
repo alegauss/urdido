@@ -46,6 +46,21 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+To keep a reviewed cut, set `revision = "v3"` in `[video]` or pass
+`--revision v3` to `build` (VM40). The complete build writes into
+`video/revisions/<name>.<language>.<cut>/v3/`: video, subtitles, description
+and credits when generated, measured QA, first frame, and working parts.
+An existing revision is refused, including an interrupted one; use a new
+identifier for the next attempt. Language and cut have separate packages.
+
+Only after every output and optional project succeeds does the build atomically
+replace `<name>.<language>.<cut>.current.json` in `video/`. Its `videos` paths
+are relative to `video/`; `review` points at the package's generated documentation
+table, linking its videos, subtitles, QA, first frames and credits.
+Unfinished packages retain `INCOMPLETE`; failures leave the previous pointer
+and package usable. `--plan` and `--cards` do not reserve revisions. Declarations
+without a revision keep their existing output paths.
+
 Every encoded cut gets a measured `<cut>.qa.json` and a decoded
 `<cut>.first.png` before the build announces success (VM39). The report records
 the MP4's SHA-256, size, duration and streams, loudness and true peak per audio
