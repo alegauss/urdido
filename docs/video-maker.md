@@ -46,6 +46,13 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Illustrated storyboards accept `brand_mark` on a beat, media asset or document,
+in that order of precedence (VM45). Choose `top-left` (the default),
+`top-right`, `bottom-left`, `bottom-right`, or `none`. The position applies
+to both overlay layers, so a timed caption leaving the frame cannot restore
+a hidden mark. The WordPress storyboard hides the mark on recorded web pages
+to leave their own headings readable.
+
 `python -m videomaker instance plan <video.toml> <name>` shows a declared
 product fixture without running Docker (VM44). `[instances.<name>]` names
 `compose`, `url`, optional `ready`, `ready_status` and `timeout`, and `setup`

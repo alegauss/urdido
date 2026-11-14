@@ -7,6 +7,7 @@ from videomaker.sources.illustrated import validate
 from videomaker.sources.illustrated import beat_frames
 from videomaker.sources.illustrated import description
 from videomaker.sources.illustrated import anchored_frames
+from videomaker.sources.illustrated import brand_mark
 from videomaker.sources.model import RecordingRefused
 
 
@@ -132,3 +133,56 @@ def test_anchor_constraints_refuse_short_beats_and_reverse_time_vm42(tmp_path, m
     with pytest.raises(RecordingRefused, match="increase"):
         anchored_frames([{"title": "one"}, {"title": "two", "from_word": 2},
                          {"title": "three", "from_word": 1}], 150, "unused")
+
+
+def test_mark_can_be_overridden_per_asset_and_per_beat_vm45():
+    document = {"brand_mark": "top-right", "media": {"web": {"brand_mark": "none"}}}
+    assert brand_mark({}, {}) == "top-left"
+    assert brand_mark({}, document) == "top-right"
+    assert brand_mark({"asset": "web"}, document) == "none"
+    assert brand_mark({"asset": "web", "brand_mark": "bottom-right"}, document) == "bottom-right"
+    with pytest.raises(RecordingRefused, match="unknown brand_mark"):
+        brand_mark({"brand_mark": "auto"}, document)
+
+
+def test_hidden_mark_is_removed_from_both_overlay_layers_vm45():
+    from videomaker.cards.html import Frame
+    from videomaker.sources.illustrated import page
+
+    theme = SimpleNamespace(colors={"text": "#fff", "muted": "#ccc", "accent": "#2BCB6B"},
+                            fonts={"display-800": "d.woff2", "text": "t.woff2"}, data={"background": "#000"})
+    document = {"brand": "JAPODE", "series": "S", "sources": {"source": {"label": "L", "url": "U"}},
+                "media": {"web": {"brand_mark": "none"}}}
+    beat = {"kicker": "", "title": "Page", "layout": "footage", "source": "source", "asset": "web"}
+    for mark_only in (False, True):
+        content = page({**beat, "mark_only": mark_only}, document, theme, Frame(1920, 1080), "logo", 1)
+        assert "<header>" not in content
+        assert "JAPODE" not in content
+
+
+def test_brand_corners_in_actual_browser_layout_vm45():
+    """PW700: HTML stills and DOM bounds currently use the existing browser renderer."""
+    import os
+    from videomaker.cards.html import Frame
+    from videomaker.sources.illustrated import page
+
+    playwright = pytest.importorskip("playwright.sync_api")
+    theme = SimpleNamespace(colors={"text": "#fff", "muted": "#ccc", "accent": "#2BCB6B"},
+                            fonts={"display-800": "d.woff2", "text": "t.woff2"}, data={"background": "#000"})
+    document = {"brand": "JAPODE", "series": "S", "sources": {"source": {"label": "L", "url": "U"}}}
+    beat = {"kicker": "", "title": "Page", "layout": "footage", "source": "source"}
+    with playwright.sync_playwright() as driver:
+        browser = driver.chromium.launch(channel=os.environ.get("E2E_CHANNEL", "msedge"))
+        try:
+            view = browser.new_page(viewport={"width": 1920, "height": 1080})
+            for corner in ("top-right", "bottom-left", "bottom-right"):
+                for mark_only in (False, True):
+                    view.set_content(page({**beat, "brand_mark": corner, "mark_only": mark_only},
+                                          document, theme, Frame(1920, 1080), "logo", 1))
+                    box = view.locator("header").bounding_box()
+                    assert box is not None
+                    assert (box["x"] > 960) == corner.endswith("right")
+                    assert (box["y"] > 540) == corner.startswith("bottom")
+                    assert box["x"] + box["width"] <= 1920 and box["y"] + box["height"] <= 1080
+        finally:
+            browser.close()

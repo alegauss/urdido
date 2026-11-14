@@ -30,6 +30,7 @@ def validate(document: dict, takes: Takes, language: str) -> list[tuple[str, lis
     counts = Counter()
     for beats in declared.values():
         for beat in beats:
+            brand_mark(beat, document)
             if beat.get("asset"):
                 counts[document.get("media", {}).get(beat["asset"], {}).get("file", beat["asset"])] += 1
     for key, asset in document.get("media", {}).items():
@@ -55,6 +56,14 @@ def validate(document: dict, takes: Takes, language: str) -> list[tuple[str, lis
                 raise RecordingRefused(f"{name}: unknown media asset")
         rows.append((name, beats, voiced[0]))
     return rows
+
+
+def brand_mark(beat: dict, document: dict) -> str:
+    asset = document.get("media", {}).get(beat.get("asset"), {})
+    value = beat.get("brand_mark", asset.get("brand_mark", document.get("brand_mark", "top-left")))
+    if not isinstance(value, str) or value not in {"top-left", "top-right", "bottom-left", "bottom-right", "none"}:
+        raise RecordingRefused(f"unknown brand_mark {value!r}; use a corner or none")
+    return value
 
 
 def beat_frames(beats: list[dict], total: int, max_static: float | None = None) -> list[int]:
@@ -120,6 +129,17 @@ def page(beat: dict, document: dict, theme: Theme, frame: Frame, logo: str, numb
     if layout in {"footage", "picture"}:
         graphic = ""  # Composited from the real source file, without changing its contents.
     c = theme.colors
+    mark = brand_mark(beat, document)
+    mark_css = ""
+    if mark not in {"top-left", "none"}:
+        vertical, horizontal = mark.split("-")
+        mark_css = ("body header,body.full header{width:max-content;"
+                    f"top:{'50px' if vertical == 'top' else 'auto'};"
+                    f"bottom:{'50px' if vertical == 'bottom' else 'auto'};"
+                    f"left:{'70px' if horizontal == 'left' else 'auto'};"
+                    f"right:{'70px' if horizontal == 'right' else 'auto'};" + "}")
+    header = "" if mark == "none" else (
+        f'<header><img src="{logo}"><b>{esc(document["brand"])}</b><small>{esc(document["series"])}</small></header>')
     full_css = '''
 .full.layer-text{background:transparent}.full .glow{display:none}
 .full header{top:50px;left:70px;text-shadow:0 2px 8px #000}
@@ -162,7 +182,8 @@ background:repeating-radial-gradient(circle,#15251c 0 4px,#294534 5px,#0b1410 7p
 footer{{position:absolute;left:110px;right:110px;bottom:70px;border-top:1px solid #2bcb6b44;padding-top:22px;display:flex;gap:30px;align-items:center}}
 footer span{{font:21px Text;color:#9bbba7;max-width:1460px}}footer b{{margin-left:auto;color:{c['accent']};font:800 23px Display}}
 {full_css}
-</style><body class="{'full' if full else ''} {'hero' if beat.get('hero') else ''}"><div class="glow"></div><header><img src="{logo}"><b>{esc(document['brand'])}</b><small>{esc(document['series'])}</small></header>
+{mark_css}
+</style><body class="{'full' if full else ''} {'hero' if beat.get('hero') else ''}"><div class="glow"></div>{header}
 <main><section><div class="rule"></div><div class="kicker">{esc(beat['kicker'])}</div><h1>{esc(beat.get('caption', beat['title']))}</h1><p class="text">{esc(beat.get('text', ''))}</p></section><section class="graphic">{graphic}</section></main>
 <footer><span>Fonte: {esc(source['label'])}<br>{esc(source['url'])}</span><b>{number:02}</b></footer>'''
 
