@@ -5,6 +5,7 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
+import { checkOpening } from './opening.mjs';
 
 /**
  * polyweave, answering as data.
@@ -44,6 +45,7 @@ export const buy = ( {
 	dry = false,
 	adopt = false,
 } ) => {
+	checkOpening( { narration, locale } );
 	const { script, lines, spoken, dir } = narration;
 	const all = lines().flatMap( ( [ key, texts ] ) =>
 		Object.entries( texts ).map( ( [ language, text ] ) => ( {

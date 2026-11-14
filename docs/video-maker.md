@@ -46,6 +46,27 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Before buying voice takes, `narration/buy.mjs` checks the selected language's
+intro for preambles such as "Hoje eu quero te contar" or "Today we will" (VM29).
+This runs for dry plans too, before writing the purchase request.
+
+For a timing estimate, add `opening` to the narration's `script.json`:
+
+```json
+"opening": {
+  "words_per_minute": { "pt-BR": 150 },
+  "proof": { "pt-BR": { "take": "intro", "before_word": 10 } }
+}
+```
+
+The editor names the take and zero-based word before which the first proof
+appears on screen. The guard counts spoken words up to that point, excluding
+delivery tags and applying pronunciation substitutions. It refuses an estimate
+over 20 seconds or an invalid anchor. Supply the narrator's pace and proof for
+each purchased language. Scripts without `opening` receive the preamble check
+only. This estimate does not verify the footage or measure viewer retention;
+review the rendered opening against the declared shot and later Studio curves.
+
 An illustrated history can also declare `source.kind = "illustrated"` and a
 `source.declaration` JSON, as `japode/wordpress/video.toml` does (VM35). It names
 every narration take in order, with weighted editorial beats, their factual
