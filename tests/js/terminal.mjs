@@ -43,5 +43,8 @@ const before = {
 // The report that closes chapter 6, as the scene shows it (formatted, not raw Markdown).
 const report = declaredChapters[ 'chapter-6' ].at( -1 );
 const shown = markdownHtml( report.text );
+// VM65: formatting coverage must survive a retake whose report uses different Markdown.
+const fixture = readFileSync( new URL( '../fixtures/terminal-report.md', import.meta.url ), 'utf8' );
+const formattedFixture = markdownHtml( fixture );
 
-process.stdout.write( JSON.stringify( { declared: declaredChapters, before, init, record, shown } ) );
+process.stdout.write( JSON.stringify( { declared: declaredChapters, before, init, record, shown, formattedFixture } ) );

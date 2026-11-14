@@ -56,13 +56,32 @@ def test_the_init_line_shows_the_plugin_and_nothing_of_the_machine():
         assert private not in init["text"], private
 
 
-def test_the_report_is_shown_formatted_not_as_markdown():
+def test_markdown_formatting_with_stable_report_vm65():
     import re
 
-    shown = replay()["shown"]
+    shown = replay()["formattedFixture"]
     assert "<table>" in shown and "<th>Trilha</th>" in shown
     assert "<b>Verificação:</b>" in shown and shown.count("<li>") >= 8
     assert "<code>/trilhas/pedra-do-vigia</code>" in shown
     words = re.sub(r"<[^>]+>", " ", shown)
     for raw in ("**", "|---", "| Trilha", "- **", "`"):
         assert raw not in words, raw
+    assert "<h4>Relatório</h4>" in shown
+    assert "<i>rascunho</i>" in shown
+    assert "<ol><li>Revisar</li><li>Publicar</li></ol>" in shown
+    assert '<script>' not in shown
+    assert '&lt;script&gt;alert("teste")&lt;/script&gt; &amp; revisão.' in shown
+
+
+def test_current_report_keeps_its_words_vm11_vm65():
+    import html
+    import re
+
+    data = replay()
+    report = data["declared"]["chapter-6"][-1]
+    assert report["kind"] == "text"
+    # Compare visible words independently of which Markdown structures the agent used.
+    source = re.sub(r"(?m)^\s*(?:#{1,6}\s+|[-*]\s+|\d+\.\s+)", "", report["text"])
+    source = source.replace("**", "").replace("`", "")
+    visible = html.unescape(re.sub(r"<[^>]+>", " ", data["shown"]))
+    assert "".join(source.split()) == "".join(visible.split())
