@@ -46,6 +46,21 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Illustrated builds produce a description of at most 5,000 UTF-16 units and a
+full `.credits.json` sidecar (VM52). The first paragraph comes from the
+storyboard's `description`, or `[description] summary` in `video.toml`.
+`[description] notes` can replace the longer closing notes for publishing;
+the original notes remain in the full credit record.
+
+The public text groups shared licence links and declared modification notes,
+shortens YouTube watch links while retaining their time parameters, credits
+Pixabay stock by service, and groups the video's own screen recordings by
+site. Used editorial references and individual third-party attributions stay
+readable. Titles, authors, source links, licence information and supplied
+notices are retained; the formatter refuses overflow rather than truncating
+protected fields or inferring a missing licence version. The Scion legacy
+build calls the same formatter with `publishing.json` and its 33 used sources.
+
 Builds reserve the bottom 20% of the frame for player captions by default
 (VM48). Configure the expected player's band and response in the video declaration:
 

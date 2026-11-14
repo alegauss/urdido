@@ -411,7 +411,7 @@ class Build:
             from videomaker.sources.illustrated import description
             from videomaker.labels import check as check_labels
 
-            description(document, script, plan_of(timeline), self.language, self.out, self.name)
+            description(document, script, plan_of(timeline), self.language, self.out, self.name, self.decl.get("description"))
             edit = self.load(str(self.parts / "illustrated" / "edit.json"))
             check_labels(document, edit, highlights, video.opening)
         if self.args.plan:

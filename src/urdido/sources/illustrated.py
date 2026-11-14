@@ -294,25 +294,15 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
     return result
 
 
-def description(document: dict, script: dict, plan: dict, language: str, out: Path, name: str):
+def description(document: dict, script: dict, plan: dict, language: str, out: Path, name: str, options: dict | None = None):
     """Chapter times come from the composed voice placements, never estimated reading times."""
-    lines = [document["title"], "", document["description"], "", "Capítulos", "0:00 Introdução"]
+    from videomaker.publish.description import illustrated, write
+
+    lines = ["0:00 Introdução"]
     placed = plan["spoken"][language]
     # takes.lines uses a stable order; one spoken placement per take was validated above.
     for i, (key, chapter) in enumerate(script["chapters"].items()):
         at = int(max(0, placed[1 + i * 2]["at"] - 0.4))
         lines.append(f"{at // 60}:{at % 60:02} {chapter['title'][language]}")
-    lines += ["", "Fontes consultadas"]
-    lines += [f"{source['label']}: {source['url']}" for source in document["sources"].values()]
-    lines += ["", "Imagens e vídeos de apoio"]
-    used = dict.fromkeys(beat["asset"] for beats in document["scenes"].values() for beat in beats if beat.get("asset"))
-    for key in used:
-        asset = document["media"][key]
-        lines.append(f"{asset['title']} — {asset['author']} — {asset['license']} — {asset['url']}")
-        if asset.get("license_url"):
-            lines.append(asset["license_url"])
-        if asset.get("section"):
-            lines.append(f"Recorte da fonte original: {asset['section']}; sem áudio original; reenquadrado para esta edição.")
-    # A video whose music is licensed rather than generated says so in `generated` (VM38).
-    lines += ["", document["credits"], document.get("generated", "Narração e trilha geradas com ElevenLabs.")]
-    (out / f"{name}.{language}.description.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    text, provenance = illustrated(document, lines, options)
+    write(out, f"{name}.{language}", text, provenance)
