@@ -3,6 +3,11 @@
 
 import sys
 
+if len(sys.argv) >= 2 and sys.argv[1] == "storyboard":
+    from videomaker.storyboard import main as storyboard
+
+    sys.exit(storyboard(sys.argv[2:]))
+
 if len(sys.argv) >= 2 and sys.argv[1] == "instance":
     from videomaker.instances import main as instance
 

@@ -46,6 +46,31 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+`python -m videomaker storyboard inspect <storyboard.json>` prints the current
+SHA-256 and beat IDs (VM46). On a legacy storyboard, run `storyboard assign-ids`
+with `--expected-sha256 <hash>` once. IDs stay with their beats through later
+insertions and moves. Add `--dry-run` to preview any edit without writing.
+
+`storyboard edit <storyboard.json> --expected-sha256 <hash> --operations <edits.json>`
+accepts an array of operations:
+
+```json
+[
+  {"op": "set", "beat": "existing-id", "values": {"asset": "new-media", "seconds": 3}},
+  {"op": "insert", "take": "intro", "after": "existing-id", "value": {"id": "new-id", "title": "New beat", "source": "source-key"}},
+  {"op": "move", "beat": "new-id", "take": "intro"},
+  {"op": "media", "key": "new-media", "values": {"author": "Source author"}},
+  {"op": "credits", "value": "Updated credits"}
+]
+```
+
+`remove` takes a `beat` ID. An omitted `after` inserts or moves to the start of
+the take. Writes preserve UTF-8, key order, line endings and unrelated values,
+refuse stale input and use an exclusive edit marker plus an atomic replacement.
+The command prints a diff and the resulting hash. A build prints the SHA-256
+of each declaration it reads and saves them in `parts/<name>.<language>.inputs.json`;
+a declaration changed during that build prevents success.
+
 Illustrated storyboards accept `brand_mark` on a beat, media asset or document,
 in that order of precedence (VM45). Choose `top-left` (the default),
 `top-right`, `bottom-left`, `bottom-right`, or `none`. The position applies

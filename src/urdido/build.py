@@ -16,6 +16,7 @@ relative to its folder or start at a root: <plugin> (TURING_WORDPRESS), <recordi
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -39,8 +40,9 @@ TAB, NEWLINE = chr(9), chr(10)
 class Build:
     def __init__(self, toml: Path, args: argparse.Namespace):
         self.here = toml.parent.resolve()
-        with open(toml, "rb") as f:
-            self.decl = tomllib.load(f)
+        raw = toml.read_bytes()
+        self.decl = tomllib.loads(raw.decode("utf-8-sig"))
+        self.input_hashes = {toml.resolve(): hashlib.sha256(raw).hexdigest()}
         self.args = args
         env = os.environ.get
         self.roots = {
@@ -142,8 +144,25 @@ class Build:
         return out
 
     def load(self, declared: str):
-        with open(self.path(declared), encoding="utf-8") as f:
-            return json.load(f)
+        file = Path(self.path(declared)).resolve()
+        raw = file.read_bytes()
+        if not file.is_relative_to(self.parts):
+            sha = hashlib.sha256(raw).hexdigest()
+            if file in self.input_hashes and self.input_hashes[file] != sha:
+                raise RecordingRefused(f"declaration changed during build: {file}")
+            self.input_hashes[file] = sha
+        return json.loads(raw.decode("utf-8-sig"))
+
+    def write_inputs(self) -> Path:
+        for file, sha in self.input_hashes.items():
+            if hashlib.sha256(file.read_bytes()).hexdigest() != sha:
+                raise RecordingRefused(f"declaration changed during build: {file}")
+        manifest = self.parts / f"{self.name}.{self.language}.inputs.json"
+        manifest.write_text(json.dumps({"declarations": [
+            {"file": str(file), "sha256": sha} for file, sha in self.input_hashes.items()]}, indent=2) + "\n", encoding="utf-8")
+        for file, sha in self.input_hashes.items():
+            print(f"input sha256 {sha} {file}")
+        return manifest
 
     # -- the chaptered recording ----------------------------------------------------------------
 
@@ -454,6 +473,8 @@ def main(argv: list[str] | None = None) -> int:
     build = Build(Path(a.declaration), a)
     kind = build.decl["source"]["kind"]
     result = build.chaptered() if kind == "chaptered" else build.scenes()
+    if result == 0:
+        build.write_inputs()
     if result == 0 and build.revision:
         print(build.revision.complete(build.checked))
     return result
