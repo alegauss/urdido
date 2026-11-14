@@ -46,6 +46,21 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Illustrated builds keep verified stage caches beside their outputs (VM55).
+Raster layers, beat clips, take joins, the opening, full join, highlights, audio
+mix and final mux each use their own effective inputs. Output hashes must still
+match before reuse. Embedded fonts and images, renderer code, the browser binary,
+FFmpeg binary, audio bytes and timing participate where they affect that stage.
+Beat IDs and unused provenance fields do not invalidate unchanged images. HTML
+with external resources, or a browser channel whose executable is not identified,
+is rendered each time. Changed captions reuse the audio mix; changed audio reuses
+unaffected images. Completed stages remain reusable after a later stage fails.
+`parts/cache.<language>.json` lists every hit and miss, including failed attempts;
+the build also prints their counts. Media hashes are shared across worker threads
+for the duration of one build. QA still measures the finished file on every run.
+Cache reuse currently stays within one output folder: a new immutable revision
+package starts with fresh caches. No speedup is assumed before measuring a cut.
+
 Thumbnail layouts can use `videomaker.thumbnail.fit_title` to fit measured
 title lines to a declared subject-free box (VM54). Japode's layout keeps the
 title inside its right-hand column, reducing from `title_size` as needed down

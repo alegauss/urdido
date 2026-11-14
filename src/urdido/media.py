@@ -17,6 +17,7 @@ import subprocess
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
+from contextvars import copy_context
 from dataclasses import dataclass, field
 from typing import Callable, Literal, Sequence, TypeVar
 
@@ -59,7 +60,7 @@ def pool(tasks: Sequence[Callable[[], T]], limit: int = PARALLEL) -> list[T]:
     if not tasks:
         return []
     with ThreadPoolExecutor(max_workers=max(1, min(limit, len(tasks)))) as running:
-        futures = [running.submit(task) for task in tasks]
+        futures = [running.submit(copy_context().run, task) for task in tasks]
         return [future.result() for future in futures]
 
 
@@ -221,7 +222,10 @@ class Media:
         listing, job = self.concat_job(segments, name)
         with open(listing, "w", encoding="utf-8", newline="") as out:
             out.write(self.concat_list(segments))
-        ffmpeg(job.args)
+        from videomaker import cache
+
+        cache.run("join", [job.file], job.args, lambda: ffmpeg(job.args),
+                  inputs=[__file__, *segments], tools=["ffmpeg"])
         return job.file
 
 

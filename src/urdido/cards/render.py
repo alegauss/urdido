@@ -5,6 +5,9 @@ backdrop, and each range of hills cut to its own box."""
 from __future__ import annotations
 
 import os
+import re
+from dataclasses import asdict
+from importlib.metadata import version
 from pathlib import Path
 from typing import Mapping
 
@@ -16,6 +19,7 @@ def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | 
     to `out_dir`; returns the files in the order written."""
     from playwright.sync_api import sync_playwright
     from videomaker import safety
+    from videomaker import cache
 
     os.makedirs(out_dir, exist_ok=True)
     written: list[str] = []
@@ -24,10 +28,18 @@ def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | 
     safe_report.unlink(missing_ok=True)
     channel = channel if channel is not None else os.environ.get("E2E_CHANNEL", "msedge")
     with sync_playwright() as p:
-        browser = p.chromium.launch(channel=channel or None)
+        executable = Path(p.chromium.executable_path)
+        if channel == "msedge":
+            executable = next((Path(os.environ.get(root, "")) / "Microsoft/Edge/Application/msedge.exe"
+                               for root in ("PROGRAMFILES(X86)", "PROGRAMFILES", "LOCALAPPDATA")
+                               if (Path(os.environ.get(root, "")) / "Microsoft/Edge/Application/msedge.exe").is_file()), None)
+        elif channel:
+            # Other named channels have different binaries. Refuse caching when we cannot
+            # fingerprint that browser, while retaining the renderer's existing channel support.
+            executable = None
+        browser = None
+        page = None
         try:
-            page = browser.new_page(viewport={"width": frame.width, "height": frame.height})
-
             def check_layer(name, layer):
                 found = safety.collisions(safety.page_boxes(page, name), frame.height)
                 for item in found:
@@ -42,23 +54,48 @@ def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | 
 
             for name, content in pages.items():
                 file = os.path.join(out_dir, f"{name}.png")
-                page.set_content(content)
-                page.evaluate("() => document.fonts.ready")
-                check_layer(name, "full")
-                if name.startswith("card-hills-"):
-                    page.locator(".ridge").screenshot(path=file, omit_background=True)
-                    written.append(file)
-                    continue
-                page.screenshot(path=file)
-                written.append(file)
-                if name != "card-backdrop":
-                    page.evaluate("() => document.body.classList.add('layer-text')")
+                outputs = [file]
+                if not name.startswith("card-hills-") and name != "card-backdrop":
+                    outputs.append(os.path.join(out_dir, f"{name}-text.png"))
+
+                def raster():
+                    nonlocal browser, page
+                    if browser is None:
+                        browser = p.chromium.launch(channel=channel or None)
+                        page = browser.new_page(viewport={"width": frame.width, "height": frame.height})
+                    before = len(findings)
+                    page.set_content(content)
                     page.evaluate("() => document.fonts.ready")
-                    check_layer(name, "text")
-                    text = os.path.join(out_dir, f"{name}-text.png")
-                    page.screenshot(path=text, omit_background=True)
-                    written.append(text)
+                    check_layer(name, "full")
+                    if name.startswith("card-hills-"):
+                        page.locator(".ridge").screenshot(path=file, omit_background=True)
+                    else:
+                        page.screenshot(path=file)
+                        if len(outputs) > 1:
+                            page.evaluate("() => document.body.classList.add('layer-text')")
+                            page.evaluate("() => document.fonts.ready")
+                            check_layer(name, "text")
+                            page.screenshot(path=outputs[1], omit_background=True)
+                    return findings[before:]
+
+                # All production pages embed their fonts/assets in content. External URLs
+                # are deliberately uncached because their bytes are not declared here.
+                urls = re.findall(r'(?:(?:src|href)\s*=\s*["\']|url\(\s*["\']?)([^)"\'\s]+)', content, re.I)
+                embedded = all(url.startswith(("data:", "#")) for url in urls) \
+                    and not any(tag in content.lower() for tag in ("<script", "@import"))
+                if cache.CURRENT.get() and executable and embedded:
+                    before = len(findings)
+                    found = cache.run("raster", outputs,
+                                      [content, frame.width, frame.height, channel, version("playwright"),
+                                       asdict(safety.CURRENT.get())], raster,
+                                      inputs=[__file__, safety.__file__, executable])
+                    if len(findings) == before:
+                        findings.extend(found)
+                else:
+                    raster()
+                written.extend(outputs)
         finally:
-            browser.close()
+            if browser:
+                browser.close()
     safety.publish(findings, safe_report)
     return written

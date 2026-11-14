@@ -27,6 +27,7 @@ from typing import Any, Mapping
 
 from videomaker import captions as cap
 from videomaker import media
+from videomaker import cache
 from videomaker.audio import mix
 from videomaker.cards import html
 from videomaker.jsnum import fixed
@@ -449,7 +450,7 @@ class Build:
                         name=f"mix.{self.language}")
         file = str(self.out / f"{self.name}.{self.language}.mp4")
         lang = video_decl["languages"][self.language]
-        media.ffmpeg(["-i", joined, "-i", str(self.out / f"{self.name}.{self.language}.srt"), "-i", voice,
+        mux_args = ["-i", joined, "-i", str(self.out / f"{self.name}.{self.language}.srt"), "-i", voice,
                       *[a for _, srt in extra for a in ("-i", srt)],
                       "-map", "0:v", "-map", "2:a", "-map", "1",
                       *[a for i in range(len(extra)) for a in ("-map", str(3 + i))],
@@ -457,7 +458,10 @@ class Build:
                       "-c:s", "mov_text", "-metadata:s:v:0", "language=und", "-metadata:s:a:0", f"language={lang}",
                       "-metadata:s:s:0", f"language={lang}",
                       *[a for i, (track, _) in enumerate(extra) for a in (f"-metadata:s:s:{i + 1}", f"language={track}")],
-                      file])
+                      file]
+        mux_inputs = [mux_args[i + 1] for i, arg in enumerate(mux_args) if arg == "-i"]
+        cache.run("final mux", [file], mux_args, lambda: media.ffmpeg(mux_args),
+                  inputs=[__file__, media.__file__, *mux_inputs], tools=["ffmpeg"])
         print(self.checked_output(file, illustrated=illustrated))
         return 0
 
@@ -479,7 +483,8 @@ def main(argv: list[str] | None = None) -> int:
     kind = build.decl["source"]["kind"]
     from videomaker.safety import configured
 
-    with configured(build.decl.get("captions", {}).get("safe_area", {})):
+    with cache.configured(build.parts / f"cache.{build.language}.json", enabled=kind == "illustrated" and not a.plan), \
+            configured(build.decl.get("captions", {}).get("safe_area", {})):
         result = build.chaptered() if kind == "chaptered" else build.scenes()
     if result == 0:
         build.write_inputs()

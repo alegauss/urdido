@@ -15,7 +15,7 @@ import math
 import os
 import re
 import subprocess
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Mapping, Sequence
 
 from videomaker import media
@@ -226,7 +226,7 @@ def _integrated(file: str, loudness: Loudness) -> float:
     )
 
 
-def voice_track(
+def _voice_track(
     placed: Sequence[Take],
     total: float,
     out_file: str,
@@ -273,3 +273,21 @@ def voice_track(
         render(gain)
         measured = _integrated(out_file, loudness)
     return measured
+
+
+def voice_track(
+    placed: Sequence[Take], total: float, out_file: str, work_dir: str,
+    sounds: Sequence[Sound] = (), bed: Bed | None = None, trim_db: float | None = None,
+    duck: Duck = Duck(), loudness: Loudness = Loudness(), name: str = "mix",
+) -> float:
+    """VM55: reuse only the independently verified mix for these audio/timing inputs."""
+    from videomaker import cache
+
+    settings = [[asdict(t) for t in placed], total, [asdict(s) for s in sounds],
+                asdict(bed) if bed else None, trim_db, asdict(duck), asdict(loudness), name]
+    inputs = [__file__, media.__file__, *[t.file for t in placed], *[s.file for s in sounds]]
+    if bed:
+        inputs.append(bed.file)
+    return cache.run("audio mix", [out_file], settings,
+                     lambda: _voice_track(placed, total, out_file, work_dir, sounds, bed, trim_db, duck, loudness, name),
+                     inputs=inputs, tools=["ffmpeg"])

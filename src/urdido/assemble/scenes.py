@@ -112,7 +112,12 @@ class ScenesVideo:
         if self.intro is not None:
             opening = self.part("opening.mp4")
             if render or not os.path.exists(opening):
-                self.media.cut("opening.mp4", ["-ss", fixed(self.intro.start, 3), "-i", self.intro.file])
+                from videomaker import cache
+
+                cache.run("opening", [opening], [self.intro.start, self.frame.width, self.frame.height,
+                                                self.media.fps, self.media.encoder],
+                          lambda: self.media.cut("opening.mp4", ["-ss", fixed(self.intro.start, 3), "-i", self.intro.file]),
+                          inputs=[__file__, mediamod.__file__, self.intro.file], tools=["ffmpeg"])
             length = mediamod.seconds(opening)
             b.shots([(opening, length)])
             b.sound(self.intro.file, self.intro.start, 0.0, length)

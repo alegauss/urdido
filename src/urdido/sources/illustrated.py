@@ -6,7 +6,6 @@ step not yet offered by polyweave; cards.render is the framework's existing impl
 from __future__ import annotations
 
 import base64
-import hashlib
 import html
 import json
 import math
@@ -14,6 +13,7 @@ from collections import Counter
 from pathlib import Path
 
 from videomaker import media
+from videomaker import cache
 from videomaker.cards.html import Frame, Theme
 from videomaker.cards.render import render as draw
 from videomaker.narration import Takes
@@ -226,7 +226,7 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
                     raise RecordingRefused(f"{name}: media asset needs its licence, author and source URL")
                 if beat["layout"] == "footage" and beat.get("at", 0) + frames / 30 > media.seconds(str(file)) + 0.02:
                     raise RecordingRefused(f"{name}: the footage is shorter than the requested beat")
-                asset = {**asset, "path": str(file), "sha256": hashlib.sha256(file.read_bytes()).hexdigest()}
+                asset = {**asset, "path": str(file), "sha256": cache.file_hash(file)}
             jobs.append((key, content, frames, beat, asset))
             audit.append({"take": name, "beat": key, "at": clock / 30, "seconds": frames / 30,
                           "static": beat.get("static", beat.get("layout", "date") != "footage"),
@@ -241,10 +241,6 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
     def encode(job):
         key, content, frames, beat, asset = job
         file = out / f"{key}.mp4"
-        stamp = out / f"{key}.sha256"
-        digest = hashlib.sha256((("cfr-motion-v4" if asset else "stable-card-v3") + content + str(frames) + encoder + json.dumps([beat, asset], sort_keys=True)).encode()).hexdigest()
-        if file.exists() and stamp.exists() and stamp.read_text() == digest:
-            return
         inputs = ["-i", str(out / f"{key}.png")]
         if asset:
             full = beat.get("presentation", "full") == "full"
@@ -283,14 +279,18 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
             # Editorial cards stay locked; only the source footage supplies camera movement.
             inputs = ["-loop", "1", "-framerate", "30", *inputs]
             filters = ["-vf", "setsar=1"]
-        media.ffmpeg([*inputs, *filters, "-frames:v", str(frames), *media.video_codec(encoder, 20),
-                      "-pix_fmt", "yuv420p", "-r", "30", "-an", str(file)])
-        stamp.write_text(digest)
+        args = [*inputs, *filters, "-frames:v", str(frames), *media.video_codec(encoder, 20),
+                "-pix_fmt", "yuv420p", "-r", "30", "-an", str(file)]
+        sources = [inputs[i + 1] for i, arg in enumerate(inputs) if arg == "-i"]
+        cache.run("illustrated clip", [file], args, lambda: media.ffmpeg(args),
+                  inputs=[__file__, media.__file__, *sources], tools=["ffmpeg"])
     media.pool([lambda job=job: encode(job) for job in jobs])
     for scene, (_, beats, _) in zip(result, rows):
         listing = out / f"{scene.name}.concat.txt"
         listing.write_text("".join(f"file '{scene.name}-{i}.mp4'\n" for i in range(len(beats))), encoding="utf-8")
-        media.ffmpeg(["-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy", scene.file])
+        args = ["-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy", scene.file]
+        cache.run("illustrated take join", [scene.file], args, lambda: media.ffmpeg(args),
+                  inputs=[__file__, *[out / f"{scene.name}-{i}.mp4" for i in range(len(beats))]], tools=["ffmpeg"])
     return result
 
 
