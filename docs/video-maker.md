@@ -46,6 +46,19 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Every encoded cut gets a measured `<cut>.qa.json` and a decoded
+`<cut>.first.png` before the build announces success (VM39). The report records
+the MP4's SHA-256, size, duration and streams, loudness and true peak per audio
+stream, UTF-8 checks of its captions and script, and the first 120 decoded
+frames' presentation intervals and identical-frame runs. Illustrated full cuts
+also include shot, asset, source-file, static-time and highlight counts from
+their build inputs. Other cuts leave those editorial counts null.
+
+The first-frame image carries its own hash and the MP4's hash in the report.
+A failed measurement removes stale QA files; a video that changes during
+measurement is refused. The opening sample measures cadence and repeated
+frames. Camera shakiness and whether a shot fits its sentence still need review.
+
 Before buying voice takes, `narration/buy.mjs` checks the selected language's
 intro for preambles such as "Hoje eu quero te contar" or "Today we will" (VM29).
 This runs for dry plans too, before writing the purchase request.

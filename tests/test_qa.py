@@ -1,0 +1,81 @@
+"""VM39: QA measures encoded media and cannot preserve a stale report after failure."""
+import json
+import shutil
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from videomaker import qa
+
+
+def test_opening_reports_cadence_and_repeats_separately_vm39():
+    data = qa.opening_frames("#tb 0: 1/30\n0,0,0,1,2,aaa\n0,1,1,1,2,aaa\n0,3,3,1,2,bbb\n")
+    assert data["decoded_frames"] == 3
+    assert data["intervals"] == [0.033333333, 0.066666667]
+    assert data["identical_frame_runs"] == [{"from": 0, "to": 1 / 30, "frames": 2}]
+    with pytest.raises(RuntimeError, match="no time base"):
+        qa.opening_frames("")
+
+
+@pytest.fixture
+def movie(tmp_path):
+    if not (shutil.which("ffmpeg") and shutil.which("ffprobe")):
+        pytest.skip("ffmpeg and ffprobe are required")
+    file = tmp_path / "cut.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "color=red:s=64x64:r=30:d=1",
+                    "-f", "lavfi", "-i", "sine=frequency=440:duration=1", "-c:v", "libx264",
+                    "-c:a", "aac", "-shortest", str(file)], check=True)
+    return file
+
+
+def test_report_uses_actual_video_and_binds_its_image_vm39(movie):
+    text = movie.with_suffix(".srt")
+    text.write_text("Verificação em português", encoding="utf-8")
+    edit = {"beats": [{"seconds": 1, "static": True, "asset": "original"}]}
+    data = json.loads(qa.report(movie, edit=edit, text_files=[text]).read_text(encoding="utf-8"))
+    assert data["sha256"] == qa.sha256(movie)
+    assert data["first_frame"]["video_sha256"] == data["sha256"]
+    assert data["first_frame"]["sha256"] == qa.sha256(movie.with_suffix(".first.png"))
+    assert 0.9 <= data["duration"] <= 1.2
+    assert {s["codec_type"] for s in data["streams"]} == {"audio", "video"}
+    assert float(data["loudness"][0]["measurement"]["input_i"]) < 0
+    assert data["opening"]["decoded_frames"] == 30
+    assert data["editorial"] == {"shots": 1, "assets": 1, "source_files": 1, "static_seconds": 1, "highlights": 0}
+    assert data["texts"][0]["utf8"] is True
+
+
+def test_invalid_utf8_clears_stale_report_and_preview_vm39(movie):
+    qa.report(movie)
+    text = movie.with_suffix(".srt")
+    text.write_bytes(b"\xff")
+    with pytest.raises(UnicodeDecodeError):
+        qa.report(movie, text_files=[text])
+    assert not movie.with_suffix(".qa.json").exists()
+    assert not movie.with_suffix(".first.png").exists()
+
+
+def test_editorial_counts_shared_source_once_vm39():
+    edit = {"beats": [{"asset": "a", "seconds": 2, "static": False},
+                      {"asset": "b", "seconds": 1, "static": True}]}
+    assets = {"a": {"file": "same.mp4"}, "b": {"file": "same.mp4"}}
+    data = qa.editorial(edit, {"lines": {"intro": [{"show": "one"}]}}, assets)
+    assert data == {"shots": 2, "assets": 2, "source_files": 1, "static_seconds": 1, "highlights": 1}
+
+
+def test_changed_output_is_refused_vm39(movie, monkeypatch):
+    actual = qa.sha256
+    calls = 0
+
+    def changed(path):
+        nonlocal calls
+        if path == movie:
+            calls += 1
+            if calls > 1:
+                return "changed"
+        return actual(path)
+
+    monkeypatch.setattr(qa, "sha256", changed)
+    with pytest.raises(RuntimeError, match="changed during measurement"):
+        qa.report(movie)
+    assert not movie.with_suffix(".qa.json").exists()

@@ -94,6 +94,19 @@ class Build:
         file.write_text(text, encoding="utf-8", newline="")
         return file
 
+    def checked_output(self, file: str, *, illustrated: bool = False) -> str:
+        """VM39: no finished export is announced until its measured sidecar exists."""
+        from videomaker.qa import report
+
+        edit = self.load(str(self.parts / "edit.json")) if illustrated else None
+        highlights = self.load(self.decl["highlights"]["declaration"]) \
+            if illustrated and self.decl.get("highlights") else None
+        assets = self.load(self.decl["source"]["declaration"]).get("media", {}) if illustrated else None
+        texts = [Path(self.path(self.decl["narration"]["script"]))]
+        texts.extend(p for suffix in (".srt", ".vtt") if (p := Path(file).with_suffix(suffix)).exists())
+        report(file, edit=edit, highlights=highlights, assets=assets, text_files=texts)
+        return file
+
     def translated_captions(self, placed) -> list[tuple[str, str]]:
         """The `[captions.translations.<language>]` the video declares (VM53): captions in a
         language it is not narrated in, timed sentence by sentence to the spoken takes. Writes
@@ -175,7 +188,7 @@ class Build:
                 return 0
             renderer = Renderer(video, str(self.out), script, title_languages=list(titles),
                                 track_languages=tracks, portable=self.portable)
-            print(renderer.clip(builder))
+            print(self.checked_output(renderer.clip(builder)))
             return 0
 
         from videomaker.assemble.video import FullVideo, Intro
@@ -205,6 +218,8 @@ class Build:
         renderer = Renderer(video, str(self.out), script, title_languages=list(titles),
                             track_languages=tracks, write_plan=self.write_plan, portable=self.portable)
         made = renderer.full(builder, teaser=self.decl.get("cuts", {}).get("teaser", False))
+        for file in made:
+            self.checked_output(file)
         self.stills(video)
         if self.args.project:
             made.append(self.project(plan_file, webm))
@@ -349,6 +364,7 @@ class Build:
             short = selection(video, key, shorts["cuts"][key]["chapters"], self.path(shorts["music"]),
                               str(self.out), limit=shorts.get("limit", 60),
                               track_language=video_decl["languages"][self.language])
+            self.checked_output(short.file)
             print(f"{short.file}: {short.length:.1f} s" + (f", {short.over:.1f} s over its {short.limit:g} s" if short.over else ""))
             return 0
         timeline = video.compose(render=not self.args.plan)
@@ -395,7 +411,7 @@ class Build:
                       "-metadata:s:s:0", f"language={lang}",
                       *[a for i, (track, _) in enumerate(extra) for a in (f"-metadata:s:s:{i + 1}", f"language={track}")],
                       file])
-        print(file)
+        print(self.checked_output(file, illustrated=illustrated))
         return 0
 
 
