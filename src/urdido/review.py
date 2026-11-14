@@ -4,7 +4,6 @@ PW708 tracks exact-time, editorially labelled contact sheets in polyweave.
 """
 from __future__ import annotations
 
-import hashlib
 import html
 import json
 from pathlib import Path
@@ -13,20 +12,15 @@ from videomaker import captions, media
 from videomaker.cards.html import Frame
 from videomaker.cards.render import render
 from videomaker.sources.model import RecordingRefused
+from videomaker.keywords import word_record
 
 
 def words(placed: list[dict]) -> list[dict]:
     timed = []
     for take in placed:
         audio = Path(take["file"])
-        record = audio.with_suffix(".words.json")
-        if not record.is_file():
-            raise RecordingRefused(f"{audio.stem}: review needs word times; run videomaker.narration_words")
-        data = json.loads(record.read_text(encoding="utf-8"))
-        if data["sha256"] != hashlib.sha256(audio.read_bytes()).hexdigest():
-            raise RecordingRefused(f"{audio.stem}: stale review word times; transcribe the current take")
         timed.extend({"text": w["text"], "at": take["at"] + w["start"],
-                      "end": take["at"] + w["end"]} for w in data["words"])
+                      "end": take["at"] + w["end"]} for w in word_record(audio))
     return timed
 
 

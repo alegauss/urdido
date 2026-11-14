@@ -14,6 +14,51 @@ def fold(text: str) -> str:
     return re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFKD", text.lower()))
 
 
+def word_record(file: Path) -> list[dict]:
+    record = file.with_suffix(".words.json")
+    if not record.exists():
+        raise RecordingRefused(f"{file.stem}: missing word times; run videomaker.narration_words")
+    words = json.loads(record.read_text(encoding="utf-8"))
+    if words["sha256"] != hashlib.sha256(file.read_bytes()).hexdigest():
+        raise RecordingRefused(f"{file.stem}: stale word times; transcribe the current take")
+    return words["words"]
+
+
+def matches(words: list[dict], phrase: str, start: int = 0) -> list[tuple[int, int]]:
+    target = fold(phrase)
+    if not target:
+        raise RecordingRefused("word anchor must contain a spoken word")
+    tokens = [fold(w["text"]) for w in words]
+    found = []
+    for i in range(start, len(tokens)):
+        joined, j = "", i
+        while j < len(tokens) and len(joined) < len(target):
+            joined += tokens[j]
+            j += 1
+        if joined == target:
+            found.append((i, j))
+    return found
+
+
+def anchor(file: Path, spec: str | dict) -> float:
+    """VM42: resolve one explicit occurrence, refusing a guessed match."""
+    spec = {"text": spec} if isinstance(spec, str) else spec
+    words = word_record(file)
+    text = spec["text"]
+    found = matches(words, text)
+    if spec.get("context"):
+        contexts = matches(words, spec["context"])
+        found = [(i, j) for i, j in found if any(a <= i and j <= b for a, b in contexts)]
+    occurrence = spec.get("occurrence")
+    if occurrence is not None:
+        if isinstance(occurrence, bool) or not isinstance(occurrence, int) or occurrence < 1:
+            raise RecordingRefused(f"{file.stem}: anchor occurrence must be a positive integer")
+        found = found[occurrence - 1:occurrence]
+    if len(found) != 1:
+        raise RecordingRefused(f"{file.stem}: word anchor {text!r} has {len(found)} matches; specify occurrence or context")
+    return words[found[0][0]]["start"]
+
+
 def cues(placed: list[dict], lines: dict) -> list[dict]:
     result = []
     for take in placed:
@@ -22,25 +67,12 @@ def cues(placed: list[dict], lines: dict) -> list[dict]:
         wanted = lines.get(name, [])
         if not wanted:
             continue
-        record = file.with_suffix(".words.json")
-        if not record.exists():
-            raise RecordingRefused(f"{name}: missing word times; run videomaker.narration_words")
-        words = json.loads(record.read_text(encoding="utf-8"))
-        if words["sha256"] != hashlib.sha256(file.read_bytes()).hexdigest():
-            raise RecordingRefused(f"{name}: stale word times; transcribe the current take")
-        tokens = [(fold(w["text"]), w["start"], w["end"]) for w in words["words"]]
+        words = word_record(file)
+        tokens = [(fold(w["text"]), w["start"], w["end"]) for w in words]
         cursor, found = 0, []
         for item in wanted:
-            target = fold(item.get("hear", item["show"]))
-            match = None
-            for i in range(cursor, len(tokens)):
-                joined, j = "", i
-                while j < len(tokens) and len(joined) < len(target):
-                    joined += tokens[j][0]
-                    j += 1
-                if joined == target:
-                    match = i, j
-                    break
+            candidates = matches(words, item.get("hear", item["show"]), cursor)
+            match = candidates[0] if candidates else None
             if match is None:
                 raise RecordingRefused(f"{name}: keyword anchor {item.get('hear', item['show'])!r} not heard")
             i, cursor = match

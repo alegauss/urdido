@@ -46,6 +46,17 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Illustrated beats after the first can declare `"from_word": "Gutenberg"`
+(VM42). The current take's hash-checked transcript places that boundary at the
+word's start plus the 0.4-second voice lead, rounded to a production frame.
+For a repeated phrase, use `"from_word": {"text": "Mike", "occurrence": 2}`
+(one based), or replace `occurrence` with `"context": "Mike Little"`.
+Missing or ambiguous matches are refused before rendering. Existing duration
+and weight rules fill each interval between anchors; contradictory durations,
+reversed anchors and beats shorter than one second are refused. `at` remains
+the trim into the source file. A retake recomputes the timeline from its new
+word times; the first beat always begins at the take's origin.
+
 For illustrated videos, `build --plan` also writes `video/review/index.html`
 and `review.json` (VM41). Each beat has a source-midpoint still or its production
 card, the overlapping hash-checked narration words, production captions,

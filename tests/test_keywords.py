@@ -5,6 +5,7 @@ import pytest
 
 from videomaker.keywords import cues
 from videomaker.keywords import write_ass
+from videomaker.keywords import anchor
 from videomaker.sources.model import RecordingRefused
 
 
@@ -48,3 +49,27 @@ def test_missing_name_does_not_get_a_guessed_time(tmp_path):
     _, placed = fixture(tmp_path)
     with pytest.raises(RecordingRefused, match="not heard"):
         cues(placed, {"intro": [{"show": "Matt Mullenweg"}]})
+
+
+def test_word_anchor_resolves_context_and_occurrence_without_guessing_vm42(tmp_path):
+    take, _ = fixture(tmp_path)
+    path = take.with_suffix(".words.json")
+    data = json.loads(path.read_text())
+    data["words"] += [{"text": "Mike", "start": 2, "end": 2.2},
+                      {"text": "again", "start": 2.3, "end": 2.7}]
+    path.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(RecordingRefused, match="2 matches"):
+        anchor(take, "Mike")
+    assert anchor(take, {"text": "Mike", "occurrence": 2}) == 2
+    assert anchor(take, {"text": "Mike", "context": "Mike Little"}) == 1
+    with pytest.raises(RecordingRefused, match="0 matches"):
+        anchor(take, "Gutenberg")
+    with pytest.raises(RecordingRefused, match="positive integer"):
+        anchor(take, {"text": "Mike", "occurrence": 0})
+
+
+def test_word_anchor_rejects_stale_transcript_vm42(tmp_path):
+    take, _ = fixture(tmp_path)
+    take.write_bytes(b"retake")
+    with pytest.raises(RecordingRefused, match="stale"):
+        anchor(take, "Mike Little")

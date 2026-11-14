@@ -6,6 +6,7 @@ import pytest
 from videomaker.sources.illustrated import validate
 from videomaker.sources.illustrated import beat_frames
 from videomaker.sources.illustrated import description
+from videomaker.sources.illustrated import anchored_frames
 from videomaker.sources.model import RecordingRefused
 
 
@@ -100,3 +101,34 @@ def test_a_timed_caption_leaves_the_brand_mark_on_screen():
     assert "<b>JAPODE</b>" in mark
     assert "WordPress" not in mark
     assert ".full:before{display:none}" in mark
+
+
+def test_word_anchor_includes_voice_lead_and_rounds_frames_vm42(tmp_path):
+    import hashlib
+    import json
+
+    audio = tmp_path / "intro.mp3"
+    audio.write_bytes(b"audio")
+    words = audio.with_suffix(".words.json")
+    data = {"sha256": hashlib.sha256(audio.read_bytes()).hexdigest(),
+            "words": [{"text": "Gutenberg", "start": 1.21, "end": 1.8}]}
+    words.write_text(json.dumps(data), encoding="utf-8")
+    beats = [{"title": "before"}, {"title": "portrait", "from_word": "Gutenberg", "at": 27}]
+    assert anchored_frames(beats, 120, str(audio)) == [48, 72]
+    assert beats[1]["at"] == 27  # Source trim never becomes a timeline start.
+    audio.write_bytes(b"retake")
+    data["sha256"] = hashlib.sha256(audio.read_bytes()).hexdigest()
+    data["words"][0]["start"] = 2.01
+    words.write_text(json.dumps(data), encoding="utf-8")
+    assert anchored_frames(beats, 120, str(audio)) == [72, 48]
+
+
+def test_anchor_constraints_refuse_short_beats_and_reverse_time_vm42(tmp_path, monkeypatch):
+    monkeypatch.setattr("videomaker.keywords.anchor", lambda file, spec: spec)
+    with pytest.raises(RecordingRefused, match="first beat"):
+        anchored_frames([{"title": "one", "from_word": 1}], 120, "unused")
+    with pytest.raises(RecordingRefused, match="one second"):
+        anchored_frames([{"title": "one"}, {"title": "two", "from_word": 0.1}], 120, "unused")
+    with pytest.raises(RecordingRefused, match="increase"):
+        anchored_frames([{"title": "one"}, {"title": "two", "from_word": 2},
+                         {"title": "three", "from_word": 1}], 150, "unused")
