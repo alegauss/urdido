@@ -1,8 +1,8 @@
 """Word-timed callouts over footage, matched against hash-checked narration transcripts."""
 from __future__ import annotations
 
-import hashlib
 import json
+import math
 import re
 import unicodedata
 from pathlib import Path
@@ -22,9 +22,25 @@ def word_record(file: Path) -> list[dict]:
     if not record.exists():
         raise RecordingRefused(f"{file.stem}: missing word times; run videomaker.narration_words")
     words = json.loads(record.read_text(encoding="utf-8"))
-    if words["sha256"] != hashlib.sha256(file.read_bytes()).hexdigest():
+    from videomaker.cache import file_hash
+
+    if words["sha256"] != file_hash(file):
         raise RecordingRefused(f"{file.stem}: stale word times; transcribe the current take")
-    return words["words"]
+    transcript = words["words"]
+    if not isinstance(transcript, list) or not transcript:
+        raise RecordingRefused(f"{file.stem}: word times must contain spoken words")
+    previous = 0
+    for word in transcript:
+        try:
+            start, end = word["start"], word["end"]
+            valid = isinstance(word["text"], str) and bool(word["text"].strip()) \
+                and math.isfinite(start) and math.isfinite(end) and 0 <= previous <= start <= end
+        except (KeyError, TypeError):
+            valid = False
+        if not valid:
+            raise RecordingRefused(f"{file.stem}: malformed or unordered word times; review the transcript")
+        previous = start
+    return transcript
 
 
 def matches(words: list[dict], phrase: str, start: int = 0) -> list[tuple[int, int]]:

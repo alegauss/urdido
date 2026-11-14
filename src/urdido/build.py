@@ -363,18 +363,22 @@ class Build:
 
         video_decl = self.decl["video"]
         folder = video_decl["folders"][self.language]
-        script = self.load(self.decl["narration"]["script"])
-        cards = self.load(self.decl["cards"]["declaration"])
+        illustrated = self.decl["source"]["kind"] == "illustrated"
+        if illustrated:
+            from videomaker.preflight import illustrated as preflight
+
+            script, cards, document = preflight(self)
+        else:
+            script = self.load(self.decl["narration"]["script"])
+            cards = self.load(self.decl["cards"]["declaration"])
         theme = html.Theme.load(cards["theme"], {"shio": self.roots["shio"], "root": str(self.here)})
         takes = Takes(script, self.path(self.decl["narration"]["takes"]))
         encoder = os.environ.get("STORY_ENCODER") or media.detect_encoder()
-        illustrated = self.decl["source"]["kind"] == "illustrated"
         if illustrated:
             if self.args.cut != "full" or self.args.vertical or self.args.project or self.args.cards:
                 raise SystemExit("illustrated videos currently support full cuts and --plan")
             from videomaker.sources.illustrated import scenes as illustrations
 
-            document = self.load(self.decl["source"]["declaration"])
             source_scenes = illustrations(document, takes, theme, self.language, str(self.here),
                                          str(self.parts), render=not self.args.plan, encoder=encoder)
         else:

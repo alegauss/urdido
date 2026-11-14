@@ -120,6 +120,7 @@ def test_word_anchor_includes_voice_lead_and_rounds_frames_vm42(tmp_path):
     audio.write_bytes(b"retake")
     data["sha256"] = hashlib.sha256(audio.read_bytes()).hexdigest()
     data["words"][0]["start"] = 2.01
+    data["words"][0]["end"] = 2.6
     words.write_text(json.dumps(data), encoding="utf-8")
     assert anchored_frames(beats, 120, str(audio)) == [72, 48]
 

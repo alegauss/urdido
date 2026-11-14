@@ -46,6 +46,16 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Illustrated `build` and `build --plan` run the same read-only preflight before
+browser rendering or encoder detection (VM56 / PW712). It collects independent
+errors in narration provenance, transcript hashes and ordering, highlight anchors,
+subtitle translations, source references, beat timing, footage bounds, image files
+and required font files. Findings name the file, field, take and stable beat ID
+where applicable. Fatal editorial-label conflicts also fail before rendering.
+Dependent checks wait for their inputs to be valid; the checker never invents
+word times, buys voice or repairs declarations. Existing media may be probed with
+FFprobe. Browser layout and encoded-media QA still run at their production stages.
+
 Illustrated builds keep verified stage caches beside their outputs (VM55).
 Raster layers, beat clips, take joins, the opening, full join, highlights, audio
 mix and final mux each use their own effective inputs. Output hashes must still
