@@ -110,3 +110,26 @@ def test_build_loads_illustrated_edit_report_vm66(tmp_path, monkeypatch):
     assert build.checked_output(str(file), illustrated=True) == str(file)
     assert seen["edit"] == edit
     assert captions in seen["text_files"]
+    assert seen["peak_ceiling"] == -1.0
+
+
+def test_encoded_true_peak_is_enforced_and_failed_report_is_removed_vm47(movie):
+    data = json.loads(qa.report(movie, peak_ceiling=0).read_text(encoding="utf-8"))
+    measured = float(data["loudness"][0]["measurement"]["input_tp"])
+    assert measured <= data["peak_ceiling"] == 0
+    with pytest.raises(RuntimeError, match="encoded true peak.*increase.*margin"):
+        qa.report(movie, peak_ceiling=measured - 0.5)
+    assert not movie.with_suffix(".qa.json").exists()
+    assert not movie.with_suffix(".first.png").exists()
+
+
+def test_every_audio_stream_is_checked_and_silence_is_valid_vm47():
+    levels = [{"stream": 1, "language": "por", "measurement": {"input_tp": "-3.00"}},
+              {"stream": 2, "language": "eng", "measurement": {"input_tp": "-0.87"}}]
+    with pytest.raises(RuntimeError, match=r"stream 2 \(eng\).*-0.87.*-2.00"):
+        qa.check_true_peak(levels, -2)
+    qa.check_true_peak([{"stream": 1, "measurement": {"input_tp": "-inf"}}], -2)
+    with pytest.raises(RuntimeError, match="valid encoded true-peak"):
+        qa.check_true_peak([{"stream": 1, "measurement": {"input_tp": "NaN"}}], -2)
+    with pytest.raises(ValueError, match="finite"):
+        qa.check_true_peak([], float("nan"))

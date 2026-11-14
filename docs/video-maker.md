@@ -152,6 +152,14 @@ frames' presentation intervals and identical-frame runs. Illustrated full cuts
 also include shot, asset, source-file, static-time and highlight counts from
 their build inputs. Other cuts leave those editorial counts null.
 
+Before accepting a build, QA holds every audio stream in the encoded MP4 to
+`[audio] peak` (VM47), using the mix's default ceiling when it is omitted.
+AAC overshoot therefore fails the build even when the pre-encode limiter passed.
+The error identifies the stream and measured dBTP; increase `[audio] margin`
+and rebuild. A failed peak check removes stale QA and first-frame sidecars and
+cannot advance a revision's current pointer. Direct `qa.report` callers can
+pass `peak_ceiling` to request the same check.
+
 The first-frame image carries its own hash and the MP4's hash in the report.
 A failed measurement removes stale QA files; a video that changes during
 measurement is refused. The opening sample measures cadence and repeated

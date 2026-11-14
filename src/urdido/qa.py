@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 import subprocess
@@ -53,7 +54,7 @@ def editorial(edit: dict | None, highlights: dict | None, assets: dict | None = 
 
 
 def report(file: str | Path, *, edit: dict | None = None, highlights: dict | None = None,
-           assets: dict | None = None, text_files=()) -> Path:
+           assets: dict | None = None, text_files=(), peak_ceiling: float | None = None) -> Path:
     """Fail if any measurement fails or the MP4 changes. Write a sidecar and decoded first frame.
 
     The bounded opening sample covers at most 120 frames. It measures decoded repetition and
@@ -77,6 +78,8 @@ def report(file: str | Path, *, edit: dict | None = None, highlights: dict | Non
                        "-i", str(file), "-map", f"0:{s['index']}", "-vn", "-sn",
                        "-af", "loudnorm=print_format=json"])}
                   for s in probe["streams"] if s["codec_type"] == "audio"]
+        if peak_ceiling is not None:
+            check_true_peak(levels, peak_ceiling)
         # PW702: decode from the beginning without seeking to an approximate thumbnail timestamp.
         media.ffmpeg(["-i", str(file), "-map", "0:v:0", "-frames:v", "1", str(image)])
         decoded = subprocess.run(
@@ -91,6 +94,7 @@ def report(file: str | Path, *, edit: dict | None = None, highlights: dict | Non
         data = {"schema": 1, "file": str(file.resolve()), "sha256": signature,
                 "bytes": file.stat().st_size, "duration": float(probe["format"]["duration"]),
                 "streams": probe["streams"], "loudness": levels,
+                "peak_ceiling": peak_ceiling,
                 "first_frame": {"file": image.name, "sha256": sha256(image), "video_sha256": signature},
                 "opening": opening_frames(decoded), "editorial": editorial(edit, highlights, assets), "texts": texts}
         if sha256(file) != signature:
@@ -102,3 +106,22 @@ def report(file: str | Path, *, edit: dict | None = None, highlights: dict | Non
         for stale in (output, image, pending):
             stale.unlink(missing_ok=True)
         raise
+
+
+def check_true_peak(levels: list[dict], ceiling: float) -> None:
+    """VM47 / PW697: hold every encoded audio stream to the mix's promised ceiling."""
+    if not math.isfinite(ceiling) or ceiling > 0:
+        raise ValueError("QA: peak ceiling must be finite and at most 0 dBTP")
+    breaches = []
+    for level in levels:
+        try:
+            peak = float(level["measurement"]["input_tp"])
+            if math.isnan(peak):
+                raise ValueError("NaN")
+        except (KeyError, TypeError, ValueError):
+            raise RuntimeError(f"QA: audio stream {level['stream']} has no valid encoded true-peak measurement") from None
+        if peak > ceiling:
+            breaches.append(f"stream {level['stream']} ({level.get('language') or 'und'}): {peak:.2f} dBTP > {ceiling:.2f} dBTP")
+    if breaches:
+        raise RuntimeError("QA: encoded true peak exceeds the declared ceiling: " + "; ".join(breaches)
+                           + "; increase [audio].margin and rebuild")

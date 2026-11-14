@@ -115,7 +115,8 @@ class Build:
         assets = self.load(self.decl["source"]["declaration"]).get("media", {}) if illustrated else None
         texts = [Path(self.path(self.decl["narration"]["script"]))]
         texts.extend(p for suffix in (".srt", ".vtt") if (p := Path(file).with_suffix(suffix)).exists())
-        report(file, edit=edit, highlights=highlights, assets=assets, text_files=texts)
+        report(file, edit=edit, highlights=highlights, assets=assets, text_files=texts,
+               peak_ceiling=self.decl.get("audio", {}).get("peak", mix.Loudness().peak))
         self.checked.append(file)
         return file
 
