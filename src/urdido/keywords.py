@@ -77,7 +77,8 @@ def cues(placed: list[dict], lines: dict) -> list[dict]:
                 raise RecordingRefused(f"{name}: keyword anchor {item.get('hear', item['show'])!r} not heard")
             i, cursor = match
             found.append({"at": take["at"] + tokens[i][1], "show": item["show"],
-                          "duration": min(2.8, item.get("duration", 2.8)), "take": name})
+                          "duration": min(2.8, item.get("duration", 2.8)), "take": name,
+                          **{k: item[k] for k in ("person", "event") if k in item}})
         for i, cue in enumerate(found):
             end = min(cue["at"] + cue["duration"], take["at"] + take["length"])
             if i + 1 < len(found):

@@ -381,17 +381,20 @@ class Build:
         self.write_plan(self.name, plan_of(timeline))
         if illustrated:
             from videomaker.sources.illustrated import description
+            from videomaker.keywords import cues as highlight_cues
+            from videomaker.labels import check as check_labels
 
             description(document, script, plan_of(timeline), self.language, self.out, self.name)
+            highlights = highlight_cues(plan_of(timeline)["spoken"].get(self.language, []),
+                                        self.load(self.decl["highlights"]["declaration"])["lines"]) \
+                if self.decl.get("highlights") else []
+            edit = self.load(str(self.parts / "illustrated" / "edit.json"))
+            check_labels(document, edit, highlights, video.opening)
         if self.args.plan:
             if illustrated:
-                from videomaker.keywords import cues as highlight_cues
                 from videomaker.review import sheet
 
-                highlights = highlight_cues(plan_of(timeline)["spoken"].get(self.language, []),
-                                            self.load(self.decl["highlights"]["declaration"])["lines"]) \
-                    if self.decl.get("highlights") else []
-                print(sheet(document, self.load(str(self.parts / "illustrated" / "edit.json")),
+                print(sheet(document, edit,
                             plan_of(timeline)["spoken"].get(self.language, []), highlights,
                             self.here, self.parts, self.out, opening=video.opening))
             return 0

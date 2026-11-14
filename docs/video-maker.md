@@ -46,6 +46,15 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Illustrated plans and builds refuse a spoken highlight while a beat's caption
+is visible (VM43), including duplicate labels. `overlay_seconds` ends that
+visibility on full-frame footage and pictures. A highlight crossing a cut
+warns so its end time can be reviewed. Highlight entries can declare
+`"person": "Michel Valdrighi"` or `"event": "WordCamp Brasil"`; alternatively,
+the storyboard's `entities` maps a displayed label to `"person"` or `"event"`.
+Missing matching `people` or `events` tags on the beat or asset produces a
+warning. These declarations support review; they do not establish identity.
+
 Illustrated beats after the first can declare `"from_word": "Gutenberg"`
 (VM42). The current take's hash-checked transcript places that boundary at the
 word's start plus the 0.4-second voice lead, rounded to a production frame.
