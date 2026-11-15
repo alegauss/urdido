@@ -46,6 +46,54 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Narrative evidence is declared separately from media rights (VM64 / PW716):
+
+```toml
+[claims]
+declaration = "claims.json"
+action = "warn" # error refuses claims that lack a current approval; off keeps the report only
+```
+
+The JSON file has `version: 1` and a `claims` array. Every claim names a unique `id`,
+`language`, narration `take`, exact spoken `anchor` (the same text/occurrence/context
+format as beat anchors), claim `text`, and a `kind`: historical, statistic, editorial
+or footage. `evidence` entries name a storyboard `source` or explicit HTTP(S) `url`,
+an excerpt or supporting `note`, and independent ISO dates: `source_date`, `event_date`,
+`published_at`, `retrieved_at`. Unknown dates stay null. Optional `file` snapshots
+are hashed. `illustrations` name an `asset` and separate event/publication dates and
+notes; illustrative footage never proves that the depicted event happened when the
+footage was published. Dates and URLs are supplied evidence, without automatic web
+verification. The report covers declared claims only.
+
+```powershell
+python -m videomaker claims inspect japode/wordpress/video.toml --language pt-BR
+python -m videomaker claims report japode/wordpress/video.toml --language pt-BR --out japode/wordpress/video/claims.html
+```
+
+Inspect returns the claims file SHA-256. The HTML and JSON report include each claim's
+current fingerprint and resolved anchor time within its narration take. The build also
+produces `<name>.<language>.claims.html` and `.json` before rendering. A URL or an imported
+note never marks a claim approved. The WordPress seed contains seven unreviewed claim
+groups copied from its existing narration and source candidates; it records no human
+approval or new evidence retrieval.
+
+After a person reviews the evidence, their review JSON supplies `status` approved or
+rejected, `reviewer`, ISO `date`, `reason`, and the exact `fingerprint` from that view.
+Statistics also require an explicit `valid_until` date. Apply that supplied record:
+
+```powershell
+python -m videomaker claims review japode/wordpress/video.toml --language pt-BR --id release-2003 --expected-sha256 <current-file-hash> --review-file human-review.json
+```
+
+The write checks both the file SHA and review fingerprint, records prior decisions,
+and uses an exclusive lock and atomic replacement. Missing anchors, stale narration,
+undated retrievals, changed claim text/evidence, changed audio/alignment or illustrative
+media bytes, and expired reviews require review again. Historical claims can declare
+a deadline too. Remote page changes require an updated snapshot, retrieval record or
+review deadline; URLs are not downloaded by this check. Publishing reuses current
+approved claim citations through the existing description limit, preserving all claim
+metadata and review states in the credits JSON. Existing media credits remain required.
+
 Builds print live stage events with elapsed time (VM63 / PW715). A long-running
 stage emits a heartbeat every ten seconds with its active take, asset or output.
 Known batches show completed/total units; `?` means the total has not been planned.

@@ -3,6 +3,11 @@
 
 import sys
 
+if len(sys.argv) >= 2 and sys.argv[1] == "claims":
+    from videomaker.claims import main as claims
+
+    sys.exit(claims(sys.argv[2:]))
+
 if len(sys.argv) >= 2 and sys.argv[1] == "prepare":
     from videomaker.prepare import main as prepare
 

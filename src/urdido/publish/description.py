@@ -137,10 +137,16 @@ def illustrated(document: dict, chapters: list[str], options: dict | None = None
     asset_urls = {a["url"] for a in credits}
     sources = [{"label": s.get("credit_label", s["label"].split(" · ")[0]), "url": s["url"]}
                for key, s in document["sources"].items() if key in source_keys or s["url"] in asset_urls]
+    claim_report = document.get("_claims_report")
+    if claim_report:
+        from videomaker.claims import citations
+
+        sources.extend(citations(claim_report))
     text = format_description(options.get("summary", document["description"]), chapters, credits,
                               sources=sources, notes=options.get("notes", document["credits"]),
                               generated=document.get("generated", "Narração e trilha geradas com ElevenLabs."))
-    return text, {"assets": credits, "sources": document["sources"], "original_notes": document["credits"]}
+    return text, {"assets": credits, "sources": document["sources"], "original_notes": document["credits"],
+                  **({"claims": claim_report} if claim_report else {})}
 
 
 def scion(plan: dict, sources: dict, publishing: dict, language: str = "pt-BR") -> tuple[str, dict]:

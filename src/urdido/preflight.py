@@ -254,6 +254,17 @@ def illustrated(build):
                 build.pause_report = report
                 check(source_file, "pauses", lambda: enforce_pauses(report))
     if document is not None and script is not None:
+        if build.decl.get("claims") and takes:
+            from videomaker.claims import inspect as inspect_claims, enforce as enforce_claims
+
+            claim_data = load(build.decl["claims"].get("declaration"), "claims.declaration")
+            if claim_data is not None:
+                claim_report = check(build.path(build.decl["claims"]["declaration"]), "claims",
+                                     lambda: inspect_claims(claim_data, takes, build.language, document, build.here,
+                                                            action=build.decl["claims"].get("action", "warn")))
+                if claim_report is not None:
+                    document["_claims_report"] = claim_report
+                    check(build.path(build.decl["claims"]["declaration"]), "claims", lambda: enforce_claims(claim_report))
         from videomaker import textcheck
 
         settings = textcheck.policy(build.decl.get("text_checks", {}), build.language)

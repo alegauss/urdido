@@ -395,6 +395,10 @@ class Build:
             from videomaker.pauses import publish as publish_pauses
 
             publish_pauses(self.pause_report, self.parts / f"{self.name}.{self.language}.pauses.json")
+            if "_claims_report" in document:
+                from videomaker.claims import publish as publish_claims
+
+                publish_claims(document["_claims_report"], self.out / f"{self.name}.{self.language}.claims.html")
         else:
             script = self.load(self.decl["narration"]["script"])
             cards = self.load(self.decl["cards"]["declaration"])
