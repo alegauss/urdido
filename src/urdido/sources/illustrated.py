@@ -109,7 +109,7 @@ def anchored_frames(beats: list[dict], total: int, audio: str,
     return result
 
 
-def page(beat: dict, document: dict, theme: Theme, frame: Frame, logo: str, number: int) -> str:
+def page(beat: dict, document: dict, theme: Theme, frame: Frame, logo: str, number: int, *, field_prefix="scene") -> str:
     esc = lambda s: html.escape(str(s), quote=True)
     source = document["sources"][beat["source"]]
     layout = beat.get("layout", "date")
@@ -140,6 +140,10 @@ def page(beat: dict, document: dict, theme: Theme, frame: Frame, logo: str, numb
                     f"right:{'70px' if horizontal == 'right' else 'auto'};" + "}")
     header = "" if mark == "none" else (
         f'<header><img src="{logo}"><b>{esc(document["brand"])}</b><small>{esc(document["series"])}</small></header>')
+    fields = {"h1": f"{field_prefix}.{'caption' if 'caption' in beat else 'title'}", "p.text": f"{field_prefix}.text",
+              ".kicker": f"{field_prefix}.kicker", ".date": f"{field_prefix}.big", "blockquote": f"{field_prefix}.quote",
+              ".attribution": f"{field_prefix}.by", ".tile strong": f"{field_prefix}.items",
+              "header b": "brand", "header small": "series", "footer span": f"sources.{beat['source']}"}
     full_css = '''
 .full.layer-text{background:transparent}.full .glow{display:none}
 .full header{top:50px;left:70px;text-shadow:0 2px 8px #000}
@@ -183,13 +187,14 @@ footer{{position:absolute;left:110px;right:110px;bottom:70px;border-top:1px soli
 footer span{{font:21px Text;color:#9bbba7;max-width:1460px}}footer b{{margin-left:auto;color:{c['accent']};font:800 23px Display}}
 {full_css}
 {mark_css}
-</style><body class="{'full' if full else ''} {'hero' if beat.get('hero') else ''}"><div class="glow"></div>{header}
-<main><section><div class="rule"></div><div class="kicker">{esc(beat['kicker'])}</div><h1>{esc(beat.get('caption', beat['title']))}</h1><p class="text">{esc(beat.get('text', ''))}</p></section><section class="graphic">{graphic}</section></main>
+</style><body data-text-fields="{esc(json.dumps(fields))}" class="{'full' if full else ''} {'hero' if beat.get('hero') else ''}"><div class="glow"></div>{header}
+<main{' data-text-box="fixed"' if not full else ''}><section><div class="rule"></div><div class="kicker">{esc(beat['kicker'])}</div><h1>{esc(beat.get('caption', beat['title']))}</h1><p class="text">{esc(beat.get('text', ''))}</p></section><section class="graphic">{graphic}</section></main>
 <footer><span>Fonte: {esc(source['label'])}<br>{esc(source['url'])}</span><b>{number:02}</b></footer>'''
 
 
 def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: str,
-           parts: str, *, render: bool, encoder: str, beat_keys: set[str] | None = None) -> list[Scene]:
+           parts: str, *, render: bool, encoder: str, beat_keys: set[str] | None = None,
+           cards_only: bool = False) -> list[Scene]:
     from videomaker.library import check_range, resolve
     from videomaker.keywords import aliases as declared_aliases
 
@@ -213,13 +218,13 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
                 raise RecordingRefused(f"{name}: too many beats for the spoken take")
             n += 1
             key = f"{name}-{i}"
-            content = page(beat, document, theme, frame, logo, n)
+            content = page(beat, document, theme, frame, logo, n, field_prefix=f"scenes.{name}.{i}")
             pages[key] = content
             (out / f"{key}.html").write_text(content, encoding="utf-8")
             if beat.get("overlay_seconds"):
                 # The caption leaves after overlay_seconds; the brand mark stays the whole beat.
                 mark = page({**beat, "caption": "", "title": "", "text": "", "mark_only": True},
-                            document, theme, frame, logo, n)
+                            document, theme, frame, logo, n, field_prefix=f"scenes.{name}.{i}")
                 pages[f"{key}-mark"] = mark
                 content += mark
             asset = document.get("media", {}).get(beat.get("asset"))
@@ -249,6 +254,8 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
                  if key in beat_keys or (key.endswith("-mark") and key[:-5] in beat_keys)}
     if pages:
         draw(pages, frame, str(out))
+    if cards_only:
+        return result
     def encode(job):
         key, content, frames, beat, asset = job
         file = out / f"{key}.mp4"

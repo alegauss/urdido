@@ -46,6 +46,38 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Illustrated builds check text integrity and layout before video encoding (VM61 / PW700).
+Inputs must decode as UTF-8; replacement characters, likely mojibake and question
+marks inside words are reported with their file and field. Ordinary questions and
+URL query strings remain valid. Glyph checks use the declared scene fonts, including
+the renderer's uppercase kickers, and require the `cards` extra's FontTools dependency.
+They do not infer a replacement accent or silently select a fallback font.
+
+```toml
+[text_checks]
+action = "error" # error by default for illustrated builds; warn or off are explicit alternatives
+protected_tokens = ["WordPress", "JAPODE"]
+glyphs = true
+```
+
+`protected_tokens` can also map language codes to lists. The shared renderer waits
+for fonts, measures text against its horizontal box, assigned layout boundaries,
+clipping ancestors and viewport, and checks protected tokens for line breaks.
+It records the exact declaration field, layer and bounds in `text-checks.json`
+beside the raster layers. Failures include a screenshot under `text-check/` and
+stop before video clips are encoded. Cached warning reports
+retain a verified preview; a changed policy invalidates the measurement cache.
+
+Check every illustrated card and overlay layer without video encoding:
+
+```powershell
+python -m videomaker build japode/wordpress/video.toml --language pt-BR --cards
+```
+
+This uses the production pages and target frame size. It checks text rather than
+automatically shrinking titles. Font coverage applies to drawn scene text; soft
+subtitles keep their player's font, while their input encoding is still checked.
+
 Prepare narration changes together with their word times and anchor review (VM60 / PW703):
 
 ```powershell

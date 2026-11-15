@@ -246,6 +246,29 @@ def illustrated(build):
             if report is not None:
                 build.repetition_report = report
                 check(source_file, "repetition", lambda: enforce(report))
+    if document is not None and script is not None:
+        from videomaker import textcheck
+
+        settings = textcheck.policy(build.decl.get("text_checks", {}), build.language)
+        text_findings = check(build.here, "text_checks", lambda: textcheck.inputs(document, script, build.language, theme, settings))
+        if text_findings is not None and settings.action != "off":
+            for language, spec, table in translations:
+                if isinstance(table, dict):
+                    for name, sentences in table.items():
+                        if isinstance(sentences, list):
+                            for i, text in enumerate(sentences):
+                                if isinstance(text, str):
+                                    text_findings.extend({"field": f"captions.translations.{language}.{name}.{i}", "rule": "encoding",
+                                                          "message": message, "file": build.path(spec["file"])}
+                                                         for message in textcheck.corruption(text))
+        if text_findings:
+            if settings.action == "error":
+                for row in text_findings:
+                    file = row.get("file") or build.path(build.decl["narration"]["script"] if row["field"].startswith("narration.") else
+                                      build.decl["cards"]["declaration"] if row["field"].startswith("cards.") else build.decl["source"]["declaration"])
+                    issue(file, row["field"], row["message"])
+            else:
+                textcheck.enforce(text_findings, settings)
     if findings:
         raise PreflightRefused(findings)
     return script, cards, document

@@ -20,12 +20,16 @@ def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | 
     from playwright.sync_api import sync_playwright
     from videomaker import safety
     from videomaker import cache
+    from videomaker import textcheck
 
     os.makedirs(out_dir, exist_ok=True)
     written: list[str] = []
     findings = []
+    text_findings = []
     safe_report = Path(out_dir) / "caption-safe-area.json"
+    text_report = Path(out_dir) / "text-checks.json"
     safe_report.unlink(missing_ok=True)
+    text_report.unlink(missing_ok=True)
     channel = channel if channel is not None else os.environ.get("E2E_CHANNEL", "msedge")
     with sync_playwright() as p:
         executable = Path(p.chromium.executable_path)
@@ -51,6 +55,14 @@ def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | 
                         findings.append({**item, "page": name, "layers": [layer]})
                 if found and safety.CURRENT.get().action == "error":
                     safety.publish(findings, safe_report)
+                text_found = textcheck.measure(page, frame, name, layer)
+                if text_found:
+                    preview = Path(out_dir) / "text-check" / f"{name}.{layer}.png"
+                    preview.parent.mkdir(exist_ok=True)
+                    page.screenshot(path=str(preview), omit_background=layer == "text")
+                    text_findings.extend({**row, "preview": str(preview), "preview_sha256": cache.file_hash(preview)} for row in text_found)
+                    if textcheck.CURRENT.get().action == "error":
+                        textcheck.publish(text_findings, text_report)
 
             for name, content in pages.items():
                 file = os.path.join(out_dir, f"{name}.png")
@@ -64,6 +76,7 @@ def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | 
                         browser = p.chromium.launch(channel=channel or None)
                         page = browser.new_page(viewport={"width": frame.width, "height": frame.height})
                     before = len(findings)
+                    before_text = len(text_findings)
                     page.set_content(content)
                     page.evaluate("() => document.fonts.ready")
                     check_layer(name, "full")
@@ -76,7 +89,7 @@ def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | 
                             page.evaluate("() => document.fonts.ready")
                             check_layer(name, "text")
                             page.screenshot(path=outputs[1], omit_background=True)
-                    return findings[before:]
+                    return {"safe": findings[before:], "text": text_findings[before_text:]}
 
                 # All production pages embed their fonts/assets in content. External URLs
                 # are deliberately uncached because their bytes are not declared here.
@@ -85,12 +98,19 @@ def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | 
                     and not any(tag in content.lower() for tag in ("<script", "@import"))
                 if cache.CURRENT.get() and executable and embedded:
                     before = len(findings)
+                    before_text = len(text_findings)
                     found = cache.run("raster", outputs,
                                       [content, frame.width, frame.height, channel, version("playwright"),
-                                       asdict(safety.CURRENT.get())], raster,
-                                      inputs=[__file__, safety.__file__, executable])
+                                       asdict(safety.CURRENT.get()), asdict(textcheck.CURRENT.get())], raster,
+                                      inputs=[__file__, safety.__file__, textcheck.__file__, executable])
                     if len(findings) == before:
-                        findings.extend(found)
+                        findings.extend(found["safe"])
+                    if len(text_findings) == before_text:
+                        for row in found["text"]:
+                            if not Path(row["preview"]).is_file() or cache.file_hash(row["preview"]) != row["preview_sha256"]:
+                                preview = outputs[-1] if row["layer"] == "text" else outputs[0]
+                                row = {**row, "preview": preview, "preview_sha256": cache.file_hash(preview)}
+                            text_findings.append(row)
                 else:
                     raster()
                 written.extend(outputs)
@@ -98,4 +118,5 @@ def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | 
             if browser:
                 browser.close()
     safety.publish(findings, safe_report)
+    textcheck.publish(text_findings, text_report)
     return written

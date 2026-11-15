@@ -390,10 +390,12 @@ class Build:
             cards = self.load(self.decl["cards"]["declaration"])
         theme = html.Theme.load(cards["theme"], {"shio": self.roots["shio"], "root": str(self.here)})
         takes = Takes(script, self.path(self.decl["narration"]["takes"]))
-        encoder = os.environ.get("STORY_ENCODER") or media.detect_encoder()
+        encoder = os.environ.get("STORY_ENCODER") or ("x264" if self.args.cards or self.args.plan else media.detect_encoder())
         if illustrated:
-            if self.args.cut != "full" or self.args.vertical or self.args.project or self.args.cards:
-                raise SystemExit("illustrated videos currently support full cuts and --plan")
+            if self.args.cut != "full" or self.args.vertical or self.args.project:
+                raise SystemExit("illustrated videos support full cuts, cards, plans and motion previews")
+            if self.args.cards and (self.args.plan or getattr(self.args, "preview", None)):
+                raise SystemExit("use --cards separately from --plan or --preview")
             from videomaker.sources.illustrated import scenes as illustrations
 
             if getattr(self.args, "preview", None):
@@ -401,7 +403,10 @@ class Build:
 
                 return render(self, document, script, cards, theme, takes, encoder)
             source_scenes = illustrations(document, takes, theme, self.language, str(self.here),
-                                         str(self.parts), render=not self.args.plan, encoder=encoder)
+                                         str(self.parts), render=not self.args.plan, encoder=encoder, cards_only=self.args.cards)
+            if self.args.cards:
+                print(f"illustrated layers checked: {self.parts / 'illustrated/text-checks.json'}")
+                return 0
         else:
             listing = self.path(self.decl["source"]["listing"].replace("{folder}", folder))
             source_scenes = scene_clips(listing)
@@ -522,8 +527,10 @@ def main(argv: list[str] | None = None) -> int:
     if a.preview and kind != "illustrated":
         raise SystemExit("--preview requires an illustrated source")
     from videomaker.safety import configured
+    from videomaker import textcheck
 
     with cache.configured(build.parts / f"cache.{build.language}.json", enabled=kind == "illustrated" and not a.plan), \
+            textcheck.configured(build.decl.get("text_checks", {}), build.language, enabled=kind == "illustrated"), \
             configured(build.decl.get("captions", {}).get("safe_area", {})):
         result = build.chaptered() if kind == "chaptered" else build.scenes()
     if result == 0:

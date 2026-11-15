@@ -28,7 +28,8 @@ def cut(tmp_path, monkeypatch):
         path.write_bytes(name.encode())
         write(f"narration/en/{name}.mp3.prov.json", {"prompt": script[name]["en"], "details": {"voice": "test"}, "engine": {"model": "test"}})
         write(f"narration/en/{name}.words.json", {"sha256": cache.file_hash(path), "words": [{"text": script[name]["en"], "start": 0.1, "end": 1.0}]})
-    (tmp_path / "font.ttf").write_bytes(b"font fixture")
+    font = Path(__file__).resolve().parents[2] / "japode/brand/fonts/JapodeJakarta-ExtraBold.ttf"
+    (tmp_path / "font.ttf").write_bytes(font.read_bytes())
     (tmp_path / "logo.svg").write_text("logo fixture")
     cards = {"theme": {"fonts": {"dir": str(tmp_path), "display": {"files": {"800": "font.ttf"}}, "text": {"file": "font.ttf"}},
                        "colors": {"text": "#fff", "muted": "#ccc", "accent": "#0f0"}, "background": "#000"}}
