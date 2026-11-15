@@ -81,7 +81,7 @@ def beat_frames(beats: list[dict], total: int, max_static: float | None = None) 
     for beat, frames in zip(beats, result):
         if frames < 30:
             raise RecordingRefused("a beat must last at least one second")
-        static = beat.get("static", beat.get("layout", "date") != "footage")
+        static = beat.get("layout", "date") != "footage" or beat.get("static", False)
         if static and max_static is not None and frames > math.floor(max_static * 30):
             raise RecordingRefused(f"static beat {beat['title']!r} exceeds {max_static:g} seconds")
     return result
@@ -240,7 +240,7 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
                 asset = {**asset, "path": str(file), "sha256": cache.file_hash(file)}
             jobs.append((key, content, frames, beat, asset))
             audit.append({"take": name, "beat": key, "at": clock / 30, "seconds": frames / 30,
-                          "static": beat.get("static", beat.get("layout", "date") != "footage"),
+                          "static": beat.get("layout", "date") != "footage" or beat.get("static", False),
                           "asset": beat.get("asset")})
             clock += frames
         result.append(Scene(name, str(out / f"{name}.mp4"), total_frames / 30, "illustrated"))

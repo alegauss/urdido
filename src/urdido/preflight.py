@@ -246,6 +246,13 @@ def illustrated(build):
             if report is not None:
                 build.repetition_report = report
                 check(source_file, "repetition", lambda: enforce(report))
+        if not findings:
+            from videomaker.pauses import inspect as inspect_pauses, enforce as enforce_pauses
+
+            report = check(source_file, "pauses", lambda: inspect_pauses(document, {"beats": audit}, build.here, opening or 0))
+            if report is not None:
+                build.pause_report = report
+                check(source_file, "pauses", lambda: enforce_pauses(report))
     if document is not None and script is not None:
         from videomaker import textcheck
 

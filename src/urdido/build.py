@@ -385,6 +385,9 @@ class Build:
             from videomaker.repetition import publish
 
             publish(self.repetition_report, self.parts / f"{self.name}.{self.language}.repetition.json")
+            from videomaker.pauses import publish as publish_pauses
+
+            publish_pauses(self.pause_report, self.parts / f"{self.name}.{self.language}.pauses.json")
         else:
             script = self.load(self.decl["narration"]["script"])
             cards = self.load(self.decl["cards"]["declaration"])

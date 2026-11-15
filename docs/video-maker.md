@@ -46,6 +46,43 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Illustrated screen recordings can declare pause budgets (VM62 / PW707) in their
+storyboard. Mark the relevant media or beat with `"screen_recording": true`:
+
+```json
+"pauses": {
+  "action": "warn",
+  "max_pause_seconds": 3,
+  "sample_fps": 5,
+  "width": 320,
+  "height": 180,
+  "pixel_delta": 12,
+  "min_changed_share": 0.002,
+  "cursor_motion": "ignore-small"
+}
+```
+
+An absent policy leaves measurements off. `all_footage: true` explicitly selects
+every footage beat. Preflight samples each selected source interval without editing
+it, before card rendering or encoding. The build writes `<name>.<language>.pauses.json`
+beside the parts, with source hashes, longest pauses, offending source and full-cut
+intervals, and the sampling resolution. `--plan` runs this check too. `action: error`
+refuses an unreviewed over-budget pause; `warn` preserves it for review.
+
+`ignore-small` ignores adjacent changes below the declared pixel share, including
+cursor-sized changes; it does not recognize cursors semantically and can also ignore
+small interface changes. `count` treats any pixel change above `pixel_delta` as motion.
+Sampling can miss movement between samples; reported boundaries have approximately
+one sample interval of uncertainty. Choose thresholds for the recording's dimensions
+and content. No pause is cut automatically. Cards and photos retain `max_static_seconds`
+even if their declaration says `static: false`; active footage is measured independently.
+
+A deliberate hold can be retained under `pauses.exceptions` with its stable `beat` ID,
+source `start`/`end` seconds, `sha256`, reviewer, ISO `date` and reason. The exception
+must cover the measured pause and match the current source bytes. Findings retain
+the review record; changed source bytes require another review. This policy is opt-in
+for existing videos. The current WordPress storyboard has no pause budget yet.
+
 Illustrated builds check text integrity and layout before video encoding (VM61 / PW700).
 Inputs must decode as UTF-8; replacement characters, likely mojibake and question
 marks inside words are reported with their file and field. Ordinary questions and
