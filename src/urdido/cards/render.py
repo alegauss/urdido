@@ -21,6 +21,7 @@ def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | 
     from videomaker import safety
     from videomaker import cache
     from videomaker import textcheck
+    from videomaker import progress
 
     os.makedirs(out_dir, exist_ok=True)
     written: list[str] = []
@@ -30,6 +31,7 @@ def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | 
     text_report = Path(out_dir) / "text-checks.json"
     safe_report.unlink(missing_ok=True)
     text_report.unlink(missing_ok=True)
+    progress.plan("raster", len(pages))
     channel = channel if channel is not None else os.environ.get("E2E_CHANNEL", "msedge")
     with sync_playwright() as p:
         executable = Path(p.chromium.executable_path)
@@ -112,7 +114,7 @@ def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | 
                                 row = {**row, "preview": preview, "preview_sha256": cache.file_hash(preview)}
                             text_findings.append(row)
                 else:
-                    raster()
+                    progress.run("raster", Path(file).name, raster)
                 written.extend(outputs)
         finally:
             if browser:

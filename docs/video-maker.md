@@ -46,6 +46,27 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 
 ## The Python assembly
 
+Builds print live stage events with elapsed time (VM63 / PW715). A long-running
+stage emits a heartbeat every ten seconds with its active take, asset or output.
+Known batches show completed/total units; `?` means the total has not been planned.
+Cache events distinguish verified hits from work that must run. Counts describe the
+units planned so far, and can grow when the next batch is discovered. No ETA is guessed.
+
+```powershell
+python -m videomaker build japode/wordpress/video.toml --language pt-BR --progress json > progress.jsonl
+```
+
+The default `--progress human` writes concise events to stderr. `--progress json`
+writes only JSON lines to stdout and sends ordinary paths, cache summaries and
+diagnostics to stderr. `--progress off` suppresses the live events. Every mode saves
+flushed events at `parts/progress.<language>.jsonl`, including failures. The file is
+replaced at the next build; copy it to retain an earlier attempt. Revisions keep it
+inside their own package. Failed records contain the exception type, affected unit,
+known pending counts and last successful unit, without embedding encoder arguments
+or exception messages. `not_observed` lists stages the attempt did not finish; a plan
+or card-only check can finish successfully without encoding any video. Rerunning uses
+the existing verified stage cache; progress does not make a failed output reusable.
+
 Illustrated screen recordings can declare pause budgets (VM62 / PW707) in their
 storyboard. Mark the relevant media or beat with `"screen_recording": true`:
 

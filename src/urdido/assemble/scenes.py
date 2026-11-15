@@ -103,9 +103,12 @@ class ScenesVideo:
                 from videomaker.cards.render import render as draw
 
                 draw(pages, self.frame, self.parts)
+            from videomaker import progress
+
+            progress.plan("source clips", len(planned))
             mediamod.pool([
-                (lambda s=scene, f=fit, o=file: self.encode_fit(s, f, o)) if fit else
-                (lambda p=still, k=need, o=file: self.encode_still(p, k, o))
+                (lambda s=scene, f=fit, o=file: progress.run("source clips", s.name, lambda: self.encode_fit(s, f, o))) if fit else
+                (lambda p=still, k=need, o=file: progress.run("source clips", os.path.basename(o), lambda: self.encode_still(p, k, o)))
                 for scene, takes, need, file, fit, still in planned
             ])
         clock = 0.0

@@ -63,6 +63,9 @@ class Session:
             valid = False
         with self.lock:
             self.events.append({"stage": name, "hit": valid, "outputs": [str(p) for p in outputs]})
+        from videomaker.progress import cache_status
+
+        cache_status(valid)
         if valid:
             return prior.get("result")
         stamp.unlink(missing_ok=True)
@@ -94,10 +97,13 @@ def file_hash(file):
 
 
 def run(name, outputs, settings, action, *, inputs=(), tools=()):
-    current = CURRENT.get()
-    if current is None:
-        return action()
-    return current.run(name, outputs, settings, action, inputs=inputs, tools=tools)
+    from videomaker.progress import unit
+
+    with unit(name, Path(outputs[0]).name):
+        current = CURRENT.get()
+        if current is None:
+            return action()
+        return current.run(name, outputs, settings, action, inputs=inputs, tools=tools)
 
 
 @contextmanager

@@ -302,9 +302,13 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
         sources = [inputs[i + 1] for i, arg in enumerate(inputs) if arg == "-i"]
         cache.run("illustrated clip", [file], args, lambda: media.ffmpeg(args),
                   inputs=[__file__, media.__file__, *sources], tools=["ffmpeg"])
+    from videomaker import progress
+
+    progress.plan("source clips", len(jobs))
     media.pool([lambda job=job: encode(job) for job in jobs])
     if beat_keys is not None:
         return result  # VM57: previews reuse the exact production beat clips, without full-take joins.
+    progress.plan("join", len(result))
     for scene, (_, beats, _) in zip(result, rows):
         listing = out / f"{scene.name}.concat.txt"
         listing.write_text("".join(f"file '{scene.name}-{i}.mp4'\n" for i in range(len(beats))), encoding="utf-8")

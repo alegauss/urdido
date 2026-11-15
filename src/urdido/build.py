@@ -123,8 +123,11 @@ class Build:
             assets = resolve(self.load(self.decl["source"]["declaration"]), self.here, self.load).get("media", {})
         texts = [Path(self.path(self.decl["narration"]["script"]))]
         texts.extend(p for suffix in (".srt", ".vtt") if (p := Path(file).with_suffix(suffix)).exists())
-        report(file, edit=edit, highlights=highlights, assets=assets, text_files=texts,
-               peak_ceiling=self.decl.get("audio", {}).get("peak", mix.Loudness().peak))
+        from videomaker import progress
+
+        progress.run("verification", Path(file).name,
+                     lambda: report(file, edit=edit, highlights=highlights, assets=assets, text_files=texts,
+                                    peak_ceiling=self.decl.get("audio", {}).get("peak", mix.Loudness().peak)))
         self.checked.append(file)
         return file
 
@@ -381,7 +384,11 @@ class Build:
         if illustrated:
             from videomaker.preflight import illustrated as preflight
 
-            script, cards, document = preflight(self)
+            from videomaker import progress
+
+            progress.plan("validation", 1)
+            with progress.unit("validation", f"{self.name}.{self.language}"):
+                script, cards, document = preflight(self)
             from videomaker.repetition import publish
 
             publish(self.repetition_report, self.parts / f"{self.name}.{self.language}.repetition.json")
@@ -459,6 +466,9 @@ class Build:
                             self.here, self.parts, self.out, opening=video.opening))
             return 0
         pieces = pieces_of(timeline)
+        from videomaker import progress
+
+        progress.plan("join", 1)
         joined = video.media.concat(pieces, f"{self.name}-joined.mp4")
         total = media.seconds(joined)
         placed = plan_of(timeline)["spoken"].get(self.language, [])
@@ -524,6 +534,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--context-before", type=float, default=0, help="seconds before the preview selection")
     p.add_argument("--context-after", type=float, default=0, help="seconds after the preview selection")
     p.add_argument("--preview-occurrence", type=int, help="1-based spoken-cue occurrence when the phrase repeats")
+    p.add_argument("--progress", choices=["human", "json", "off"], default="human",
+                   help="live stage events: human on stderr or JSONL on stdout; also saved beside the build parts")
     a = p.parse_args(argv)
     build = Build(Path(a.declaration), a)
     kind = build.decl["source"]["kind"]
@@ -531,13 +543,18 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("--preview requires an illustrated source")
     from videomaker.safety import configured
     from videomaker import textcheck
+    from videomaker import progress
 
-    with cache.configured(build.parts / f"cache.{build.language}.json", enabled=kind == "illustrated" and not a.plan), \
+    with progress.configured(build.parts / f"progress.{build.language}.jsonl", mode=a.progress), \
+            cache.configured(build.parts / f"cache.{build.language}.json", enabled=kind == "illustrated" and not a.plan), \
             textcheck.configured(build.decl.get("text_checks", {}), build.language, enabled=kind == "illustrated"), \
             configured(build.decl.get("captions", {}).get("safe_area", {})):
-        result = build.chaptered() if kind == "chaptered" else build.scenes()
-    if result == 0:
-        build.write_inputs()
-    if result == 0 and build.revision:
-        print(build.revision.complete(build.checked))
+        with progress.unit("assembly", f"{build.name}.{build.language}:{a.cut}"):
+            result = build.chaptered() if kind == "chaptered" else build.scenes()
+        if result == 0:
+            with progress.unit("declarations", "input hashes"):
+                build.write_inputs()
+        if result == 0 and build.revision:
+            with progress.unit("package", "revision"):
+                print(build.revision.complete(build.checked))
     return result

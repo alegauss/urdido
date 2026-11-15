@@ -133,6 +133,10 @@ action="off"
         return json.loads((tmp_path / "video/parts/cache.en.json").read_text())["stages"]
     first = build()
     assert encoded and not any(e["hit"] for e in first)
+    progress_events = [json.loads(line) for line in (tmp_path / "video/parts/progress.en.jsonl").read_text("utf-8").splitlines()]
+    assert {"validation", "raster", "source clips", "join", "highlights", "mix", "mux", "verification"} <= {
+        e["stage"] for e in progress_events if e["event"] == "finished"}
+    assert progress_events[-1]["pending"] == []
     story["scenes"]["intro"][0]["id"] = "identity-only"
     story["scenes"]["outro"][0]["people"] = ["provenance-only"]
     write("story.json", story)
