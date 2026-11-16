@@ -181,7 +181,7 @@ def context(declaration, language):
     source = resolve(source, folder)
     script = json.loads((folder / spec["narration"]["script"]).read_text("utf-8-sig"))
     file = folder / spec["claims"]["declaration"]
-    takes = Takes(script, str(folder / spec["narration"]["takes"]))
+    takes = Takes(script, str(folder / spec["narration"]["takes"]), spec["narration"].get("tempo", 1.0))
     report = inspect(read(file), takes, language, source, folder, action=spec["claims"].get("action", "warn"))
     return file, report
 

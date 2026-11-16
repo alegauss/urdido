@@ -10,7 +10,7 @@ from types import SimpleNamespace
 from videomaker import captions, keywords, media
 from videomaker.cards.html import Frame, Theme, resolve
 from videomaker.narration import Takes
-from videomaker.sources.illustrated import anchored_frames, page, validate
+from videomaker.sources.illustrated import anchored_frames, paced, page, validate
 from videomaker.sources.model import RecordingRefused
 
 
@@ -96,7 +96,7 @@ def illustrated(build):
         check(build.path(highlight_spec["declaration"]), "style", style)
     takes = None
     if script is not None:
-        takes = check(build.here, "narration", lambda: Takes(script, build.path(build.decl["narration"]["takes"])))
+        takes = check(build.here, "narration", lambda: Takes(script, build.path(build.decl["narration"]["takes"]), build.decl["narration"].get("tempo", 1.0)))
     voices, words = {}, {}
     if takes:
         for name in takes.lines:
@@ -189,7 +189,8 @@ def illustrated(build):
                 continue
             take = voices[name]
             lengths = check(source_file, f"scenes.{name}.timing",
-                            lambda: anchored_frames(beats, math.ceil((0.4 + take.length + 0.5) * 30), take.file,
+                            lambda: anchored_frames(paced(beats, getattr(takes, "tempo", 1.0)),
+                                                    math.ceil((0.4 + take.length + 0.5) * 30), take.file,
                                                     document.get("max_static_seconds"), aliases=aliases), name)
             if lengths:
                 placed.append({"file": take.file, "at": (opening or 0) + clock / 30 + 0.4,

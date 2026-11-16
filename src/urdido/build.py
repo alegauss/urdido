@@ -203,7 +203,7 @@ class Build:
             raise SystemExit(f"videomaker build: {refused}")
         frame = html.Frame(1080, 1920) if vertical else html.Frame(1920, 1080)
         script = self.load(self.decl["narration"]["script"])
-        takes = Takes(script, self.path(self.decl["narration"]["takes"]))
+        takes = Takes(script, self.path(self.decl["narration"]["takes"]), self.decl["narration"].get("tempo", 1.0))
         cards = self.load(self.decl["cards"]["declaration"])
         theme = html.Theme.load(cards["theme"], {"turing": self.roots["plugin"], "shio": self.roots["shio"]})
         words = cards["words"][self.decl["cards"]["words"]]
@@ -403,7 +403,7 @@ class Build:
             script = self.load(self.decl["narration"]["script"])
             cards = self.load(self.decl["cards"]["declaration"])
         theme = html.Theme.load(cards["theme"], {"shio": self.roots["shio"], "root": str(self.here)})
-        takes = Takes(script, self.path(self.decl["narration"]["takes"]))
+        takes = Takes(script, self.path(self.decl["narration"]["takes"]), self.decl["narration"].get("tempo", 1.0))
         encoder = os.environ.get("STORY_ENCODER") or ("x264" if self.args.cards or self.args.plan else media.detect_encoder())
         if illustrated:
             if self.args.cut != "full" or self.args.vertical or self.args.project:

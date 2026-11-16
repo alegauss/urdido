@@ -25,10 +25,60 @@ class Take:
     text: str
 
 
+def stretched(source: str, tempo: float) -> str:
+    """The take `tempo` times as fast, pitch kept, with its word times scaled to match (VM72).
+
+    eleven_v3 ignores the `speed` delivery setting, so a faster narration is made from the
+    bought take: `<language>/tempo-<t>/<name>.mp3` beside it, rebuilt whenever the take changes.
+    Its `.words.json` comes from the take's own transcript divided by the tempo and is keyed to
+    the stretched file's hash, so no second transcription is bought. Without a current transcript
+    of the take, the stretched one is left without words and the build says so as it always does.
+    """
+    import subprocess
+
+    from videomaker.cache import file_hash
+
+    source_path = os.path.abspath(source)
+    folder = os.path.join(os.path.dirname(source_path), f"tempo-{tempo:g}")
+    name = os.path.splitext(os.path.basename(source_path))[0]
+    out = os.path.join(folder, f"{name}.mp3")
+    record = os.path.join(folder, f"{name}.mp3.tempo.json")
+    source_hash = file_hash(source_path)
+    try:
+        with open(record, encoding="utf-8") as f:
+            fresh = json.load(f) == {"source_sha256": source_hash, "tempo": tempo} and os.path.exists(out)
+    except (OSError, ValueError):
+        fresh = False
+    if not fresh:
+        os.makedirs(folder, exist_ok=True)
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", source_path, "-filter:a", f"atempo={tempo}",
+                        "-c:a", "libmp3lame", "-q:a", "2", out], check=True)
+        with open(record, "w", encoding="utf-8") as f:
+            json.dump({"source_sha256": source_hash, "tempo": tempo}, f)
+    words_in = os.path.splitext(source_path)[0] + ".words.json"
+    words_out = os.path.splitext(out)[0] + ".words.json"
+    try:
+        with open(words_in, encoding="utf-8-sig") as f:
+            heard = json.load(f)
+    except (OSError, ValueError):
+        return out
+    if heard.get("sha256") == source_hash:
+        scaled = {**heard, "sha256": file_hash(out), "tempo": tempo, "source_sha256": source_hash,
+                  "words": [{**w, "start": round(w["start"] / tempo, 3), "end": round(w["end"] / tempo, 3)}
+                            for w in heard["words"]]}
+        with open(words_out, "w", encoding="utf-8") as f:
+            json.dump(scaled, f, ensure_ascii=False, indent=2)
+            f.write("\n")
+    return out
+
+
 class Takes:
-    def __init__(self, script: Mapping, folder: str):
+    def __init__(self, script: Mapping, folder: str, tempo: float = 1.0):
         self.script = script
         self.folder = folder
+        self.tempo = float(tempo)
+        if not 0.5 <= self.tempo <= 2.0:
+            raise ValueError(f"narration tempo {tempo} is outside 0.5-2.0")
         self.lines: dict[str, Mapping[str, str]] = {"intro": script["intro"]}
         for n, chapter in script["chapters"].items():
             self.lines[f"chapter-{n}"] = chapter["card"]
@@ -42,10 +92,22 @@ class Takes:
             said = re.sub(rf"\b{re.escape(word)}\b", lambda _: sound, said)
         return said
 
-    def take_file(self, language: str, name: str) -> str:
+    def source_file(self, language: str, name: str) -> str:
+        """The take as bought, whatever the tempo."""
         return os.path.join(self.folder, language, f"{name}.mp3")
 
+    def take_file(self, language: str, name: str) -> str:
+        """The take the video hears: the bought one, or at a tempo its stretched copy (VM72)."""
+        source = self.source_file(language, name)
+        if self.tempo == 1.0 or not os.path.exists(source):
+            return source
+        return stretched(source, self.tempo)
+
     def current(self, file: str, language: str | None, text: str | None) -> bool:
+        folder = os.path.dirname(file)
+        if os.path.basename(folder).startswith("tempo-"):
+            # A stretched copy is current when the take it was made from is (VM72).
+            file = os.path.join(os.path.dirname(folder), os.path.basename(file))
         record = f"{file}.prov.json"
         if text is None or not (os.path.exists(file) and os.path.exists(record)):
             return False

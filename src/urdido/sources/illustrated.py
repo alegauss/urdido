@@ -66,6 +66,14 @@ def brand_mark(beat: dict, document: dict) -> str:
     return value
 
 
+def paced(beats: list[dict], tempo: float) -> list[dict]:
+    """A beat's fixed `seconds` were timed against the bought take, so a narration heard
+    `tempo` times as fast shortens them by the same factor (VM72)."""
+    if tempo == 1.0:
+        return beats
+    return [{**b, "seconds": b["seconds"] / tempo} if "seconds" in b else b for b in beats]
+
+
 def beat_frames(beats: list[dict], total: int, max_static: float | None = None) -> list[int]:
     """Fixed short cards leave their remaining narration time to moving footage."""
     fixed = {i: round(b["seconds"] * 30) for i, b in enumerate(beats) if "seconds" in b}
@@ -211,7 +219,7 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
     n = 0
     for name, beats, take in rows:
         total_frames = math.ceil((0.4 + take.length + 0.5) * 30)
-        lengths = anchored_frames(beats, total_frames, take.file, document.get("max_static_seconds"),
+        lengths = anchored_frames(paced(beats, takes.tempo), total_frames, take.file, document.get("max_static_seconds"),
                                   aliases=declared_aliases(takes.script, language))
         for i, (beat, frames) in enumerate(zip(beats, lengths)):
             if frames < 30:
