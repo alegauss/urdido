@@ -112,3 +112,16 @@ def test_readiness_retries_connection_closed_during_server_start_vm44(instance, 
     monkeypatch.setattr("videomaker.instances.urlopen", request)
     monkeypatch.setattr("videomaker.instances.time.sleep", lambda seconds: None)
     instance.wait()
+
+
+def test_a_tag_moving_on_does_not_change_the_containers(instance, monkeypatch):
+    recorded = [{"ID": "one", "Image": "ghcr.io/openviglet/shio:latest", "Service": "shio", "State": "running"}]
+    instance.record.parent.mkdir()
+    instance.record.write_text(json.dumps({"project": instance.project, "ready": True, "containers": recorded,
+                                           "instance_spec_sha256": instance.spec_sha}), encoding="utf-8")
+    # a release was published meanwhile: compose now prints the running image by its digest
+    monkeypatch.setattr(instance, "containers", lambda: [{**recorded[0], "Image": "sha256:c5d5abd4"}])
+    assert instance.status()["containers"] == recorded
+    monkeypatch.setattr(instance, "containers", lambda: [{**recorded[0], "ID": "two"}])
+    with pytest.raises(RuntimeError, match="containers changed"):
+        instance.status()

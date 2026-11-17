@@ -125,7 +125,11 @@ class Instance:
 
     def status(self) -> dict:
         data = self.owned()
-        if not data or not data.get("ready") or self.containers() != data["containers"] \
+        # The same containers, by id, service and state. Not by `Image`: compose prints the tag while it
+        # still names the running image and its digest once the tag moves on (a release published
+        # mid-recording, 2026-11-17), though the container and what it runs are unchanged.
+        same = lambda rows: [{k: row.get(k) for k in ("ID", "Service", "State")} for row in rows]
+        if not data or not data.get("ready") or same(self.containers()) != same(data["containers"]) \
                 or data.get("instance_spec_sha256") != self.spec_sha:
             raise RuntimeError("instance is not ready or its containers changed; run instance up/reset")
         return data
