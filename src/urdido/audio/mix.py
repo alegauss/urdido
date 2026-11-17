@@ -58,6 +58,7 @@ class Sound:
     source_at: float
     at: float
     length: float
+    gain_db: float = 0.0  # a clip's own level, e.g. a loud meme brought down (VM78)
 
 
 @dataclass(frozen=True)
@@ -196,8 +197,9 @@ def mix_graph(
     count = len(placed)
     for n, sound in enumerate(sounds):
         inputs += ["-ss", f"{sound.source_at:.3f}", "-t", f"{sound.length:.3f}", "-i", sound.file]
+        level = f"volume={_num(sound.gain_db)}dB," if sound.gain_db else ""
         graph.append(
-            f"[{count}:a]afade=t=out:st={max(0, sound.length - 0.6):.3f}:d=0.6,"
+            f"[{count}:a]{level}afade=t=out:st={max(0, sound.length - 0.6):.3f}:d=0.6,"
             f"adelay={_ms(sound.at)}:all=1[s{n}]"
         )
         labels += f"[s{n}]"

@@ -10,7 +10,7 @@ from types import SimpleNamespace
 from videomaker import captions, keywords, media
 from videomaker.cards.html import Frame, Theme, resolve
 from videomaker.narration import Takes
-from videomaker.sources.illustrated import anchored_frames, paced, page, validate
+from videomaker.sources.illustrated import anchored_frames, paced, page, scene_frames, validate
 from videomaker.sources.model import RecordingRefused
 
 
@@ -171,7 +171,8 @@ def illustrated(build):
                     issue(source_file, f"scenes.{name}.{i}", exc, name, key)
                 if theme is not None:
                     check(source_file, f"scenes.{name}.{i}.page",
-                          lambda: page(beat, document, theme, Frame(1920, 1080), "preflight", i + 1), name, key)
+                          lambda: page(beat, document, theme, build.frame() if hasattr(build, "frame") else Frame(1920, 1080),
+                                       "preflight", i + 1), name, key)
                 if "from_word" in beat and name in words:
                     check(source_file, f"scenes.{name}.{i}.from_word",
                           lambda: keywords.anchor(Path(voices[name].file), beat["from_word"], aliases=aliases), name, key)
@@ -190,7 +191,7 @@ def illustrated(build):
             take = voices[name]
             lengths = check(source_file, f"scenes.{name}.timing",
                             lambda: anchored_frames(paced(beats, getattr(takes, "tempo", 1.0)),
-                                                    math.ceil((0.4 + take.length + 0.5) * 30), take.file,
+                                                    scene_frames(document, name, take.length), take.file,
                                                     document.get("max_static_seconds"), aliases=aliases), name)
             if lengths:
                 placed.append({"file": take.file, "at": (opening or 0) + clock / 30 + 0.4,

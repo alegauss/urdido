@@ -417,7 +417,8 @@ class Build:
 
                 return render(self, document, script, cards, theme, takes, encoder)
             source_scenes = illustrations(document, takes, theme, self.language, str(self.here),
-                                         str(self.parts), render=not self.args.plan, encoder=encoder, cards_only=self.args.cards)
+                                         str(self.parts), render=not self.args.plan, encoder=encoder, cards_only=self.args.cards,
+                                         frame=self.frame())
             if self.args.cards:
                 print(f"illustrated layers checked: {self.parts / 'illustrated/text-checks.json'}")
                 return 0
@@ -425,7 +426,7 @@ class Build:
             listing = self.path(self.decl["source"]["listing"].replace("{folder}", folder))
             source_scenes = scene_clips(listing)
         video = ScenesVideo(
-            name=self.name, language=self.language, frame=html.Frame(1920, 1080), scenes=source_scenes,
+            name=self.name, language=self.language, frame=self.frame(), scenes=source_scenes,
             takes=takes, script=script, theme=theme,
             words=cards["words"][self.language], parts=str(self.parts),
             encoder=encoder, intro=self.intro(),
@@ -476,13 +477,17 @@ class Build:
         joined = video.media.concat(pieces, f"{self.name}-joined.mp4")
         total = media.seconds(joined)
         placed = plan_of(timeline)["spoken"].get(self.language, [])
+        if (self.decl.get("captions") or {}).get("burn") and not self.decl.get("highlights"):
+            raise SystemExit("videomaker build: [captions] burn draws in the highlights' pass; declare [highlights] "
+                             "(its lines may be empty) for its fonts")
         if self.decl.get("highlights"):
             from videomaker.keywords import overlay
             from videomaker.keywords import aliases as declared_aliases
 
             joined = overlay(joined, placed, self.load(self.decl["highlights"]["declaration"]),
                              self.parts, self.path(self.decl["highlights"]["fonts"]), encoder,
-                             aliases=declared_aliases(script, self.language))
+                             aliases=declared_aliases(script, self.language), frame=self.frame(),
+                             burn=(self.decl.get("captions") or {}).get("burn"))
         cues = cap.narration_cues(placed)
         for ext, text in (("srt", cap.srt(cues)), ("vtt", cap.vtt(cues))):
             (self.out / f"{self.name}.{self.language}.{ext}").write_text(text, encoding="utf-8", newline="")
@@ -505,12 +510,31 @@ class Build:
         print(self.checked_output(file, illustrated=illustrated))
         return 0
 
+    def frame(self):
+        """The declared `[video] frame = [width, height]`, 1920x1080 by default (VM74)."""
+        size = (self.decl.get("video") or {}).get("frame", [1920, 1080])
+        if not (isinstance(size, list) and len(size) == 2 and all(isinstance(v, int) and v >= 16 and v % 2 == 0 for v in size)):
+            raise SystemExit(f"videomaker build: [video] frame must be [width, height] in even pixels, got {size!r}")
+        return html.Frame(*size)
+
+    def beat_sounds(self, opening: float) -> list:
+        """The illustrated beats that play their clip's own sound, where they sit on the timeline
+        (VM78): the edit records each one's clip and the second its picture starts from."""
+        edit = self.parts / "illustrated" / "edit.json"
+        if not edit.exists():
+            return []
+        beats = json.loads(edit.read_text(encoding="utf-8"))["beats"]
+        return [mix.Sound(b["sound"]["file"], float(b["sound"]["source_at"]), opening + b["at"], b["seconds"],
+                          float(b["sound"].get("gain_db", 0.0)))
+                for b in beats if b.get("sound")]
+
     def scene_voice(self, video, placed, total):
         """Use the full production mix even when VM57 reviews only a short interval."""
         voice = str(self.parts / f"voice.{self.language}.m4a")
         music = self.decl["music"]
         bed = self.path(music["bed"])
         sounds = [mix.Sound(video.intro.file, video.intro.start, 0.0, video.opening)] if video.intro else []
+        sounds += self.beat_sounds(getattr(video, "opening", 0) or 0)
         # A narrated explainer may want its bed quieter than the default (VM38): `reference` is the
         # bed's LUFS before the duck, `between` / `under` its gain beside and under the voice.
         duck = mix.Duck(**{k: music[k] for k in ("between", "under", "ramp") if k in music})

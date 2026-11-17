@@ -209,6 +209,39 @@ def translated_cues(placed: Mapping, words: Sequence[Mapping], translation: Sequ
     return cues
 
 
+def burned_cues(placed: Mapping, words: Sequence[Mapping], size: int = 3) -> list[Cue]:
+    """The narration as it is burned into a Short (VM75): the script's written words, never the
+    transcript's spelling, in groups of at most `size` words that never cross a sentence. Each
+    sentence is placed by the transcript's word times, as the translated captions are, and its
+    groups share that time by length. A lone last word joins the group before it."""
+    if size < 1:
+        raise ValueError("captions.burn.words must be at least 1")
+    spoken = sentences(str(placed.get("text") or ""))
+    if not spoken:
+        return []
+    if len(words) < len(spoken):
+        raise ValueError("burned captions need the take's word timings")
+    ends = sentence_ends(spoken, words, placed["length"])
+    starts = [0] + [e + 1 for e in ends[:-1]]
+    cues = []
+    for n, (first, last, sentence) in enumerate(zip(starts, ends, spoken)):
+        start_t = placed["at"] + words[first]["start"]
+        end_t = placed["at"] + (words[starts[n + 1]]["start"] if n + 1 < len(starts) else words[last]["end"] + 0.3)
+        tokens = sentence.split()
+        groups = [tokens[i:i + size] for i in range(0, len(tokens), size)]
+        if len(groups) > 1 and len(groups[-1]) == 1:
+            lone = groups.pop()
+            groups[-1] += lone
+        texts = [" ".join(g) for g in groups]
+        total = sum(_units(t) for t in texts) or 1
+        t = start_t
+        for text in texts:
+            nxt = t + (end_t - start_t) * _units(text) / total
+            cues.append(Cue(t, nxt, text))
+            t = nxt
+    return cues
+
+
 def narration_cues(placed: Iterable[Mapping], width: int = CAPTION_WIDTH) -> list[Cue]:
     """One language's takes as cues, in the order they are heard."""
     return [cue for take in sorted(placed, key=lambda p: p["at"]) for cue in caption_cues(take, width)]

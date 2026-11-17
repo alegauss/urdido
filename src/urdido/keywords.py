@@ -126,11 +126,18 @@ def cues(placed: list[dict], lines: dict, *, aliases=None) -> list[dict]:
             if match is None:
                 raise RecordingRefused(f"{name}: keyword anchor {item.get('hear', item['show'])!r} not heard")
             i, cursor = match
+            look = item.get("look")
+            if look not in (None, *LOOKS):
+                raise RecordingRefused(f"{name}: highlight look {look!r} is unknown; use one of {sorted(LOOKS)}")
+            # A fact callout stays at most 2.8 s; a meme may hold its punchline longer (VM77).
+            longest = 5.0 if look == "meme" else 2.8
             found.append({"at": take["at"] + tokens[i][1], "show": item["show"],
-                          "duration": min(2.8, item.get("duration", 2.8)), "take": name,
-                          **{k: item[k] for k in ("person", "event") if k in item}})
+                          "duration": min(longest, item.get("duration", 2.8)), "take": name,
+                          **{k: item[k] for k in ("person", "event", "look") if k in item}})
         for i, cue in enumerate(found):
-            end = min(cue["at"] + cue["duration"], take["at"] + take["length"])
+            # A reaction meme lands after the line, so it may hold into the take's 0.5 s tail (VM77).
+            tail = 0.5 if cue.get("look") == "meme" else 0
+            end = min(cue["at"] + cue["duration"], take["at"] + take["length"] + tail)
             if i + 1 < len(found):
                 end = min(end, found[i + 1]["at"] - 0.08)
             result.append({**cue, "end": end})
@@ -142,41 +149,106 @@ def stamp(t: float) -> str:
     return f"{cs // 360000}:{cs // 6000 % 60:02}:{cs // 100 % 60:02}.{cs % 100:02}"
 
 
-def write_ass(file: Path, timed: list[dict], style: dict):
-    color = style["color"].lstrip("#")
-    box = f"&H00{color[4:6]}{color[2:4]}{color[:2]}"
+#: Burned captions on a vertical frame sit in the Shorts safe area (VM75): clear of the buttons on
+#: the right (x 60 to 940 of 1080) and above the title at the bottom (y 1500 of 1920).
+SHORTS_BURN = {"size": 84, "margin": 520, "left": 60, "right": 140}
+WIDE_BURN = {"size": 58, "margin": 70, "left": 160, "right": 160}
+
+
+class _Wide:
+    width, height = 1920, 1080
+
+
+#: Highlight looks besides the channel's callout (VM77): a meme is white display type with a heavy
+#: black outline near the top of the frame, below the brand mark.
+LOOKS = {"meme"}
+
+
+def meme_style(font: str, frame) -> str:
+    size, top = (124, 300) if frame.height > frame.width else (110, 90)
+    side = 60 if frame.height > frame.width else 160
+    return (f"Style: Meme,{font},{size},&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,10,0,8,"
+            f"{side},{side},{top},1")
+
+
+def ass_color(hex_color: str) -> str:
+    color = hex_color.lstrip("#")
+    return f"&H00{color[4:6]}{color[2:4]}{color[:2]}"
+
+
+def burn_style(burn: dict, frame) -> dict:
+    """The burned captions' look: the frame's default, any key the declaration sets over it."""
+    base = SHORTS_BURN if frame.height > frame.width else WIDE_BURN
+    known = {"words", "font", "size", "margin", "left", "right", "color", "outline"}
+    unknown = set(burn) - known
+    if unknown:
+        raise ValueError(f"captions.burn: unknown keys {sorted(unknown)}; use {sorted(known)}")
+    return {**base, "color": "#FFFFFF", "outline": 6, **burn}
+
+
+def write_ass(file: Path, timed: list[dict], style: dict, *, frame=None, burned: list | None = None,
+              burn: dict | None = None):
+    box = ass_color(style["color"])
+    frame = frame or _Wide()
     # A player draws the optional captions at the bottom; `margin` (px from the bottom edge, at
     # 1080p) lifts the highlights clear of them (VM48). 85 keeps the earlier videos unchanged.
     margin = int(style.get("margin", 85))
+    side = 130 if frame.width >= frame.height else 60
+    styles = [f"Style: Key,{style['font']},{HIGHLIGHT_FONT_SIZE},&H00111111,&H00111111,{box},&H00000000,0,0,0,0,100,100,0,0,3,{HIGHLIGHT_OUTLINE},0,2,{side},{side},{margin},1"]
+    if any(cue.get("look") == "meme" for cue in timed):
+        styles.append(meme_style(style["font"], frame))
+    if burned:
+        b = burn_style(burn or {}, frame)
+        styles.append(f"Style: Cap,{b.get('font', style['font'])},{int(b['size'])},{ass_color(b['color'])},{ass_color(b['color'])},"
+                      f"&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,{int(b['outline'])},0,2,"
+                      f"{int(b['left'])},{int(b['right'])},{int(b['margin'])},1")
+    newline = "\n"
     head = f"""[Script Info]
 ScriptType: v4.00+
-PlayResX: 1920
-PlayResY: 1080
+PlayResX: {frame.width}
+PlayResY: {frame.height}
 WrapStyle: 2
 ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Key,{style['font']},{HIGHLIGHT_FONT_SIZE},&H00111111,&H00111111,{box},&H00000000,0,0,0,0,100,100,0,0,3,{HIGHLIGHT_OUTLINE},0,2,130,130,{margin},1
+{newline.join(styles)}
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
-    events = []
+    clean = lambda text: text.replace("{", "").replace("}", "").replace("\n", r"\N")  # noqa: E731
+    # A caption group may wrap (\q0); the highlights keep the file's no-wrap style.
+    events = [f"Dialogue: 0,{stamp(c.start)},{stamp(c.end)},Cap,,0,0,0,,{{\\q0}}{clean(c.text)}" for c in burned or []]
     for cue in timed:
-        text = cue["show"].replace("{", "").replace("}", "").replace("\n", r"\N")
-        events.append(f"Dialogue: 1,{stamp(cue['at'])},{stamp(cue['end'])},Key,,0,0,0,,{{\\fad(100,150)}}{text}")
+        if cue.get("look") == "meme":
+            # A meme may wrap to two lines (\q0) and pops in rather than fading.
+            events.append(f"Dialogue: 2,{stamp(cue['at'])},{stamp(cue['end'])},Meme,,0,0,0,,{{\\q0}}{clean(cue['show'])}")
+        else:
+            events.append(f"Dialogue: 1,{stamp(cue['at'])},{stamp(cue['end'])},Key,,0,0,0,,{{\\fad(100,150)}}{clean(cue['show'])}")
     file.write_text(head + "\n".join(events) + "\n", encoding="utf-8")
 
 
+def burned_cues(placed: list[dict], size: int) -> list:
+    """Every heard take's written words as burned caption groups (VM75)."""
+    from videomaker.captions import burned_cues as take_cues
+
+    cues = []
+    for take in sorted(placed, key=lambda p: p["at"]):
+        cues += take_cues(take, word_record(Path(take["file"])), size)
+    return cues
+
+
 def overlay(joined: str, placed: list[dict], declaration: dict, parts: Path, fonts: str, encoder: str,
-            *, window: tuple[float, float] | None = None, origin: float = 0, aliases=None) -> str:
+            *, window: tuple[float, float] | None = None, origin: float = 0, aliases=None,
+            frame=None, burn: dict | None = None) -> str:
     from videomaker import media
     from videomaker import cache
 
     timed = cues(placed, declaration["lines"], aliases=aliases)
+    burned = burned_cues(placed, int(burn.get("words", 3))) if burn else None
     ass = parts / "keywords.ass"
-    write_ass(ass, timed, declaration["style"])
+    write_ass(ass, timed, declaration["style"], frame=frame, burned=burned, burn=burn)
     (parts / "keywords.json").write_text(json.dumps(timed, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     path = lambda p: str(p).replace("\\", "/").replace(":", r"\:").replace("'", r"\'")
     output = str(parts / "highlighted.mp4")

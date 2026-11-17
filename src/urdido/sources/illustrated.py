@@ -66,12 +66,50 @@ def brand_mark(beat: dict, document: dict) -> str:
     return value
 
 
+def picture_crop(beat: dict) -> str:
+    """A picture beat's `crop = [left, top, right, bottom]` (fractions of the image) as the ffmpeg
+    filter that precedes its fitting to the frame, or nothing without one (VM76)."""
+    box = beat.get("crop")
+    if box is None:
+        return ""
+    if beat.get("layout") != "picture":
+        raise RecordingRefused("crop applies to picture beats only")
+    if not (isinstance(box, list) and len(box) == 4 and all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in box)):
+        raise RecordingRefused(f"a picture crop is [left, top, right, bottom], got {box!r}")
+    left, top, right, bottom = box
+    if not (0 <= left < right <= 1 and 0 <= top < bottom <= 1):
+        raise RecordingRefused(f"a picture crop is fractions with left < right and top < bottom, got {box!r}")
+    return f"crop=iw*{right - left:.4f}:ih*{bottom - top:.4f}:iw*{left:.4f}:ih*{top:.4f},"
+
+
 def paced(beats: list[dict], tempo: float) -> list[dict]:
     """A beat's fixed `seconds` were timed against the bought take, so a narration heard
     `tempo` times as fast shortens them by the same factor (VM72)."""
     if tempo == 1.0:
         return beats
-    return [{**b, "seconds": b["seconds"] / tempo} if "seconds" in b else b for b in beats]
+    # A beat that plays its own sound keeps its clip's real seconds (VM78).
+    return [{**b, "seconds": b["seconds"] / tempo} if "seconds" in b and not b.get("sound") else b for b in beats]
+
+
+def sound_gain(beat: dict) -> float:
+    """A sounding beat's `"sound": {"gain_db": -6}`, or 0 for `"sound": true` (VM78)."""
+    sound = beat.get("sound")
+    if sound is True:
+        return 0.0
+    if isinstance(sound, dict) and set(sound) <= {"gain_db"}:
+        gain = sound.get("gain_db", 0.0)
+        if isinstance(gain, (int, float)) and not isinstance(gain, bool) and -40 <= gain <= 12:
+            return float(gain)
+    raise RecordingRefused(f"a beat's sound is true or {{\"gain_db\": -40..12}}, got {sound!r}")
+
+
+def scene_frames(document: dict, name: str, length: float) -> int:
+    """A take's scene in frames: its 0.4 s lead, the take, its 0.5 s tail, and any pause the
+    storyboard opens after it for a clip to play on its own (VM78)."""
+    pause = (document.get("pauses") or {}).get(name, 0)
+    if isinstance(pause, bool) or not isinstance(pause, (int, float)) or pause < 0:
+        raise RecordingRefused(f"{name}: a pause is seconds of 0 or more, got {pause!r}")
+    return math.ceil((0.4 + length + 0.5 + pause) * 30)
 
 
 def beat_frames(beats: list[dict], total: int, max_static: float | None = None) -> list[int]:
@@ -202,13 +240,15 @@ footer span{{font:21px Text;color:#9bbba7;max-width:1460px}}footer b{{margin-lef
 
 def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: str,
            parts: str, *, render: bool, encoder: str, beat_keys: set[str] | None = None,
-           cards_only: bool = False) -> list[Scene]:
+           cards_only: bool = False, frame: Frame | None = None) -> list[Scene]:
     from videomaker.library import check_range, resolve
     from videomaker.keywords import aliases as declared_aliases
 
     document = resolve(document, folder)
     rows = validate(document, takes, language)
-    frame = Frame(1920, 1080)
+    # The video's frame, 1920x1080 unless the declaration sets another, e.g. a 9:16 Short (VM74).
+    frame = frame or Frame(1920, 1080)
+    W, H = frame.width, frame.height
     out = Path(parts) / "illustrated"
     out.mkdir(parents=True, exist_ok=True)
     logo_path = (Path(folder) / document["logo"]).resolve()
@@ -218,7 +258,7 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
     clock = 0
     n = 0
     for name, beats, take in rows:
-        total_frames = math.ceil((0.4 + take.length + 0.5) * 30)
+        total_frames = scene_frames(document, name, take.length)
         lengths = anchored_frames(paced(beats, takes.tempo), total_frames, take.file, document.get("max_static_seconds"),
                                   aliases=declared_aliases(takes.script, language))
         for i, (beat, frames) in enumerate(zip(beats, lengths)):
@@ -235,6 +275,7 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
                             document, theme, frame, logo, n, field_prefix=f"scenes.{name}.{i}")
                 pages[f"{key}-mark"] = mark
                 content += mark
+            picture_crop(beat)  # refused before any rendering (VM76)
             asset = document.get("media", {}).get(beat.get("asset"))
             if asset:
                 file = (Path(folder) / asset["file"]).resolve()
@@ -247,9 +288,15 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
                     raise RecordingRefused(f"{name}: the footage is shorter than the requested beat")
                 asset = {**asset, "path": str(file), "sha256": cache.file_hash(file)}
             jobs.append((key, content, frames, beat, asset))
+            if beat.get("sound") and beat.get("layout") != "footage":
+                raise RecordingRefused(f"{name}: only a footage beat can play its own sound")
             audit.append({"take": name, "beat": key, "at": clock / 30, "seconds": frames / 30,
                           "static": beat.get("layout", "date") != "footage" or beat.get("static", False),
-                          "asset": beat.get("asset")})
+                          "asset": beat.get("asset"),
+                          # Where the mix finds the clip's sound (VM78).
+                          **({"sound": {"file": asset["path"], "source_at": beat.get("at", 0),
+                                        "gain_db": sound_gain(beat)}}
+                             if beat.get("sound") and asset else {})})
             clock += frames
         result.append(Scene(name, str(out / f"{name}.mp4"), total_frames / 30, "illustrated"))
     (out / "edit.json").write_text(json.dumps({"beats": audit, "total": clock / 30}, indent=2) + "\n", encoding="utf-8")
@@ -279,13 +326,20 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
                 inputs += ["-ss", str(beat.get("at", 0)), "-i", asset["path"]]
             if full:
                 if beat["layout"] == "picture":
+                    cut = picture_crop(beat)
                     if asset.get("plain_background"):
-                        graph = "[1:v]setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x0b1410,setsar=1[asset];"
+                        graph = f"[1:v]setpts=PTS-STARTPTS,{cut}scale={W}:{H}:force_original_aspect_ratio=decrease,pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=0x0b1410,setsar=1[asset];"
                     else:
-                        graph = "[1:v]setpts=PTS-STARTPTS,split[bg][fg];[bg]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,boxblur=30:2,eq=brightness=-0.2[back];[fg]scale=1920:1080:force_original_aspect_ratio=decrease[front];[back][front]overlay=(W-w)/2:(H-h)/2,setsar=1[asset];"
+                        graph = f"[1:v]setpts=PTS-STARTPTS,{cut}split[bg][fg];[bg]scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},boxblur=30:2,eq=brightness=-0.2[back];[fg]scale={W}:{H}:force_original_aspect_ratio=decrease[front];[back][front]overlay=(W-w)/2:(H-h)/2,setsar=1[asset];"
+                elif asset.get("fit") == "blur":
+                    # The whole clip over a blurred, darkened fill of itself: a 16:9 or low-resolution
+                    # clip on a 9:16 frame without bars or a blown-up crop (VM74).
+                    graph = (f"[1:v]setpts=PTS-STARTPTS,fps=30,split[bg][fg];[bg]scale={W}:{H}:force_original_aspect_ratio=increase,"
+                             f"crop={W}:{H},boxblur=30:2,eq=brightness=-0.2[back];[fg]scale={W}:{H}:force_original_aspect_ratio=decrease[front];"
+                             "[back][front]overlay=(W-w)/2:(H-h)/2,setsar=1[asset];")
                 else:
-                    sizing = ("scale=1920:1080:force_original_aspect_ratio=decrease,"
-                              "pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x0b1410") if asset.get("fit") == "contain" else "scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080"
+                    sizing = (f"scale={W}:{H}:force_original_aspect_ratio=decrease,"
+                              f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=0x0b1410") if asset.get("fit") == "contain" else f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H}"
                     graph = f"[1:v]setpts=PTS-STARTPTS,fps=30,{sizing},setsar=1[asset];"
                 if beat.get("overlay_seconds"):
                     # The mark layer (input 2) stays; only the caption layer leaves on time.
