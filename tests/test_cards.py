@@ -104,7 +104,8 @@ def test_a_viglet_shio_card_renders_in_its_theme(tmp_path):
     page = html.card(
         css, f"{words['chapter']} 1", captions.chapter_title(script, chapter, "pt-BR"), words["store"], pill=True
     )
-    assert "Fraunces" in page and "#0E3B4F" in page and "Um comando" in page
+    # the purples of Viglet Shio's logo since 2026-11-17, Quilhara's fonts
+    assert "Fraunces" in page and "#3B1A78" in page and "Um comando" in page
     assert "Barlow" not in page and "Tarnfell" not in page
 
     try:
