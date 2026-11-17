@@ -83,5 +83,7 @@ def test_current_report_keeps_its_words_vm11_vm65():
     # Compare visible words independently of which Markdown structures the agent used.
     source = re.sub(r"(?m)^\s*(?:#{1,6}\s+|[-*]\s+|\d+\.\s+)", "", report["text"])
     source = source.replace("**", "").replace("`", "")
+    # a table's pipes and its separator row are its structure, drawn as the table itself
+    source = re.sub(r"(?m)^\s*\|?(?:\s*:?-{3,}:?\s*\|)+\s*:?-*:?\s*$", "", source).replace("|", " ")
     visible = html.unescape(re.sub(r"<[^>]+>", " ", data["shown"]))
     assert "".join(source.split()) == "".join(visible.split())

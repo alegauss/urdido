@@ -206,14 +206,18 @@ export async function filmTerminal(browser, { lines, title = "Claude Code", out,
     readMs *= scale;
     minMs *= scale;
   }
-  const { mkdirSync, readdirSync, renameSync, rmSync } = await import("node:fs");
+  const { mkdirSync, readdirSync, rmSync } = await import("node:fs");
   const { dirname, join } = await import("node:path");
   const tmp = `${out}.tmp`;
   rmSync(tmp, { recursive: true, force: true });
   mkdirSync(tmp, { recursive: true });
   const ctx = await browser.newContext({ viewport: size, recordVideo: { dir: tmp, size } });
   const page = await ctx.newPage();
+  const born = Date.now();
   await page.setContent(PAGE(title, zoom));
+  // The browser films its empty white page until the terminal paints: the clip is cut just past it,
+  // or the replay opens on a white frame (the Viglet Shio promo's chapter 6, 2026-11-17, VM86).
+  const blank = (Date.now() - born) / 1000 + 0.1;
   await page.waitForTimeout(800);
   for (const line of lines) {
     const wait = line.kind === "prompt" ? 0 : Math.max(minMs, readMs * line.text.split("\n").length);
@@ -256,6 +260,9 @@ export async function filmTerminal(browser, { lines, title = "Claude Code", out,
   const [webm] = readdirSync(tmp).filter((f) => f.endsWith(".webm"));
   mkdirSync(dirname(out), { recursive: true });
   rmSync(out, { force: true });
-  renameSync(join(tmp, webm), out);
+  const { execFileSync } = await import("node:child_process");
+  execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-ss", blank.toFixed(3), "-i", join(tmp, webm),
+    "-c:v", "libvpx", "-b:v", "8M", "-crf", "8", "-deadline", "good", "-cpu-used", "4", "-an", out],
+    { stdio: ["ignore", "pipe", "pipe"] });
   rmSync(tmp, { recursive: true, force: true });
 }

@@ -30,12 +30,13 @@ const before = {
 	'chapter-4': [ { kind: 'prompt', text: prompt } ],
 	'chapter-5': [
 		...calls( [ 'shio_find', 'shio_read' ] ).slice( 0, 6 ),
-		...lines.filter( ( l ) => l.kind === 'text' && /dry run|escrev|writ/i.test( l.text ) ),
+		...lines.filter( ( l ) => l.kind === 'text' && /dry run|simula|escrev|writ/i.test( l.text ) ),
 		...calls( [ 'shio_write' ] ),
 		...lines.filter( ( l ) => l.kind === 'error' && [ 'shio_write', 'shio_apply', 'shio_publish' ].includes( l.tool ) ),
 	],
 	'chapter-6': [
-		...calls( [ 'shio_verify', 'shio_digest' ] ).slice( 0, 6 ),
+		// the last verify only, its call and its report: one report on screen (2026-11-17)
+		...calls( [ 'shio_verify' ] ).slice( -2 ),
 		...lines.filter( ( l ) => l.kind === 'text' ).slice( -1 ),
 	],
 };
