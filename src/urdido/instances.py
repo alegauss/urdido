@@ -1,4 +1,11 @@
-"""VM44: declared Compose fixtures behind visits; PW710 tracks capture.web support."""
+"""VM44: declared Compose fixtures behind visits; PW710 tracks capture.web support.
+
+VM85: an instance can instead be one `docker run`, declared exactly as a person types it
+(`run = "docker run -p 2710:2710 ghcr.io/openviglet/shio"`), so a scene that shows the start shows
+the command that really ran. It runs in the foreground, as typed, from a detached process whose
+output is the instance's log; its container is the one that publishes the declared host port,
+which must be free before it starts.
+"""
 from __future__ import annotations
 
 import argparse
@@ -6,6 +13,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 import time
@@ -24,8 +32,16 @@ class Instance:
             self.spec = tomllib.load(file)["instances"][name]
         if not re.fullmatch(r"[a-z][a-z0-9-]{0,39}", name):
             raise ValueError("instance names use lowercase letters, digits and hyphens")
-        self.compose = (self.root / self.spec["compose"]).resolve()
-        self.compose.relative_to(self.root)
+        self.mode = "run" if "run" in self.spec else "compose"
+        if self.mode == "run":
+            self.command = run_command(self.spec["run"])
+            self.port = published_port(self.command)
+            if self.spec.get("setup"):
+                raise ValueError("a run instance takes no setup: declare a Compose file for one")
+            self.compose = None
+        else:
+            self.compose = (self.root / self.spec["compose"]).resolve()
+            self.compose.relative_to(self.root)
         self.project = "vm-" + name + "-" + hashlib.sha256(str(self.root).encode()).hexdigest()[:10]
         self.record = self.root / ".instances" / f"{name}.json"
         self.name = name
@@ -44,14 +60,65 @@ class Instance:
         return result.stdout
 
     def containers(self) -> list[dict]:
+        if self.mode == "run":
+            return self.run_containers(self.recorded_ids())
         text = self.run("ps", "--format", "json").strip()
         if not text:
             return []
         data = json.loads(text) if text.startswith("[") else [json.loads(line) for line in text.splitlines()]
         return [{k: row.get(k) for k in ("ID", "Image", "Service", "State")} for row in data]
 
+    def recorded_ids(self) -> list[str]:
+        data = json.loads(self.record.read_text(encoding="utf-8")) if self.record.exists() else {}
+        return [row["ID"] for row in data.get("containers", [])] or data.get("starting", [])
+
+    def run_containers(self, ids: list[str]) -> list[dict]:
+        rows = []
+        for cid in ids:
+            text = docker("ps", "-a", "--filter", f"id={cid}", "--format", "json").strip()
+            for line in text.splitlines():
+                row = json.loads(line)
+                rows.append({"ID": row["ID"], "Image": row.get("Image"), "Service": self.name,
+                             "State": row.get("State")})
+        return rows
+
+    def publishing(self) -> list[str]:
+        return docker("ps", "-q", "--filter", f"publish={self.port}").split()
+
+    def run_up(self, data: dict) -> dict:
+        if self.publishing():
+            raise RuntimeError(f"instance {self.name}: port {self.port} is already published by a container "
+                               "video-maker did not start; stop it first")
+        log = self.record.with_suffix(".log")
+        flags = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0) | getattr(subprocess, "DETACHED_PROCESS", 0)
+        with log.open("wb") as out:
+            process = subprocess.Popen(self.command, stdout=out, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                                       cwd=self.root, creationflags=flags, start_new_session=os.name != "nt")
+        deadline = time.monotonic() + self.spec.get("timeout", 120)
+        ids = []
+        while not ids:
+            if process.poll() is not None:
+                raise RuntimeError(f"instance {self.name}: `{self.spec['run']}` exited: "
+                                   + log.read_text(encoding="utf-8", errors="replace")[-2000:])
+            if time.monotonic() > deadline:
+                raise RuntimeError(f"instance {self.name}: no container published port {self.port}")
+            ids = self.publishing()
+            time.sleep(0.5)
+        data["starting"] = ids
+        self.record.write_text(json.dumps(data), encoding="utf-8")
+        self.wait()
+        # What the foreground run prints is the container's own output, which `docker logs` reads
+        # back whole (the detached client's file can stay empty on Windows).
+        logs = subprocess.run(["docker", "logs", *ids[:1]], capture_output=True, text=True, encoding="utf-8",
+                              errors="replace")
+        self.startup = {"command": self.spec["run"], "answered": "", "logs_command": "",
+                        "logs": (logs.stdout + logs.stderr) or log.read_text(encoding="utf-8", errors="replace")}
+        return data
+
     def owned(self) -> dict | None:
         data = json.loads(self.record.read_text(encoding="utf-8")) if self.record.exists() else None
+        if self.mode == "run":
+            return data
         if data and data["project"] != self.project:
             raise RuntimeError("instance ownership record names a different Compose project")
         if self.containers() and data is None:
@@ -76,12 +143,31 @@ class Instance:
         raise RuntimeError(f"instance {self.name}: readiness timed out at {url}")
 
     def plan(self) -> dict:
+        if self.mode == "run":
+            return {"instance": self.name, "run": self.spec["run"], "port": self.port, "url": self.spec["url"],
+                    "reset": "docker rm --force --volumes, then the same run"}
         return {"instance": self.name, "project": self.project, "compose": str(self.compose),
                 "url": self.spec["url"], "setup": self.spec.get("setup", []),
                 "reset": "down --volumes --remove-orphans, then up and setup"}
 
     def up(self) -> dict:
         previous = self.owned()
+        if self.mode == "run":
+            if previous:
+                self.status()
+                return previous
+            data = {"project": self.project, "generation": uuid.uuid4().hex, "ready": False}
+            self.record.parent.mkdir(parents=True, exist_ok=True)
+            self.record.write_text(json.dumps(data), encoding="utf-8")
+            self.run_up(data)
+            containers = self.containers()
+            data.pop("starting", None)
+            inspect = subprocess.run(["docker", "inspect", "--format", "{{.Id}} {{.Image}}",
+                                      *[row["ID"] for row in containers]], capture_output=True, text=True, check=True)
+            data.update(ready=True, containers=containers, images=inspect.stdout.splitlines(),
+                        instance_spec_sha256=self.spec_sha, url=self.spec["url"], startup=self.startup)
+            self.record.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+            return data
         before = self.containers()
         config = json.loads(self.run("config", "--format", "json"))
         if any(service.get("container_name") for service in config["services"].values()) \
@@ -120,6 +206,12 @@ class Instance:
         data = self.owned()
         if data is None:
             raise RuntimeError("instance has not been created by video-maker")
+        if self.mode == "run":
+            ids = self.recorded_ids()
+            if ids:
+                docker("rm", "--force", "--volumes", *ids)
+            self.record.unlink()
+            return
         self.run("down", "--volumes", "--remove-orphans")
         self.record.unlink()
 
@@ -174,6 +266,36 @@ class Instance:
             "visit_sha256": hashlib.sha256(raw).hexdigest(), "capture_spec_sha256": capture_sha,
             "sha256": hashlib.sha256(out.read_bytes()).hexdigest()}, indent=2) + "\n", encoding="utf-8")
         return out
+
+
+def docker(*args: str) -> str:
+    try:
+        return subprocess.run(["docker", *args], capture_output=True, text=True, encoding="utf-8", check=True).stdout
+    except subprocess.CalledProcessError as error:
+        raise RuntimeError(f"instance Docker command failed: {error.stderr}") from None
+
+
+def run_command(text: str) -> list[str]:
+    """The declared `docker run`, split as a shell would. Detached or named runs are refused: the
+    point of `run` is the command a person types, which keeps the terminal and names nothing."""
+    words = shlex.split(text)
+    if words[:2] != ["docker", "run"]:
+        raise ValueError(f"an instance's run must be a `docker run` command, got {text!r}")
+    if any(w in {"-d", "--detach", "--name", "--rm"} or w.startswith("--name=") for w in words[2:]):
+        raise ValueError("an instance's run is the command as a person types it: no -d, --name or --rm")
+    return words
+
+
+def published_port(words: list[str]) -> int:
+    """The one host port the run publishes (`-p 2710:2710`, `-p 127.0.0.1:2710:2710`)."""
+    ports = [words[i + 1] for i, w in enumerate(words[:-1]) if w in {"-p", "--publish"}]
+    ports += [w.split("=", 1)[1] for w in words if w.startswith("--publish=")]
+    if len(ports) != 1:
+        raise ValueError("an instance's run must publish exactly one port with -p")
+    parts = ports[0].split("/")[0].split(":")
+    if len(parts) < 2 or not parts[-2].isdigit():
+        raise ValueError(f"an instance's run must name its host port, got -p {ports[0]}")
+    return int(parts[-2])
 
 
 def main(argv=None):

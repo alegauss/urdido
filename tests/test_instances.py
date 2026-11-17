@@ -125,3 +125,54 @@ def test_a_tag_moving_on_does_not_change_the_containers(instance, monkeypatch):
     monkeypatch.setattr(instance, "containers", lambda: [{**recorded[0], "ID": "two"}])
     with pytest.raises(RuntimeError, match="containers changed"):
         instance.status()
+
+
+def run_instance(tmp_path, command):
+    declaration = tmp_path / "video.toml"
+    declaration.write_text(f'[instances.demo]\nrun="{command}"\nurl="http://localhost:2710/"\n', encoding="utf-8")
+    return Instance(declaration, "demo")
+
+
+def test_a_run_instance_is_the_command_a_person_types_vm85(tmp_path, monkeypatch):
+    instance = run_instance(tmp_path, "docker run -p 2710:2710 ghcr.io/openviglet/shio")
+    monkeypatch.setattr("videomaker.instances.docker", lambda *a: pytest.fail("plan called Docker"))
+    assert instance.plan()["run"] == "docker run -p 2710:2710 ghcr.io/openviglet/shio"
+    assert instance.port == 2710
+    assert run_instance(tmp_path, "docker run -p 127.0.0.1:8080:2710 img").port == 8080
+
+
+@pytest.mark.parametrize("command, words", [
+    ("docker compose up", "must be a `docker run`"),
+    ("docker run -d -p 2710:2710 img", "no -d, --name or --rm"),
+    ("docker run --name shio -p 2710:2710 img", "no -d, --name or --rm"),
+    ("docker run img", "exactly one port"),
+    ("docker run -p 2710 img", "name its host port"),
+])
+def test_a_run_that_is_not_typed_plainly_refuses_vm85(tmp_path, command, words):
+    with pytest.raises(ValueError, match=words):
+        run_instance(tmp_path, command)
+
+
+def test_a_run_refuses_a_port_someone_else_publishes_vm85(tmp_path, monkeypatch):
+    instance = run_instance(tmp_path, "docker run -p 2710:2710 img")
+    monkeypatch.setattr("videomaker.instances.docker", lambda *a: "abc123\n")
+    monkeypatch.setattr("videomaker.instances.subprocess.Popen", lambda *a, **k: pytest.fail("started anyway"))
+    with pytest.raises(RuntimeError, match="already published"):
+        instance.up()
+
+
+def test_a_run_instance_is_its_recorded_container_vm85(tmp_path, monkeypatch):
+    instance = run_instance(tmp_path, "docker run -p 2710:2710 img")
+    instance.record.parent.mkdir()
+    rows = [{"ID": "abc", "Image": "img", "Service": "demo", "State": "running"}]
+    instance.record.write_text(json.dumps({"project": instance.project, "ready": True, "containers": rows,
+                                           "instance_spec_sha256": instance.spec_sha}), encoding="utf-8")
+    calls = []
+    def docker(*args):
+        calls.append(args)
+        return '{"ID": "abc", "Image": "img", "State": "running"}\n' if args[0] == "ps" else ""
+    monkeypatch.setattr("videomaker.instances.docker", docker)
+    assert instance.status()["containers"] == rows
+    instance.down()
+    assert ("rm", "--force", "--volumes", "abc") in calls
+    assert not instance.record.exists()
