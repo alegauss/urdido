@@ -488,6 +488,11 @@ class Build:
                              self.parts, self.path(self.decl["highlights"]["fonts"]), encoder,
                              aliases=declared_aliases(script, self.language), frame=self.frame(),
                              burn=(self.decl.get("captions") or {}).get("burn"))
+        if self.decl.get("mark"):
+            from videomaker import mark
+
+            joined = mark.overlay(joined, mark.declared(self.decl["mark"], self.path), self.parts, encoder,
+                                  self.frame().height)
         cues = cap.narration_cues(placed)
         for ext, text in (("srt", cap.srt(cues)), ("vtt", cap.vtt(cues))):
             (self.out / f"{self.name}.{self.language}.{ext}").write_text(text, encoding="utf-8", newline="")
