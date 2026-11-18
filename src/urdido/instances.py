@@ -207,7 +207,9 @@ class Instance:
         if data is None:
             raise RuntimeError("instance has not been created by video-maker")
         if self.mode == "run":
-            ids = self.recorded_ids()
+            # only those still there: a run interrupted mid-recording can leave a record whose
+            # container is already gone
+            ids = [row["ID"] for row in self.containers()]
             if ids:
                 docker("rm", "--force", "--volumes", *ids)
             self.record.unlink()
