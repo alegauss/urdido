@@ -2,10 +2,9 @@
 
 ## Block A — Package foundation (urdido installable from PyPI)
 
-- 📋 **UR17** (deps: —) **A dep on another project's task is free text, so a marketing or polyweave ship never resolves here** — Moved lines already wait on marketing VM28 and polyweave PW697-PW699, and nobody relays a ship by hand. → §UR17
 - 📋 **UR18** (deps: UR16 ✅) **Nothing checks a push: no CI runs ruff and pytest on Linux and Windows** — Today the suite only ever runs on one Windows machine with NVENC and Edge, so portability bugs stay invisible. → §UR18
 - 📋 **UR19** (deps: UR18) **A version cannot reach PyPI except by a hand-run upload with a token** — Marketing has to pin a published version, and a hand release skips the build checks and the tag that says what shipped. → §UR19
-- 📋 **UR20** (deps: UR16 ✅, UR17) **An agent working in this repo or driving urdido has no CLAUDE.md, skill or friction path** — Marketing's rule that every friction becomes a framework task only works if the agent knows where and how to file it. → §UR20
+- 📋 **UR20** (deps: UR16 ✅, UR17 ✅) **An agent working in this repo or driving urdido has no CLAUDE.md, skill or friction path** — Marketing's rule that every friction becomes a framework task only works if the agent knows where and how to file it. → §UR20
 - 📋 **UR35** (deps: UR16 ✅, UR23) **Nobody outside this machine can learn what a declaration accepts or how to build a first video** — A package on PyPI is read by people who never saw marketing, and today the only manual is a 600-line README full of VM ids. → §UR35
 
 ## Block B — The engine extracted (videomaker without marketing)
@@ -37,9 +36,9 @@
 
 ## Block D — Inherited from video-maker (marketing Block B)
 
-- 📋 **UR1** (deps: polyweave PW699) **Titles and thumbnails go out unchecked, so the Scion thumbnail repeats its title and the feed cuts the title** — A thumbnail should add what the title leaves out, and a title keeps its point inside 40 to 60 characters or the feed cuts it. → §UR1
-- 📋 **UR2** (deps: polyweave PW697, polyweave PW698) **Each video cuts its Shorts with its own copied script, and the Shorts rules live only in japode/scion** — Shorts are how a new channel gets found, and the loop, pacing, safe-area and loudness rules learned on 2026-11-12 must hold for every video. → §UR2
-- 📋 **UR3** (deps: marketing VM28) **Published videos have no end screen or cards pointing to the next video on the subject** — A viewer who finishes the Docker video is not offered the Scion one, and the end screen should point at the continuation, not the newest upload. → §UR3
+- 📋 **UR1** (deps: polyweave: PW699) **Titles and thumbnails go out unchecked, so the Scion thumbnail repeats its title and the feed cuts the title** — A thumbnail should add what the title leaves out, and a title keeps its point inside 40 to 60 characters or the feed cuts it. → §UR1
+- 📋 **UR2** (deps: polyweave: PW697, polyweave: PW698) **Each video cuts its Shorts with its own copied script, and the Shorts rules live only in japode/scion** — Shorts are how a new channel gets found, and the loop, pacing, safe-area and loudness rules learned on 2026-11-12 must hold for every video. → §UR2
+- 📋 **UR3** (deps: marketing: VM28) **Published videos have no end screen or cards pointing to the next video on the subject** — A viewer who finishes the Docker video is not offered the Scion one, and the end screen should point at the continuation, not the newest upload. → §UR3
 - 📋 **UR4** (deps: UR2) **The Japode explainer videos are built by scripts copied into each video, outside video-maker** — video-maker only knows the recorded product demo, so the first video of another kind went around it, and its two copies already differ. → §UR4
 - 📋 **UR5** (deps: UR21) **A second cut of a video, to test a new opening, means copying the whole video folder and its declaration** — Retention tests need several openings of the same episode, and each copy duplicates 722 MB and drifts from the published cut on every later fix. → §UR5
 - 📋 **UR6** (deps: UR21) **A stock clip already rejected for contradicting the narration can come back into a cut without any check refusing it** — The review that removed it is lost on the next edit, and the owner has to catch the same bad shot again. → §UR6

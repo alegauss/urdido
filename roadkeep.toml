@@ -52,3 +52,9 @@ held = 60
 
 [install]
 wired = "0.2.610"
+
+# the sibling projects whose tasks a line here can wait on, spelled `<name>: <id>` in its
+# deps and answered from that project's own ledger
+[projects]
+marketing = "../../viglet/marketing"
+polyweave = "../polyweave"

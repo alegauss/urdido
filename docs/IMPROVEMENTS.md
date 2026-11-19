@@ -2,19 +2,6 @@
 
 ## Block A — Package foundation (urdido installable from PyPI)
 
-### §UR17 Sibling projects declared
-
-Declare `[projects]` in this `roadkeep.toml` for `marketing` (D:\Git\viglet\marketing)
-and `polyweave` (D:\Git\alegauss\polyweave), and the mirror entry for `urdido` in
-marketing's. Then rewrite the free-text deps the move left (`marketing VM28`, `polyweave
-PW697`, `PW698`, `PW699`) as qualified deps, so `deps`, `pick` and the session brief
-resolve them against each sibling's ledger.
-
-The friction skills that file into urdido from marketing need the same declaration.
-
-**Done when** `roadkeep deps` on UR1, UR2 and UR3 resolves each sibling dep instead of
-reporting it as outside work.
-
 ### §UR18 Gates on every push
 
 A `gates.yml` like polyweave's: `pip install -e .[test,cards]`, `ruff check .`, and
