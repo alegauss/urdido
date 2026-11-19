@@ -476,6 +476,10 @@ highlights that differ. It should reuse the base's media, takes and ledgers with
 copying them, write its output to its own folder, and record in the review which variant
 was uploaded and against which retention report it is being compared (with VM32).
 
+Sequenced after UR33: the overlay must resolve every relative path through the base, and
+about 25 call sites read `build.here` directly; UR33's declaration loader is the one
+place it belongs.
+
 ### §UR6 A rejected asset can return to a cut (was marketing VM69)
 
 Where it happened: `japode/wordpress2`, a second opening for the WordPress episode
