@@ -480,24 +480,6 @@ Sequenced after UR33: the overlay must resolve every relative path through the b
 about 25 call sites read `build.here` directly; UR33's declaration loader is the one
 place it belongs.
 
-### §UR6 A rejected asset can return to a cut (was marketing VM69)
-
-Where it happened: `japode/wordpress2`, a second opening for the WordPress episode
-(`python -m videomaker build japode/wordpress2/video.toml --language pt-BR`). The new
-chapter-1 scene put the `code` stock clip under "Como o código era aberto". The cut
-built cleanly.
-
-What was caught by hand: a contact sheet of the first 45 s showed the clip is the
-"hacker" terminal (ACCESS TO SYSTEM, SECURITY ALERT, Encrypting) that the VM38 review of
-the first cut had already removed because it contradicted the narration. That decision
-lives only in prose, in `japode/wordpress/README.md`. The asset stayed in the `media`
-list of `storyboard.json`, so nothing stopped it from coming back.
-
-What video-maker should do: let the storyboard mark a media entry as rejected, with the
-reason and optionally the time range (`rejected = "terminal de hacker com SECURITY
-ALERT; contradiz a fala"`). `build` and `--plan` should then refuse any scene that uses
-it, citing that reason.
-
 ### §UR7 A take cannot be re-rolled with the same text (was marketing VM70)
 
 Where it happened: `japode/wordpress2`, the chapter-1 take bought on 2026-11-16

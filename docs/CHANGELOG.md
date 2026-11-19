@@ -16,3 +16,4 @@
 
 ## Block D — Inherited from video-maker (marketing Block B)
 
+- ✅ **UR6** **A stock clip already rejected for contradicting the narration can come back into a cut without any check refusing it** — Storyboard media can carry rejected with a reason, whole or by range, and preflight and build refuse any beat that meets it (design recorded in `docs/video-maker.md`).

@@ -50,7 +50,7 @@ def illustrated(build):
     cards = load(build.decl.get("cards", {}).get("declaration"), "cards.declaration")
     document = load(build.decl.get("source", {}).get("declaration"), "source.declaration")
     if document is not None:
-        from urdido.library import check_range, resolve_asset
+        from urdido.library import check_rejected, check_range, resolve_asset
 
         for key, asset in document.get("media", {}).items():
             if "library" in asset:
@@ -204,6 +204,8 @@ def illustrated(build):
                         continue
                     check(source_file, f"scenes.{name}.{i}.range", lambda: check_range(beat, asset, frames), name,
                           beat.get("id", f"{name}-{i}"))
+                    check(source_file, f"media.{beat['asset']}.rejected", lambda: check_rejected(beat, asset, frames),
+                          name, beat.get("id", f"{name}-{i}"))
                     file = build.here / asset["file"]
                     key = beat.get("id", f"{name}-{i}")
                     if file.is_file() and beat.get("layout") == "footage":

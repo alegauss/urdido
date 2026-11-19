@@ -241,7 +241,7 @@ footer span{{font:21px Text;color:#9bbba7;max-width:1460px}}footer b{{margin-lef
 def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: str,
            parts: str, *, render: bool, encoder: str, beat_keys: set[str] | None = None,
            cards_only: bool = False, frame: Frame | None = None) -> list[Scene]:
-    from urdido.library import check_range, resolve
+    from urdido.library import check_rejected, check_range, resolve
     from urdido.keywords import aliases as declared_aliases
 
     document = resolve(document, folder)
@@ -284,6 +284,7 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
                 if not asset.get("license") or not asset.get("url") or not asset.get("author"):
                     raise RecordingRefused(f"{name}: media asset needs its licence, author and source URL")
                 check_range(beat, asset, frames)
+                check_rejected(beat, asset, frames)
                 if beat["layout"] == "footage" and beat.get("at", 0) + frames / 30 > media.seconds(str(file)) + 0.02:
                     raise RecordingRefused(f"{name}: the footage is shorter than the requested beat")
                 asset = {**asset, "path": str(file), "sha256": cache.file_hash(file)}

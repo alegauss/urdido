@@ -231,6 +231,18 @@ source may declare the same `source_id` and their original `source_offset` secon
 their intervals are compared in that source's clock. Filenames and source URLs
 do not supply an inferred identity or activity category.
 
+A media entry a review took out of a cut says so, with its reason, so the next edit cannot
+bring it back (UR6). `rejected` is a reason for the whole asset, or a list of source
+ranges in seconds; a range without `start` or `end` runs from the start or to the end:
+
+```json
+{"media":{"code":{"file":"stock/code.mp4","rejected":"hacker terminal with SECURITY ALERT; contradicts the line"},
+          "city":{"file":"stock/city.mp4","rejected":[{"reason":"a readable shop sign","start":12,"end":18}]}}}
+```
+
+Preflight (`--plan` and `build`) refuses any beat whose source interval meets a rejection,
+naming `media.<key>.rejected`, the beat and the reason.
+
 Declare `categories` on beats or media assets; a beat overrides its asset's labels.
 Reviewed catalogue ranges may carry these labels too. Category shares use the full
 cut's duration, including cards and opening. Untagged media time is reported as

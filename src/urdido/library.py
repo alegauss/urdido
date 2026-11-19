@@ -169,7 +169,7 @@ def review(data, key, record):
 def resolve_asset(asset, folder, load=None):
     if "library" not in asset:
         return asset
-    allowed = {"library", "candidate", "range", "fit", "plain_background", "brand_mark"}
+    allowed = {"library", "candidate", "range", "fit", "plain_background", "brand_mark", "rejected"}
     if set(asset) - allowed:
         raise RecordingRefused("library media inherits provenance and confirmed identities; only visual fit/brand overrides are allowed")
     catalogue = (Path(folder) / asset["library"]).resolve()
@@ -188,7 +188,7 @@ def resolve_asset(asset, folder, load=None):
                  if candidate.get(k) is not None}
     return {**inherited, "file": str(file), "people": selected.get("people", []), "events": selected.get("events", []),
             "categories": selected.get("categories", []),
-            **{k: asset[k] for k in ("fit", "plain_background", "brand_mark") if k in asset},
+            **{k: asset[k] for k in ("fit", "plain_background", "brand_mark", "rejected") if k in asset},
             "library_binding": {"catalogue": str(catalogue), "candidate": asset["candidate"], "range": selected,
                                 "sha256": candidate["sha256"], "rights": candidate["rights"], "kind": candidate["kind"]}}
 
@@ -220,6 +220,44 @@ def check_range(beat, asset, frames):
         raise RecordingRefused(f"library range {selected['id']}: beat exceeds its accepted source interval")
     if file_hash(asset["file"]) != binding["sha256"]:
         raise RecordingRefused("library media changed after resolution; import and review current bytes")
+
+
+def rejections(asset):
+    """The review decisions that keep a media entry out of a cut (UR6).
+
+    `rejected` is a reason, which rejects the whole asset, or a list of ranges, each
+    `{reason, start, end}` in source seconds, which reject only that stretch. A range
+    without `start` or `end` runs from the start or to the end of the source.
+    """
+    declared = asset.get("rejected")
+    if declared is None:
+        return []
+    if isinstance(declared, str):
+        declared = [{"reason": declared}]
+    elif isinstance(declared, dict):
+        declared = [declared]
+    if not isinstance(declared, list):
+        raise RecordingRefused("rejected must be a reason or a list of {reason, start, end}")
+    ranges = []
+    for item in declared:
+        if not isinstance(item, dict) or not isinstance(item.get("reason"), str) or not item["reason"].strip():
+            raise RecordingRefused("each rejection needs its reason, so the next edit knows why")
+        start, end = item.get("start", 0), item.get("end", math.inf)
+        if not all(isinstance(t, (int, float)) for t in (start, end)) or start < 0 or end <= start:
+            raise RecordingRefused(f"rejected range {start}..{end} must be source seconds, start below end")
+        ranges.append({"reason": item["reason"].strip(), "start": start, "end": end})
+    return ranges
+
+
+def check_rejected(beat, asset, frames):
+    """Refuse a beat that shows media a review already rejected, citing that review (UR6)."""
+    at = source_start(beat, asset)
+    until = at + frames / 30
+    for rejection in rejections(asset):
+        if at < rejection["end"] and until > rejection["start"]:
+            where = "" if (rejection["start"], rejection["end"]) == (0, math.inf) else \
+                f" between {rejection['start']:g} s and {rejection['end']:g} s"
+            raise RecordingRefused(f"media {beat.get('asset')} was rejected{where}: {rejection['reason']}")
 
 
 def delegate(operation, root, **parameters):
