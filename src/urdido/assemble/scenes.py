@@ -16,7 +16,7 @@ from typing import Mapping, Sequence
 
 from videomaker import media as mediamod
 from videomaker.cards import html as cardhtml
-from videomaker.edit.pacing import Fit, fit_to_line
+from videomaker.edit.pacing import Fit, fit_to_line, warp, warp_setpts
 from videomaker.jsnum import fixed
 from videomaker.narration import Take, Takes
 from videomaker.sources.scenes import Scene
@@ -46,6 +46,9 @@ class ScenesVideo:
     # its own sound, the bed starting after it (as the WordPress demo's opening does).
     intro: "Intro | None" = None
     placed: list = field(default_factory=list)  # (scene, kind, start, length, takes)
+    # VM87: per scene, the moments pinned to words (`[{mark, take, word}]`, video.toml's [anchors])
+    anchors: Mapping = field(default_factory=dict)
+    warps: dict = field(default_factory=dict)
     opening: float = 0.0  # how long the opening runs, where the bed starts
 
     def __post_init__(self):
@@ -92,6 +95,9 @@ class ScenesVideo:
             need = self.need(takes)
             file = self.part(f"scene-{n}-{scene.name}.mp4")
             fit = fit_to_line(scene.seconds, scene.seconds if scene.source == "illustrated" else need) if scene.filmed else None
+            if scene.filmed and self.anchors.get(scene.name):
+                self.warps[scene.name] = self.anchored(scene, takes, need)
+                fit = Fit(scene.seconds / need, 0.0)
             still = None if scene.filmed else self.part(f"scene-{n}-{scene.name}.png")
             if still:
                 pages[os.path.basename(still)[:-4]] = self.card_page(scene)
@@ -142,6 +148,35 @@ class ScenesVideo:
             clock += length
         return b.finish()
 
+    def anchored(self, scene: Scene, takes: Sequence[Take], need: float) -> list[tuple[float, float]]:
+        """The scene's warp: each declared mark at the second its word is said over the scene."""
+        from pathlib import Path
+
+        from videomaker import keywords
+        from videomaker.sources.model import RecordingRefused
+
+        starts, at = {}, self.voice_lead
+        for take in takes:
+            starts[Path(take.file).stem] = (take, at)
+            at += take.length + self.line_gap
+        marks = dict(scene.marks)
+        pins = []
+        for anchor in self.anchors[scene.name]:
+            mark, name = anchor["mark"], anchor["take"]
+            if mark not in marks:
+                raise RecordingRefused(f"{scene.name}: [anchors] names mark {mark!r}, which cenas.json does "
+                                       f"not record ({', '.join(marks) or 'none'}); film the scene again")
+            if name not in starts:
+                raise RecordingRefused(f"{scene.name}: [anchors] names take {name!r}, not spoken over this "
+                                       f"scene ({', '.join(starts)})")
+            take, start = starts[name]
+            word = keywords.anchor(Path(take.file), anchor["word"], aliases=keywords.aliases(self.script, self.language))
+            pins.append((float(marks[mark]), start + word, mark))
+        try:
+            return warp(scene.seconds, need, pins)
+        except ValueError as error:
+            raise RecordingRefused(f"{scene.name}: {error}") from None
+
     def part(self, name: str) -> str:
         return os.path.join(self.parts, name)
 
@@ -159,6 +194,8 @@ class ScenesVideo:
             # box to follow.
             encode[k] = f"crop=ih*{self.frame.width}/{self.frame.height}:ih,{encode[k]}"
         timing = f"setpts=PTS/{fixed(fit.speed, 4)}"
+        if scene.name in self.warps:
+            timing = warp_setpts(self.warps[scene.name])
         if fit.hold > 0:
             timing += f",tpad=stop_mode=clone:stop_duration={fixed(fit.hold, 3)}"
         encode[k] = f"{timing},{encode[k]}"

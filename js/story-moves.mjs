@@ -135,10 +135,11 @@ export async function storyMoves(page) {
     reach,
     scrollBy: (distance, ms = 0) => scrollByEased(page, distance, ms),
     click: async (locator) => { await reach(locator); await locator.click(); },
-    type: async (locator, text) => {
+    // `delay` is the hand's pace per key; a field the viewer cannot read (a password's dots) can go faster.
+    type: async (locator, text, { delay = 120 } = {}) => {
       await reach(locator);
       await locator.click();
-      await locator.pressSequentially(text, { delay: 120 });
+      await locator.pressSequentially(text, { delay });
     },
     /** Park the pointer somewhere neutral, quickly, as a hand rests. */
     rest: async (x = 1500, y = 900) => {

@@ -27,6 +27,8 @@ class Scene:
     seconds: float | None = None
     source: str | None = None
     note: str | None = None
+    # VM87: the moments the scene recorded, in clip seconds (`{"setup": 8.1, "console": 15.2}`)
+    marks: tuple = ()
 
     @property
     def filmed(self) -> bool:
@@ -47,5 +49,6 @@ def scene_clips(cenas_json: str) -> list[Scene]:
         file = os.path.join(folder, entry["file"])
         if not os.path.exists(file):
             raise RecordingRefused(f"{entry['scene']}: {entry['file']} is listed in cenas.json but not on disk")
-        scenes.append(Scene(entry["scene"], file, media.seconds(file), entry.get("source", "scenes")))
+        scenes.append(Scene(entry["scene"], file, media.seconds(file), entry.get("source", "scenes"),
+                            marks=tuple(sorted((entry.get("marks") or {}).items()))))
     return scenes

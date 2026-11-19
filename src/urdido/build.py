@@ -429,7 +429,7 @@ class Build:
             name=self.name, language=self.language, frame=self.frame(), scenes=source_scenes,
             takes=takes, script=script, theme=theme,
             words=cards["words"][self.language], parts=str(self.parts),
-            encoder=encoder, intro=self.intro(),
+            encoder=encoder, intro=self.intro(), anchors=self.decl.get("anchors") or {},
         )
         cut = self.args.cut
         if cut.startswith("short:"):
