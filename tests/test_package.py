@@ -30,8 +30,22 @@ def test_module_entry_point_answers_version():
     assert ran.stdout.strip() == f"urdido {urdido.__version__}"
 
 
-def test_no_arguments_exits_cleanly():
-    assert cli.main([]) == 0
+def test_no_arguments_answers_the_usage():
+    said = cli.main([])
+    assert isinstance(said, str) and said.startswith("usage: urdido build")
+
+
+def test_a_command_runs_its_module_main(monkeypatch):
+    seen = []
+    fake = type("Module", (), {"main": staticmethod(lambda argv: seen.append(argv))})
+    monkeypatch.setattr(cli.importlib, "import_module", lambda name: fake)
+    cli.main(["claims", "video.toml"])
+    assert seen == [["video.toml"]]
+
+
+def test_every_command_names_an_imported_module():
+    for module in cli.COMMANDS.values():
+        assert (ROOT / "src" / Path(*module.split("."))).with_suffix(".py").is_file()
 
 
 def test_every_extra_is_declared_in_pyproject():

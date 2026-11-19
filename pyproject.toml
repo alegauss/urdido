@@ -61,3 +61,194 @@ extend-exclude = [".claude"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+
+# The modules and tests imported from marketing's video-maker (UR21) were written without
+# ruff. Reformatting them would bury each module's history under one commit, so each file
+# keeps exactly the rules it broke on arrival, and UR43 pays the list down. A file leaves
+# this list once it is clean; nothing is ever added to it.
+[tool.ruff.lint.per-file-ignores]
+"src/urdido/assemble/clip.py" = ["E501", "UP035"]
+"src/urdido/assemble/scenes.py" = ["E501", "I001", "UP035", "UP037"]
+"src/urdido/assemble/video.py" = ["B023", "B905", "E501", "F401", "UP035"]
+"src/urdido/audio/mix.py" = ["E501", "UP035"]
+"src/urdido/build.py" = ["B904", "E501", "F401", "I001", "UP035"]
+"src/urdido/cache.py" = ["E501", "I001"]
+"src/urdido/captions.py" = ["B023", "B905", "E501", "UP035", "UP037"]
+"src/urdido/cards/__init__.py" = ["E501"]
+"src/urdido/cards/html.py" = ["E501", "UP035", "UP037"]
+"src/urdido/cards/render.py" = ["B023", "E501", "I001", "UP035"]
+"src/urdido/claims.py" = ["E501", "E731"]
+"src/urdido/cuts/__init__.py" = ["E501"]
+"src/urdido/cuts/render.py" = ["E501", "E741", "I001", "UP035", "UP037"]
+"src/urdido/cuts/selection.py" = ["E501", "I001", "UP035"]
+"src/urdido/edit/pacing.py" = ["B905", "E501"]
+"src/urdido/edit/stretch.py" = ["E501", "UP035"]
+"src/urdido/export/resolve.py" = ["E501", "UP035"]
+"src/urdido/instances.py" = ["E501", "E731"]
+"src/urdido/jsnum.py" = ["E501"]
+"src/urdido/keywords.py" = ["E501", "E731", "I001"]
+"src/urdido/labels.py" = ["E501"]
+"src/urdido/library.py" = ["E501", "E731", "UP017"]
+"src/urdido/mark.py" = ["E501", "I001"]
+"src/urdido/media.py" = ["E501", "UP035", "UP047"]
+"src/urdido/motion/pushin.py" = ["B905", "E501", "UP035"]
+"src/urdido/narration.py" = ["B023", "E501", "UP035"]
+"src/urdido/narration_words.py" = ["E501", "I001"]
+"src/urdido/pauses.py" = ["B905", "E501"]
+"src/urdido/preflight.py" = ["B023", "B905", "E501", "I001"]
+"src/urdido/prepare.py" = ["E501", "UP017"]
+"src/urdido/preview.py" = ["E501"]
+"src/urdido/progress.py" = ["E501"]
+"src/urdido/publish/__init__.py" = ["E501", "UP035"]
+"src/urdido/publish/__main__.py" = ["E501"]
+"src/urdido/publish/description.py" = ["E501"]
+"src/urdido/qa.py" = ["B905", "E501"]
+"src/urdido/repetition.py" = ["B023", "E501"]
+"src/urdido/review.py" = ["B023", "E501", "E731", "I001"]
+"src/urdido/revisions.py" = ["E501"]
+"src/urdido/safety.py" = ["B039", "E501", "I001"]
+"src/urdido/sources/__init__.py" = ["E501", "I001"]
+"src/urdido/sources/illustrated.py" = ["B007", "B023", "B905", "E501", "E731", "I001"]
+"src/urdido/sources/model.py" = ["E501", "UP035"]
+"src/urdido/sources/recording.py" = ["E501", "I001", "UP035"]
+"src/urdido/sources/scenes.py" = ["E501"]
+"src/urdido/storyboard.py" = ["E501"]
+"src/urdido/textcheck.py" = ["B039", "E501"]
+"src/urdido/thumbnail.py" = ["E501"]
+"src/urdido/timeline.py" = ["E501", "UP035"]
+"tests/golden_plans.py" = ["E501"]
+"tests/test_anchors.py" = ["E501"]
+"tests/test_assemble_clip.py" = ["E501", "I001"]
+"tests/test_assemble_video.py" = ["B905", "E501", "I001"]
+"tests/test_beat_sound.py" = ["E501"]
+"tests/test_build_inputs.py" = ["E501"]
+"tests/test_cache.py" = ["E501", "I001"]
+"tests/test_captions.py" = ["E501", "I001"]
+"tests/test_cards.py" = ["E501", "I001"]
+"tests/test_claims.py" = ["E501", "F401", "F811", "I001"]
+"tests/test_cuts.py" = ["E501"]
+"tests/test_description.py" = ["E501", "F401", "I001"]
+"tests/test_export.py" = ["E501", "F401"]
+"tests/test_goldens.py" = ["E501", "F401", "I001"]
+"tests/test_illustrated.py" = ["E501", "I001"]
+"tests/test_instances.py" = ["E501", "F401"]
+"tests/test_keywords.py" = ["I001"]
+"tests/test_labels.py" = ["E501"]
+"tests/test_library.py" = ["E501", "F401", "F811", "I001"]
+"tests/test_mark.py" = ["E501"]
+"tests/test_media.py" = ["E501", "F401"]
+"tests/test_mix.py" = ["E501", "I001"]
+"tests/test_motion.py" = ["B905", "E501", "I001"]
+"tests/test_opening.py" = ["E501"]
+"tests/test_pauses.py" = ["E501", "F401", "F811", "I001"]
+"tests/test_preflight.py" = ["E501", "F401", "I001"]
+"tests/test_prepare.py" = ["E501", "F401", "F811", "I001"]
+"tests/test_preview.py" = ["E501", "I001"]
+"tests/test_progress.py" = ["E501", "F401", "F811", "I001", "SIM117"]
+"tests/test_publish.py" = ["E501", "I001"]
+"tests/test_qa.py" = ["E501", "F401", "I001"]
+"tests/test_repetition.py" = ["E501", "F401", "F811", "I001"]
+"tests/test_review.py" = ["E501", "I001"]
+"tests/test_revisions.py" = ["E501"]
+"tests/test_safety.py" = ["E501", "SIM117"]
+"tests/test_scenes.py" = ["B905", "E501", "F841", "I001"]
+"tests/test_sources.py" = ["B905", "E501", "I001"]
+"tests/test_storyboard.py" = ["E501"]
+"tests/test_tempo.py" = ["E501"]
+"tests/test_terminal.py" = ["E501"]
+"tests/test_textcheck.py" = ["E501", "F401", "F811", "I001", "SIM117"]
+"tests/test_thumbnail.py" = ["E501", "I001"]
+"tests/test_timeline.py" = ["E501", "I001"]
+"tests/test_vertical_burn.py" = ["B905", "E501"]
+
+[tool.ruff.format]
+# The same imported files, unformatted on arrival (UR43).
+exclude = [
+    "src/urdido/assemble/clip.py",
+    "src/urdido/assemble/scenes.py",
+    "src/urdido/assemble/video.py",
+    "src/urdido/audio/mix.py",
+    "src/urdido/build.py",
+    "src/urdido/cache.py",
+    "src/urdido/captions.py",
+    "src/urdido/cards/html.py",
+    "src/urdido/cards/render.py",
+    "src/urdido/claims.py",
+    "src/urdido/cuts/render.py",
+    "src/urdido/cuts/selection.py",
+    "src/urdido/edit/pacing.py",
+    "src/urdido/edit/stretch.py",
+    "src/urdido/export/resolve.py",
+    "src/urdido/instances.py",
+    "src/urdido/keywords.py",
+    "src/urdido/labels.py",
+    "src/urdido/library.py",
+    "src/urdido/mark.py",
+    "src/urdido/media.py",
+    "src/urdido/motion/pushin.py",
+    "src/urdido/narration.py",
+    "src/urdido/narration_words.py",
+    "src/urdido/pauses.py",
+    "src/urdido/preflight.py",
+    "src/urdido/prepare.py",
+    "src/urdido/preview.py",
+    "src/urdido/progress.py",
+    "src/urdido/publish/__init__.py",
+    "src/urdido/publish/__main__.py",
+    "src/urdido/publish/description.py",
+    "src/urdido/qa.py",
+    "src/urdido/repetition.py",
+    "src/urdido/review.py",
+    "src/urdido/revisions.py",
+    "src/urdido/safety.py",
+    "src/urdido/sources/__init__.py",
+    "src/urdido/sources/illustrated.py",
+    "src/urdido/sources/recording.py",
+    "src/urdido/sources/scenes.py",
+    "src/urdido/storyboard.py",
+    "src/urdido/textcheck.py",
+    "src/urdido/thumbnail.py",
+    "src/urdido/timeline.py",
+    "tests/test_anchors.py",
+    "tests/test_assemble_clip.py",
+    "tests/test_assemble_video.py",
+    "tests/test_beat_sound.py",
+    "tests/test_build_inputs.py",
+    "tests/test_cache.py",
+    "tests/test_captions.py",
+    "tests/test_cards.py",
+    "tests/test_claims.py",
+    "tests/test_cuts.py",
+    "tests/test_description.py",
+    "tests/test_export.py",
+    "tests/test_illustrated.py",
+    "tests/test_instances.py",
+    "tests/test_keywords.py",
+    "tests/test_labels.py",
+    "tests/test_library.py",
+    "tests/test_mark.py",
+    "tests/test_media.py",
+    "tests/test_mix.py",
+    "tests/test_motion.py",
+    "tests/test_opening.py",
+    "tests/test_pauses.py",
+    "tests/test_preflight.py",
+    "tests/test_prepare.py",
+    "tests/test_preview.py",
+    "tests/test_progress.py",
+    "tests/test_publish.py",
+    "tests/test_qa.py",
+    "tests/test_repetition.py",
+    "tests/test_review.py",
+    "tests/test_revisions.py",
+    "tests/test_safety.py",
+    "tests/test_scenes.py",
+    "tests/test_sources.py",
+    "tests/test_storyboard.py",
+    "tests/test_tempo.py",
+    "tests/test_terminal.py",
+    "tests/test_textcheck.py",
+    "tests/test_thumbnail.py",
+    "tests/test_timeline.py",
+    "tests/test_vertical_burn.py",
+]

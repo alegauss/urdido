@@ -10,6 +10,8 @@
 
 ## Block B — The engine extracted (videomaker without marketing)
 
+- ✅ **UR21** **urdido holds none of the videomaker code, and marketing's history of each module would be lost by a copy** — video-maker's 75 commits merged into src/urdido, tests and js under the urdido name; the suite passes here and skips by name without marketing (design recorded in `tests/marketing.py`).
+
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
 ## Block D — Inherited from video-maker (marketing Block B)

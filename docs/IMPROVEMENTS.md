@@ -50,21 +50,6 @@ lists every key the schema accepts.
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-### §UR21 The code brought over with its history
-
-Bring `video-maker/` from marketing with its history: `git filter-repo
---subdirectory-filter video-maker` on a scratch clone, then merge it in here under
-`src/urdido/` (the package renamed from `videomaker`), `tests/` and `js/`. A plain copy
-is the fallback if the history does not survive the merge cleanly.
-
-The rename is mechanical: imports, `python -m videomaker` in docstrings and messages,
-`VIDEO_MAKER_FULL`. `spikes/` is dead and does not come; the golden runner and its
-expected files stay in marketing (Block C).
-
-**Done when** `pytest` runs the imported suite here (tests that need marketing files
-skip by name until they move to synthetic fixtures) and `git log --follow` on a module
-shows its marketing commits.
-
 ### §UR22 Roots and output declared, not assumed
 
 `build.py:49-57` fixes the roots `video`, `recordings`, `plugin`, `root` and `shio`,
@@ -263,6 +248,28 @@ primitive each one needs, and file urdido's remaining side here.
 
 **Done when** no open PW line plans composition, and each urdido check names the
 polyweave primitive it uses.
+
+### §UR43 The lint baseline the import left
+
+Where it happened: UR21 merged marketing's `video-maker/` history into `src/urdido/` and
+`tests/`. That code was written without ruff, and on arrival `ruff check` reported about
+2,100 findings (1,916 of them E501 at 88 columns, then I001, B023, F811, B905, UP035,
+F401) and `ruff format --check` wanted to rewrite 87 files.
+
+What was done: reformatting would have buried every module's history under one commit,
+which is what the history import exists to keep. So `pyproject.toml` carries a generated
+baseline: `[tool.ruff.lint.per-file-ignores]` lists each imported file with exactly the
+codes it broke, and `[tool.ruff.format] exclude` lists the 87 unformatted files. New
+files are held to the full rules.
+
+What to do: pay the list down module by module, preferably with the change that next
+touches the module, so blame moves with real work. Safe fixes (`ruff check --fix` for
+I001, F401, UP035, UP037, UP017) can go in one pass. B023 (a closure over a loop
+variable) and B905 (`zip` without `strict`) are possible bugs and need reading, not
+suppressing. A file leaves both lists once it is clean, and nothing is ever added.
+
+**Done when** both lists in `pyproject.toml` are gone and `ruff check` and `ruff format
+--check` pass on the whole tree.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
