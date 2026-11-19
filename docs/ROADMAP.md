@@ -2,16 +2,15 @@
 
 ## Block A — Package foundation (urdido installable from PyPI)
 
-- 📋 **UR16** (deps: —) **There is no urdido package to install: no pyproject, source tree, console script or version** — Every other task lands in a package that does not exist yet, and its layout decides how the code is imported. → §UR16
 - 📋 **UR17** (deps: —) **A dep on another project's task is free text, so a marketing or polyweave ship never resolves here** — Moved lines already wait on marketing VM28 and polyweave PW697-PW699, and nobody relays a ship by hand. → §UR17
-- 📋 **UR18** (deps: UR16) **Nothing checks a push: no CI runs ruff and pytest on Linux and Windows** — Today the suite only ever runs on one Windows machine with NVENC and Edge, so portability bugs stay invisible. → §UR18
+- 📋 **UR18** (deps: UR16 ✅) **Nothing checks a push: no CI runs ruff and pytest on Linux and Windows** — Today the suite only ever runs on one Windows machine with NVENC and Edge, so portability bugs stay invisible. → §UR18
 - 📋 **UR19** (deps: UR18) **A version cannot reach PyPI except by a hand-run upload with a token** — Marketing has to pin a published version, and a hand release skips the build checks and the tag that says what shipped. → §UR19
-- 📋 **UR20** (deps: UR16, UR17) **An agent working in this repo or driving urdido has no CLAUDE.md, skill or friction path** — Marketing's rule that every friction becomes a framework task only works if the agent knows where and how to file it. → §UR20
-- 📋 **UR35** (deps: UR16, UR23) **Nobody outside this machine can learn what a declaration accepts or how to build a first video** — A package on PyPI is read by people who never saw marketing, and today the only manual is a 600-line README full of VM ids. → §UR35
+- 📋 **UR20** (deps: UR16 ✅, UR17) **An agent working in this repo or driving urdido has no CLAUDE.md, skill or friction path** — Marketing's rule that every friction becomes a framework task only works if the agent knows where and how to file it. → §UR20
+- 📋 **UR35** (deps: UR16 ✅, UR23) **Nobody outside this machine can learn what a declaration accepts or how to build a first video** — A package on PyPI is read by people who never saw marketing, and today the only manual is a 600-line README full of VM ids. → §UR35
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-- 📋 **UR21** (deps: UR16) **urdido holds none of the videomaker code, and marketing's history of each module would be lost by a copy** — Sixty-six shipped tasks explain why each module is the way it is, and the blame is how the next change finds them. → §UR21
+- 📋 **UR21** (deps: UR16 ✅) **urdido holds none of the videomaker code, and marketing's history of each module would be lost by a copy** — Sixty-six shipped tasks explain why each module is the way it is, and the blame is how the next change finds them. → §UR21
 - 📋 **UR22** (deps: UR21) **The build defaults its roots to sibling Turing and Shio checkouts and writes to a fixed video/ folder** — A video declared anywhere else gets paths that climb out of its own project, and the root names are wired into the code. → §UR22
 - 📋 **UR23** (deps: UR21) **A misspelled or missing key in video.toml fails as a KeyError deep inside the build** — Only the illustrated path is checked before rendering, so a typo in any other table costs a partial build to find. → §UR23
 - 📋 **UR24** (deps: UR21) **Library code raises SystemExit and the CLI is an if-chain, so urdido can be neither embedded nor discovered** — A package is used from other Python code and by agents reading --help, and both see an exit or a usage line naming two of seven commands. → §UR24

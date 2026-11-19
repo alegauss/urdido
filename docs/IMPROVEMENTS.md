@@ -2,26 +2,6 @@
 
 ## Block A — Package foundation (urdido installable from PyPI)
 
-### §UR16 A package shaped like polyweave
-
-Copy polyweave's packaging, which already publishes from this machine: hatchling,
-`src/urdido/`, `__version__` in `src/urdido/__init__.py` read as the dynamic version,
-`[project.scripts] urdido = "urdido.cli:main"`, ruff (E, F, I, UP, B, SIM; 88 columns),
-pytest with `pythonpath = ["src", "tests"]`, and a README.
-
-Python 3.12 or newer, as videomaker requires today. The base dependency stays
-`opentimelineio`; everything heavier is an extra that refuses by name with its install
-remedy, the way polyweave's `kernel/layer.py` maps a requirement to `pip install
-<dist>[x]`: `cards` (playwright, fonttools), `narration` (requests), `polyweave`,
-`resolve`, `docker`, `test`.
-
-polyweave's own name was taken on PyPI and it ships as `polyweave-gamekit`. Check that
-`urdido` is free before the first release; if it is not, the distribution name changes
-and the import name stays `urdido`.
-
-**Done when** `pip install -e .[test]` installs it, `urdido --version` answers, and
-`ruff check .` and `pytest` pass on an empty suite.
-
 ### §UR17 Sibling projects declared
 
 Declare `[projects]` in this `roadkeep.toml` for `marketing` (D:\Git\viglet\marketing)

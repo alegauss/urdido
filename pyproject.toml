@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+# `urdido` was free on PyPI on 2026-11-19. If it is taken before the first release, the
+# distribution name changes here and the import name stays `urdido` (§UR16).
+name = "urdido"
+dynamic = ["version"]
+description = "Build a narrated video from a declaration: timeline, cuts, mix, cards, captions and export."
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{ name = "Alexandre Oliveira" }]
+keywords = ["video", "timeline", "narration", "captions", "opentimelineio"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Video",
+]
+dependencies = ["opentimelineio>=0.17"]
+
+# Everything heavier than the timeline is an extra, and code that needs one asks
+# `urdido.extras.require`, which refuses by name with the `pip install` that fixes it.
+# DaVinci Resolve and Docker are programs, not Python distributions, so they are not
+# extras: what needs them finds the binary and refuses by name when it is absent.
+[project.optional-dependencies]
+# Cards and thumbnails are drawn by Playwright for Python; fonttools measures the text.
+cards = ["playwright>=1.40", "fonttools>=4"]
+narration = ["requests>=2.32"]
+polyweave = ["polyweave-gamekit"]
+test = ["pytest>=8", "pillow>=10", "ruff>=0.6"]
+
+[project.scripts]
+urdido = "urdido.cli:main"
+
+[tool.hatch.version]
+path = "src/urdido/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+only-include = ["src/urdido", "README.md", "pyproject.toml"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/urdido"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 88
+src = ["src", "tests"]
+target-version = "py312"
+# The hooks under `.claude` are roadkeep's plumbing, installed from another repository.
+extend-exclude = [".claude"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
