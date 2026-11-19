@@ -2,7 +2,7 @@
 
 ## Block A — Package foundation (urdido installable from PyPI)
 
-- 📋 **UR19** (deps: UR18 ✅) **A version cannot reach PyPI except by a hand-run upload with a token** — Marketing has to pin a published version, and a hand release skips the build checks and the tag that says what shipped. → §UR19
+- ⏳ **UR19** (deps: UR18 ✅, UR24) **A version cannot reach PyPI except by a hand-run upload with a token** — Releasing 0.1.0 still needs the trusted publishers registered on PyPI and TestPyPI, and a wheel that carries urdido build and its package data. → §UR19
 - 📋 **UR20** (deps: UR16 ✅, UR17 ✅) **An agent working in this repo or driving urdido has no CLAUDE.md, skill or friction path** — Marketing's rule that every friction becomes a framework task only works if the agent knows where and how to file it. → §UR20
 - 📋 **UR35** (deps: UR16 ✅, UR23) **Nobody outside this machine can learn what a declaration accepts or how to build a first video** — A package on PyPI is read by people who never saw marketing, and today the only manual is a 600-line README full of VM ids. → §UR35
 
@@ -49,5 +49,11 @@
 - 📋 **UR12** (deps: UR21) **A scene video has no review sheet: frames to look at are pulled one by one with ffmpeg** — Checking the Shio promo's mark, cards, search and terminal took about ten hand-made ffmpeg grabs; illustrated videos get a sheet. → §UR12
 - 📋 **UR13** (deps: UR21) **A bought take is never heard back, so a word the voice says wrong is caught only by the owner watching** — The Alexandre heard "Ía" for IA in the Shio promo; after the pronounce fix nothing could confirm "iá" was what the voice said. → §UR13
 - 📋 **UR14** (deps: UR21) **A cut that flashes white for one frame passes the build's verification** — The Shio promo flashed white at 0:40, the browser's blank page before chapter 2's console, and only the Alexandre watching caught it. → §UR14
+
+## Done when — UR19
+
+- **0.1.0 installs from PyPI and urdido build --help answers** In a fresh virtualenv,
+  pip install urdido==0.1.0 succeeds and urdido build --help prints its usage, which
+  needs the trusted publishers registered and the build command in the wheel.
 
 ## Non-goals
