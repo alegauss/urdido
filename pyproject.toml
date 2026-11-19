@@ -48,6 +48,9 @@ packages = ["src/urdido"]
 testpaths = ["tests"]
 pythonpath = ["src", "tests"]
 addopts = "-q"
+markers = [
+    "full: encodes minutes of video, so it runs only where URDIDO_FULL=1 (nightly CI)",
+]
 
 [tool.ruff]
 line-length = 88

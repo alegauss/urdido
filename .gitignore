@@ -1,5 +1,8 @@
 .roadkeep
 
+# the gate's log and stamp
+.urdido/
+
 __pycache__/
 *.py[cod]
 .pytest_cache/

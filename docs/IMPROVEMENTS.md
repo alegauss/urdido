@@ -2,18 +2,6 @@
 
 ## Block A — Package foundation (urdido installable from PyPI)
 
-### §UR18 Gates on every push
-
-A `gates.yml` like polyweave's: `pip install -e .[test,cards]`, `ruff check .`, and
-pytest through a `tools/gate.py` that records skips per engine, on Ubuntu and Windows
-with Python 3.12 and 3.13. ffmpeg comes from the runner's package manager; Playwright
-installs its bundled Chromium. Tests that encode minutes of video keep a marker
-(`VIDEO_MAKER_FULL` becomes `URDIDO_FULL`) and run in a nightly job, not on every push.
-The existing `roadkeep.yml` stays.
-
-**Done when** a pull request shows ruff and the suite green on both systems, with the
-skipped tests named.
-
 ### §UR19 Releases through trusted publishing
 
 Copy polyweave's `publish.yml` and `tools/release.py`. A `v*` tag builds the sdist and

@@ -2,8 +2,7 @@
 
 ## Block A — Package foundation (urdido installable from PyPI)
 
-- 📋 **UR18** (deps: UR16 ✅) **Nothing checks a push: no CI runs ruff and pytest on Linux and Windows** — Today the suite only ever runs on one Windows machine with NVENC and Edge, so portability bugs stay invisible. → §UR18
-- 📋 **UR19** (deps: UR18) **A version cannot reach PyPI except by a hand-run upload with a token** — Marketing has to pin a published version, and a hand release skips the build checks and the tag that says what shipped. → §UR19
+- 📋 **UR19** (deps: UR18 ✅) **A version cannot reach PyPI except by a hand-run upload with a token** — Marketing has to pin a published version, and a hand release skips the build checks and the tag that says what shipped. → §UR19
 - 📋 **UR20** (deps: UR16 ✅, UR17 ✅) **An agent working in this repo or driving urdido has no CLAUDE.md, skill or friction path** — Marketing's rule that every friction becomes a framework task only works if the agent knows where and how to file it. → §UR20
 - 📋 **UR35** (deps: UR16 ✅, UR23) **Nobody outside this machine can learn what a declaration accepts or how to build a first video** — A package on PyPI is read by people who never saw marketing, and today the only manual is a 600-line README full of VM ids. → §UR35
 
