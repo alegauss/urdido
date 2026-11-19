@@ -2,9 +2,409 @@
 
 ## Block A — Package foundation (urdido installable from PyPI)
 
+### §UR16 A package shaped like polyweave
+
+Copy polyweave's packaging, which already publishes from this machine: hatchling,
+`src/urdido/`, `__version__` in `src/urdido/__init__.py` read as the dynamic version,
+`[project.scripts] urdido = "urdido.cli:main"`, ruff (E, F, I, UP, B, SIM; 88 columns),
+pytest with `pythonpath = ["src", "tests"]`, and a README.
+
+Python 3.12 or newer, as videomaker requires today. The base dependency stays
+`opentimelineio`; everything heavier is an extra that refuses by name with its install
+remedy, the way polyweave's `kernel/layer.py` maps a requirement to `pip install
+<dist>[x]`: `cards` (playwright, fonttools), `narration` (requests), `polyweave`,
+`resolve`, `docker`, `test`.
+
+polyweave's own name was taken on PyPI and it ships as `polyweave-gamekit`. Check that
+`urdido` is free before the first release; if it is not, the distribution name changes
+and the import name stays `urdido`.
+
+**Done when** `pip install -e .[test]` installs it, `urdido --version` answers, and
+`ruff check .` and `pytest` pass on an empty suite.
+
+### §UR17 Sibling projects declared
+
+Declare `[projects]` in this `roadkeep.toml` for `marketing` (D:\Git\viglet\marketing)
+and `polyweave` (D:\Git\alegauss\polyweave), and the mirror entry for `urdido` in
+marketing's. Then rewrite the free-text deps the move left (`marketing VM28`, `polyweave
+PW697`, `PW698`, `PW699`) as qualified deps, so `deps`, `pick` and the session brief
+resolve them against each sibling's ledger.
+
+The friction skills that file into urdido from marketing need the same declaration.
+
+**Done when** `roadkeep deps` on UR1, UR2 and UR3 resolves each sibling dep instead of
+reporting it as outside work.
+
+### §UR18 Gates on every push
+
+A `gates.yml` like polyweave's: `pip install -e .[test,cards]`, `ruff check .`, and
+pytest through a `tools/gate.py` that records skips per engine, on Ubuntu and Windows
+with Python 3.12 and 3.13. ffmpeg comes from the runner's package manager; Playwright
+installs its bundled Chromium. Tests that encode minutes of video keep a marker
+(`VIDEO_MAKER_FULL` becomes `URDIDO_FULL`) and run in a nightly job, not on every push.
+The existing `roadkeep.yml` stays.
+
+**Done when** a pull request shows ruff and the suite green on both systems, with the
+skipped tests named.
+
+### §UR19 Releases through trusted publishing
+
+Copy polyweave's `publish.yml` and `tools/release.py`. A `v*` tag builds the sdist and
+wheel, runs `twine check --strict`, refuses a tag that differs from `__version__`,
+publishes to TestPyPI and then PyPI through trusted publishing (no token, environments
+`testpypi` and `pypi`), and opens a GitHub release with notes from the changelog.
+`tools/release.py patch|minor|major` bumps, commits and tags on a clean `main`.
+
+The wheel must carry the package data the build needs at run time: `export/finish.lua`,
+card templates, and the JavaScript helpers if they ship inside it (Block B decides).
+
+**Done when** `0.1.0` installs from PyPI into a fresh virtualenv and `urdido build
+--help` answers.
+
+### §UR20 Agent guidance and a friction skill
+
+A `CLAUDE.md` for this repository: the gates, the governed docs, one task per commit
+through `run-commit.cmd -m`, and the rules video-maker kept (nothing on screen is
+staged; a product's brand, words and URLs live in the declaration, never in a module;
+media is never versioned).
+
+For consumers, an `urdido` skill on how to declare and build a video, and an
+`urdido-friction` skill, shaped like `polyweave-friction`, that files a line here
+(prefix UR) when the framework gets in the way. It replaces marketing's
+`video-maker-friction`, which files into marketing's own Block B.
+
+**Done when** a session in marketing that meets a missing setting files it here through
+the skill, with `(from: marketing)`.
+
+### §UR35 A first video and the declaration reference
+
+Split the video-maker README into what a newcomer needs:
+- a quickstart that builds a short video from a declaration in `examples/`, with
+  synthetic media (ffmpeg lavfi colour and tone, an OFL font), so it runs with nothing
+  bought or recorded;
+- `docs/specs/declaration.md`, generated from the declaration schema (Block B), one section per table
+  and side file;
+- one page per source kind (scenes, illustrated, and chaptered if it stays) and per
+  check (claims, pauses, repetition, text, safe area);
+- the external tools each extra needs.
+
+Ticket ids and personal names leave the prose.
+
+**Done when** the quickstart builds its example in a clean checkout and the reference
+lists every key the schema accepts.
+
 ## Block B — The engine extracted (videomaker without marketing)
 
+### §UR21 The code brought over with its history
+
+Bring `video-maker/` from marketing with its history: `git filter-repo
+--subdirectory-filter video-maker` on a scratch clone, then merge it in here under
+`src/urdido/` (the package renamed from `videomaker`), `tests/` and `js/`. A plain copy
+is the fallback if the history does not survive the merge cleanly.
+
+The rename is mechanical: imports, `python -m videomaker` in docstrings and messages,
+`VIDEO_MAKER_FULL`. `spikes/` is dead and does not come; the golden runner and its
+expected files stay in marketing (Block C).
+
+**Done when** `pytest` runs the imported suite here (tests that need marketing files
+skip by name until they move to synthetic fixtures) and `git log --follow` on a module
+shows its marketing commits.
+
+### §UR22 Roots and output declared, not assumed
+
+`build.py:49-57` fixes the roots `video`, `recordings`, `plugin`, `root` and `shio`,
+defaults `<plugin>` to `../../../turing/latest/wordpress` and `<shio>` to
+`../../../shio/latest`, and names them again at `:89`, `:208`, `:360`, `:371` and
+`:405`. `thumbnail.py:91` writes to `video/parts/thumbnail` ignoring `STORY_VIDEO_DIR`.
+
+A declaration names its roots in a `[roots]` table, each a path relative to the
+declaration or an environment variable it reads; the code knows no root by name and has
+no default outside the project. The output folder and the work folder are declared, with
+`video/` and `video/parts/` as defaults. `STORY_VIDEO_DIR`, `STORY_RECORDINGS`,
+`TURING_WORDPRESS` and `SHIO_REPO` keep working for one release with a deprecation
+notice.
+
+**Done when** no module contains a root name or a sibling path, and the marketing
+declarations build with `[roots]`.
+
+### §UR23 A schema for the declaration
+
+Every module reads the declaration as `decl["x"]["y"]`; only `[video] frame`,
+`text_checks`, `brand_mark` and instance names are checked. Model the declaration as
+typed dataclasses per table (`video`, `source`, `narration`, `cards`, `music`, `audio`,
+`opening`, `cuts`, `captions`, `highlights`, `claims`, `description`, `thumbnail`,
+`instances`, ...) and the side files it names, with defaults in one place, unknown keys
+refused with a did-you-mean, and paths resolved through the roots.
+
+`urdido check <video.toml>` validates without building, and the schema exports a JSON
+Schema that editors and the reference docs read.
+
+**Done when** every marketing declaration passes `urdido check`, and a misspelled key is
+refused with its file, table and the nearest valid name.
+
+### §UR24 Errors raised, commands declared
+
+`SystemExit` is raised deep in `build.py`, `preflight.py` and the assemblers;
+`RecordingRefused` stands in for every other error. `__main__.py` routes on
+`sys.argv[1]` and its usage names only `build` and `thumbnail`, while `publish`,
+`export` and `narration_words` are separate `-m` entry points.
+
+A small exception hierarchy (`UrdidoError` with refusal, missing-tool and declaration
+kinds, each with a remedy) is raised by the library and turned into exit codes and
+messages only in `urdido.cli`. One argparse tree holds every command: `build`, `check`,
+`prepare`, `thumbnail`, `claims`, `library`, `storyboard`, `instance`, `export`,
+`publish`, `words`. A public API (`urdido.build(...)`, `urdido.load(...)`) is declared
+in `__all__`; private names stop crossing modules.
+
+**Done when** `urdido --help` lists every command and a refused build raised from Python
+is an exception, not an exit.
+
+### §UR25 One polyweave adapter behind provider seams
+
+`prepare.py:43-54` (`voice.lines`), `library.py:225-239` (`stock.fetch`,
+`reference.register`, `reference.frames`, `provenance.credits`) and `instances.py:253`
+(`capture.web`, with the PW710 workaround) each run `python -m polyweave ... --json`;
+`prepare.py:136` reads `polyweave.toml` for Scribe prices.
+
+One `urdido.providers.polyweave` module owns the subprocess contract and the refusal
+parsing, behind small protocols the rest of the code calls: voice, stock, reference
+frames, web capture. It stays a subprocess: polyweave's stable contract is its CLI, not
+its modules. Without polyweave installed, an operation that needs it refuses with `pip
+install urdido[polyweave]`.
+
+**Done when** no module outside the adapter mentions polyweave, and the library, prepare
+and instance tests pass against a fake provider.
+
+### §UR26 A transcriber seam
+
+`narration_words.py:15-47` posts to Scribe with `requests` and `ELEVENLABS_API_KEY`,
+defaults to `pt-BR`/`por`, and `prepare.py` prices it from `polyweave.toml`. Put a
+`Transcriber` protocol in front of it, with the Scribe client as one implementation in
+the `narration` extra and polyweave's `sound.speech` as another once PW703 lands. The
+language comes from the declaration, never a default. The hash-bound word records stay
+the contract every caller reads.
+
+UR13 (takes heard back) and UR7 (re-roll) build on the same seam.
+
+**Done when** the anchor, highlight and prepare tests run against a fake transcriber,
+and the language default is gone.
+
+### §UR27 Publishing texts by locale and by target
+
+`publish/description.py:39-157` holds "Capítulos", "Fontes e demonstrações", "Apoio",
+"Capturas próprias", licence prefixes in Portuguese and a default ElevenLabs credit;
+`sources/illustrated.py:387` writes "0:00 Introdução". The 5,000-unit limit, youtu.be
+shortening and the Shorts safe area are YouTube's; `cuts/render.py:45-47` defaults the
+languages to `en` and `pt-BR`.
+
+A strings table per language, chosen by the build's language and overridable in the
+declaration, and a publishing target (YouTube first) that owns the limits, link
+shortening and safe areas. `scion()` in `description.py:152` is dead and goes.
+
+**Done when** an English build writes an English description, and no Portuguese literal
+remains outside the pt-BR table.
+
+### §UR28 One video's needs out of the core
+
+`build.py:299-343` visits `/?post_type=product` with WooCommerce selectors to take store
+screenshots for the opening; `build.py:357-360` copies stills into the Turing site;
+`publish/__init__.py:46-75` writes a TypeScript module and a marked block into Turing's
+docs. The chaptered pipeline (`sources/recording`, `assemble/clip`, `assemble/video`,
+the teaser and vertical cuts) reads `chapters.json` as Turing's e2e specs write it and
+keeps JS-parity rounding.
+
+Decide per piece: the chaptered source stays as a generic kind if its contract can be
+stated without Turing; the store screenshots become declared web captures; the
+transcript and stills publishing become a declared output, or a hook marketing owns.
+Nothing in the package writes into another repository unless the declaration says where.
+
+**Done when** no module names WooCommerce, Turing or a path outside the declared roots,
+and the WordPress demo still builds.
+
+### §UR29 Browser and layout without machine assumptions
+
+`cards/render.py:35-41` and `build.py:316` default the Playwright channel to `msedge`
+and look for `msedge.exe` under `PROGRAMFILES` and `LOCALAPPDATA`; elsewhere the
+executable is `None` and caching is refused. `thumbnail.py:85` runs `exec_module` on the
+declaration's `layout = "../brand/brand.py"`.
+
+Default to Playwright's bundled Chromium, identified by its own version for the cache,
+with the channel an opt-in in the declaration. Thumbnail layouts register through an
+entry point group (`urdido.thumbnail_layouts`) or a declared module name, with a
+documented function signature; japode's `brand.py` becomes one.
+
+**Done when** the card and thumbnail tests pass on Linux CI, and the Japode thumbnail
+still renders through the declared layout.
+
+### §UR30 The JavaScript side packaged
+
+`prepare.py:30-38` runs `node` on `narration/takes.mjs` and `opening.mjs` found at
+`Path(__file__).parents[1]`, which a wheel does not have. `takes.mjs` duplicates
+`narration.py`; `buy.mjs` buys through polyweave; `story-moves.mjs`,
+`terminal-replay.mjs` and `recording/seconds.mjs` are recording helpers using only Node
+built-ins.
+
+Port the opening gate to Python so the build needs no node. Publish the recording and
+narration helpers as one npm package (`urdido-record`, or a scope), versioned with the
+Python one, so consumers import it by name. The narration currency rules then exist
+once, in Python, with the JS reading the result.
+
+**Done when** `urdido prepare` runs without node, and marketing's scripts can import the
+helpers from the npm package.
+
+### §UR31 Tests on synthetic fixtures
+
+`test_assemble_clip`, `test_cache`, `test_captions`, `test_cards`, `test_description`,
+`test_mix`, `test_preflight`, `test_preview`, `test_publish`, `test_scenes` and
+`tests/js/terminal.mjs` read `japode/brand/fonts`, `japode/wordpress/cards.json`,
+`turing/wordpress/demo/narration`, `shio/promo/` or `D:\Git\viglet\turing`.
+
+Replace them with fixtures under `tests/fixtures/`: media generated by ffmpeg lavfi at
+test time, an OFL font, small declarations and storyboards written for the tests.
+Markers say what each test needs (`ffmpeg`, `browser`, `node`, `full`), and the gate
+reports skips by marker. The JS-parity oracles (`tests/oracles/`) come along as data.
+
+**Done when** the whole suite runs in CI with no path outside this repository.
+
+### §UR32 Cache keys that survive an install
+
+`cache.py:51-58` keys each stage on the absolute path of `cache.py` and of every input.
+Installing urdido instead of the in-repo package changes every key, and the tracked
+`*.cache.json` under `japode/*/video/parts/` all miss.
+
+Key the code by the package version plus a hash of the modules a stage runs, and inputs
+by content hash with paths relative to the declared roots. Keep a one-time reader for
+the old format that reports what it can no longer verify.
+
+**Done when** a build cached in one checkout hits its cache from another checkout of the
+same version, and an upgrade misses only the stages whose code changed.
+
+### §UR33 One pipeline per source kind
+
+`Build` in `build.py` resolves roots, loads hash-pinned JSON, runs the chaptered
+(`:188`) and scenes (`:377`) pipelines, scrapes the store, writes stills, the Resolve
+project, the final mux and the mix, and imports about thirty modules; `prepare.py:22`
+imports it back. Split it into a declaration loader, one pipeline per source kind behind
+a common interface, and shared finishing stages (mix, mux, QA, revisions, description).
+
+The illustrated path, today the most checked, sets the shape the others follow. Sources
+become pluggable through an entry point group, so a project can add one without forking.
+
+**Done when** each pipeline has its own module and tests, and `build.py` is the
+orchestration alone.
+
+### §UR34 Where polyweave ends and urdido begins
+
+polyweave PW712 (preflight and repetition), PW713 (interval preview), PW714 (media
+catalogue), PW715 (build progress) and PW716 (claims) were filed from marketing; each
+names a videomaker module as the temporary adapter, and each assumes polyweave owns an
+authored cut, beats and narration anchors. That is urdido.
+
+Agree the boundary: polyweave keeps the media primitives (stock, capture, voice and word
+times, HTML to still, measuring a finished file, frames and contact sheets, provenance,
+budgets); urdido keeps the declaration, timeline, cuts, cards, mix, checks over a cut,
+review and publishing. Then move or narrow those PW lines, leaving polyweave the
+primitive each one needs, and file urdido's remaining side here.
+
+**Done when** no open PW line plans composition, and each urdido check names the
+polyweave primitive it uses.
+
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
+
+### §UR36 Marketing on an installed urdido
+
+Marketing gets a `requirements.txt` (or a small `pyproject.toml`) that pins urdido:
+editable from `D:\Git\alegauss\urdido` while the extraction is in flight, then the PyPI
+version once UR19 releases. The skill and README install lines (`pip install -e
+"video-maker[test,cards,narration]"`) change with it, and `PYTHON` in the bin scripts
+keeps naming the interpreter that has it.
+
+**Done when** a fresh virtualenv in marketing gets urdido from the pin and `urdido
+--version` answers there.
+
+### §UR37 Every call switched to urdido
+
+The callers: `package.json` in turing/wordpress and shio/promo (`story:video`,
+`story:developer`); `turing/wordpress/bin/transcript.mjs` (which imports the package by
+running from `video-maker/`); `shio/promo/bin/story-scenes.mjs:92` (`instance`); the
+japode READMEs and `PUBLICACAO.md`; `japode/brand/brand.py:186`
+(`videomaker.thumbnail.fit_title`); `japode/scion/bin/build.py:347`
+(`videomaker.publish.description`).
+
+urdido ships a `videomaker` shim for one minor release: the module name and `python -m
+videomaker` forward to urdido with a deprecation notice. Marketing switches project by
+project; the shim goes in the next release.
+
+**Done when** grep finds no `videomaker` in marketing outside the changelog, and every
+video still builds.
+
+### §UR38 JavaScript imports from the package
+
+Eight scripts import `../../../video-maker/...`: `narration-takes.mjs` and
+`story-narration.mjs` in turing/wordpress, shio/promo and both japode explainers;
+shio/promo's `cenas.mjs`, `pace.mjs`, `story-scenes.mjs` and `story-terminal.mjs`.
+Turing's `wordpress/tests/e2e/marketing.mjs:16-35` imports marketing's
+`turing/wordpress/bin/narration-takes.mjs`, which imports `takes.mjs`.
+
+Switch each import to the npm package from the JavaScript-packaging task, installed by a
+`package.json` at the root of marketing. `narrationFor` stays exported from
+`turing/wordpress/bin/ narration-takes.mjs`, so Turing's specs need no change.
+
+**Done when** no marketing script imports a path under `video-maker/`, and Turing's
+story recording still finds its narration.
+
+### §UR39 The golden check moves to the video it proves
+
+`video-maker/test/golden/run.mjs` rebuilds the WordPress demo's variants from
+`turing/wordpress` and `../turing/latest/wordpress`, snapshots the Turing repository's
+`git status`, and diffs against `test/golden/expected/`, using media that is not
+versioned.
+
+Move it to `turing/wordpress/test/golden/` in marketing, running the installed urdido.
+urdido keeps the frozen oracles and its own synthetic end-to-end test.
+
+**Done when** `node turing/wordpress/test/golden/run.mjs` passes against the installed
+urdido with the expected files unchanged.
+
+### §UR40 Marketing's agent rules point at urdido
+
+`.claude/hooks/video-maker-gate.py` exempts `video-maker/` and any ffmpeg command
+mentioning videomaker, and tells the agent to add a module and a Block B task;
+`.claude/settings.json:37-46` wires it; `.claude/skills/video-maker-friction` files into
+Block B; `roadkeep-gui-roadmap-docs` has the install line, the pytest and node gates and
+the `feat(video-maker)` scope; `CLAUDE.md:8-28,43,56` describes the framework.
+
+Reword the hook for `urdido` (the exemption and the guidance), replace the friction
+skill with urdido's (UR20), update the gates to marketing's own tests, and rewrite the
+CLAUDE.md rules: every video is built by urdido, and framework friction becomes a UR
+task.
+
+**Done when** a new script in a video folder still asks first, and the guidance names
+urdido and its roadmap.
+
+### §UR41 Every video rebuilt and compared
+
+Rebuild every declared video with urdido and compare with the last video-maker build:
+turing/wordpress (story and developer, both languages), shio/promo (long cut and
+shorts), japode/wordpress, japode/primeiro-bug. Compare plans, captions, descriptions,
+credits and QA (duration, streams, loudness); the frames come from the review sheets.
+Expect one full rebuild per video unless the cache keys survive the install.
+
+Differences are either explained by a deliberate change in the extraction or fixed.
+japode/docker and japode/scion stay on their copied scripts until UR4.
+
+**Done when** each video's comparison is recorded with no unexplained difference.
+
+### §UR42 The in-repo framework removed
+
+Delete `video-maker/` from marketing, with its `.gitignore` lines (`*.egg-info/`,
+`video-maker/spikes/out/`), the untracked `.polyweave/*.py` scratch scripts that import
+it, and the remaining mentions in marketing's README and in visibility's `CLAUDE.md`.
+Marketing's remaining Block B (channel analytics, VM28 and VM32) stays there under a new
+title.
+
+**Done when** marketing has no `video-maker/` folder, every video builds from the pinned
+urdido, and `roadkeep lint` passes in both repositories.
 
 ## Block D — Inherited from video-maker (marketing Block B)
 
