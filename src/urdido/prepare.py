@@ -302,6 +302,84 @@ def prepare(args):
     return report
 
 
+#: Beside a take: its provenance and its word times, set aside and put back with it.
+TAKE_COMPANIONS = (".prov.json",)
+
+
+def take_files(audio: Path) -> list[Path]:
+    """A take and the files that describe it, those that exist."""
+    files = [audio, *(Path(str(audio) + suffix) for suffix in TAKE_COMPANIONS), audio.with_suffix(".words.json")]
+    return [file for file in files if file.exists()]
+
+
+def retaken(args):
+    """Buy again takes whose text is unchanged (UR7), then run `prepare`.
+
+    voice.lines counts a take current while its words, voice and model are unchanged and
+    has no way to buy it again (polyweave PW720), so each `--retake` take, its provenance
+    and its word times move to `<language>/retakes/` before the quote. With the take gone,
+    the plan prices it and an authorized run buys it. A dry plan, or a run that did not
+    buy the new take, puts the old one back. A bought retake is recorded with its reason
+    in the narration's `retakes.json`, beside the voice and model that drifted.
+    """
+    names = list(dict.fromkeys(getattr(args, "retake", None) or []))
+    reason = (getattr(args, "retake_reason", None) or "").strip()
+    if not names:
+        return prepare(args)
+    if not reason:
+        raise ValueError("--retake needs --retake-reason: what was wrong with the take, so the ledger says why")
+    if args.take and set(names) - set(args.take):
+        raise ValueError("retaken takes must be part of this plan's selection")
+    if args.execute and set(names) - set(args.authorize_take or []):
+        raise ValueError("an executed retake buys the take again: add --authorize-take for each --retake")
+    build = Build(Path(args.declaration), SimpleNamespace(language=args.language, plan=True, cards=False))
+    script = build.load(build.decl["narration"]["script"])
+    takes = Takes(script, build.path(build.decl["narration"]["takes"]))
+    if set(names) - set(takes.lines):
+        raise ValueError("retake known narration takes")
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    moved: dict[str, list[tuple[Path, Path]]] = {}
+    for name in names:
+        audio = Path(takes.take_file(args.language, name))
+        if not audio.exists():
+            raise ValueError(f"{name}: no take to buy again; a missing take is planned without --retake")
+        aside = audio.parent / "retakes"
+        aside.mkdir(exist_ok=True)
+        moved[name] = []
+        for file in take_files(audio):
+            target = aside / file.name.replace(audio.stem, f"{audio.stem}.{stamp}", 1)
+            os.replace(file, target)
+            moved[name].append((file, target))
+    report = None
+    try:
+        report = prepare(args)
+    finally:
+        bought = []
+        for name, pairs in moved.items():
+            audio = Path(takes.take_file(args.language, name))
+            fresh = args.execute and report is not None and audio.exists() \
+                and takes.current(str(audio), args.language, takes.lines[name][args.language])
+            if fresh:
+                bought.append(name)
+                continue
+            for original, target in pairs:
+                if not original.exists():
+                    os.replace(target, original)
+        ledger = Path(takes.folder) / "retakes.json"
+        if bought:
+            entries = json.loads(ledger.read_text("utf-8")) if ledger.exists() else []
+            for name in bought:
+                entries.append({"take": name, "language": args.language, "reason": reason, "at": stamp,
+                                "voice": script["voice"], "model": script["model"],
+                                "set_aside": [target.relative_to(ledger.parent).as_posix() for _, target in moved[name]]})
+            ledger.write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        if report is not None:
+            report["retakes"] = [{"take": name, "reason": reason,
+                                  "status": "bought" if name in bought else "planned" if not args.execute else "restored"}
+                                 for name in names]
+    return report
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("declaration", type=Path)
@@ -312,5 +390,8 @@ def main(argv=None):
     parser.add_argument("--max-cost", type=float, help="maximum combined estimate in the quoted service unit")
     parser.add_argument("--root", type=Path, help="Polyweave project root; defaults to the video's folder")
     parser.add_argument("--service", help="the project's configured narration service profile")
-    prepare(parser.parse_args(argv))
+    parser.add_argument("--retake", action="append",
+                        help="buy this take again although its text is unchanged (a wrong accent, say)")
+    parser.add_argument("--retake-reason", help="what was wrong with the retaken takes, kept in retakes.json")
+    retaken(parser.parse_args(argv))
     return 0

@@ -215,6 +215,20 @@ highlight labels, translated caption tracks and following takes whose times may
 move. A report distinguishes prepared takes from missing steps or anchor review.
 The command leaves scripts and highlight declarations untouched.
 
+A take whose text is right but whose delivery is not (eleven_v3 drifting into European
+Portuguese, say) is bought again with `--retake` and the reason (UR7):
+
+```powershell
+urdido prepare japode/wordpress/video.toml --language pt-BR --retake chapter-1 --retake-reason "accent: European Portuguese at 0:28"
+urdido prepare japode/wordpress/video.toml --language pt-BR --retake chapter-1 --retake-reason "accent: European Portuguese at 0:28" --authorize-take chapter-1 --execute --max-cost 0.1
+```
+
+The plan prices the take as if it were missing and changes nothing. An executed retake
+keeps the old take, its provenance and its word times in `<language>/retakes/`, and
+records the take, the reason, the voice and the model in the narration's
+`retakes.json`, so a voice or model that keeps drifting shows across takes. A run that
+does not buy the new take puts the old one back.
+
 Word anchors and highlights share exact aliases from `pronounce` and optional
 `alignment_aliases` in the narration script. For example,
 `"alignment_aliases":{"pt-BR":{"Hello Dolly":["Relodol"]}}` declares a reviewed

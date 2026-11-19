@@ -40,7 +40,6 @@
 - 📋 **UR3** (deps: marketing: VM28) **Published videos have no end screen or cards pointing to the next video on the subject** — A viewer who finishes the Docker video is not offered the Scion one, and the end screen should point at the continuation, not the newest upload. → §UR3
 - 📋 **UR4** (deps: UR2) **The Japode explainer videos are built by scripts copied into each video, outside video-maker** — video-maker only knows the recorded product demo, so the first video of another kind went around it, and its two copies already differ. → §UR4
 - 📋 **UR5** (deps: UR21 ✅, UR33) **A second cut of a video, to test a new opening, means copying the whole video folder and its declaration** — Retention tests need several openings of the same episode, and each copy duplicates 722 MB and drifts from the published cut on every later fix. → §UR5
-- 📋 **UR7** (deps: UR21 ✅) **A narration take with the wrong accent cannot be bought again unless its text changes** — eleven_v3 sometimes drifts into European Portuguese, and the only way to re-roll the take is to rewrite a line that was already right. → §UR7
 - 📋 **UR8** (deps: UR21 ✅) **A thumbnail picture can be any file in the folder, unchecked against the video's media or its licence** — The thumbnail is the promise the video must keep, and a logo or photo fetched by hand reaches it with no provenance check. → §UR8
 - 📋 **UR9** (deps: UR21 ✅) **A video made of filmed scenes gets no YouTube description or chapter times from its build** — The Viglet Shio promo's chapter times were read by hand from its captions, and every new cut moves them. → §UR9
 - 📋 **UR10** (deps: UR21 ✅) **A scene video is recorded by running its README's commands in order by hand, and a failed step does not stop the next** — The Viglet Shio promo's agent session ran on an instance whose Marketplace scene had failed, and the order lives only in prose. → §UR10
@@ -48,6 +47,7 @@
 - 📋 **UR12** (deps: UR21 ✅) **A scene video has no review sheet: frames to look at are pulled one by one with ffmpeg** — Checking the Shio promo's mark, cards, search and terminal took about ten hand-made ffmpeg grabs; illustrated videos get a sheet. → §UR12
 - 📋 **UR13** (deps: UR21 ✅) **A bought take is never heard back, so a word the voice says wrong is caught only by the owner watching** — The Alexandre heard "Ía" for IA in the Shio promo; after the pronounce fix nothing could confirm "iá" was what the voice said. → §UR13
 - 📋 **UR14** (deps: UR21 ✅) **A cut that flashes white for one frame passes the build's verification** — The Shio promo flashed white at 0:40, the browser's blank page before chapter 2's console, and only the Alexandre watching caught it. → §UR14
+- 📋 **UR44** (deps: polyweave: PW720) **A retake moves the old take's files aside by hand because voice.lines cannot buy a current take again** — Moving files behind polyweave's back is a workaround that a crash mid-run can leave half done. → §UR44
 
 ## Done when — UR19
 

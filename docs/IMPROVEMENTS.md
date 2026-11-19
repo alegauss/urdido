@@ -480,25 +480,6 @@ Sequenced after UR33: the overlay must resolve every relative path through the b
 about 25 call sites read `build.here` directly; UR33's declaration loader is the one
 place it belongs.
 
-### §UR7 A take cannot be re-rolled with the same text (was marketing VM70)
-
-Where it happened: `japode/wordpress2`, the chapter-1 take bought on 2026-11-16
-(eleven_v3, Leo Antonio, pt-BR). The owner heard European Portuguese between 0:28 and
-0:35 of the cut. The build, the Scribe transcription and the QA all passed. Scribe
-reports only `por`, so nothing told Brazilian from European Portuguese.
-
-What was done by hand: the narration buyer has no way to buy a take again when its text
-has not changed (`video-maker/narration/buy.mjs` treats the take as current). To get a
-new take, the text had to be rewritten. That worked here because more Brazilian phrasing
-("fazia meses que ninguém atualizava") also helps the accent, but a take with good text
-could not be re-rolled at all.
-
-What video-maker should do:
-- let a take be marked for re-purchase (`retake = ["chapter-1"]`, or a `--retake` option), with
-  the reason kept in the ledger;
-- record which takes the owner flagged for accent, so a voice or model that keeps drifting shows
-  up across videos.
-
 ### §UR8 A thumbnail picture is not checked against the video (was marketing VM73)
 
 Where it happened: `japode/wordpress2`, on 2026-11-16 (`python -m videomaker thumbnail
@@ -650,3 +631,20 @@ ships with a commit there too.
 **Done when** the three recordings use the one driver, a re-recording produces the same
 `chapters.json` shape, and Turing's stories pass as tests with
 `VIGLET_MARKETING_WORDPRESS` pointing nowhere.
+
+### §UR44 Retakes through voice.lines once it can
+
+`urdido prepare --retake` (UR7, `src/urdido/prepare.py`, `retaken`) re-buys a take whose
+text is unchanged by moving the take, its `.prov.json` and its `.words.json` into
+`<language>/retakes/` before asking polyweave's `voice.lines` for a quote, then putting
+them back when nothing was bought. That works only because voice.lines decides "current"
+from the file on disk, and it has no parameter to buy a current key again.
+
+polyweave PW720 asks voice.lines for a `retake` list of keys that it plans as not
+current, keeps the replaced take, and records the reason in the take's provenance. When
+it ships, pass the retaken keys through instead of moving files, keep `--retake` and
+`--retake-reason` as they are, and keep writing `retakes.json` (or read the reason back
+from the provenance if PW720 records it there).
+
+**Done when** `retaken` moves no file and the UR7 tests pass against a voice fake that
+honours the retake list.
