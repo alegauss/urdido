@@ -6,6 +6,7 @@
 - ✅ **UR17** **A dep on another project's task is free text, so a marketing or polyweave ship never resolves here** — urdido and marketing declare each other and polyweave as siblings, so deps resolves UR1-UR3's waits on PW697-PW699 and VM28 from those ledgers (design recorded in `roadkeep.toml`).
 - ✅ **UR18** **Nothing checks a push: no CI runs ruff and pytest on Linux and Windows** — gates.yml runs ruff and tools/gate.py on Ubuntu and Windows with Python 3.12 and 3.13, naming each skip, though no push has run it yet (design recorded in `.github/workflows/gates.yml`).
 - ✅ **UR19 (release tooling)** **A version cannot reach PyPI except by a hand-run upload with a token** — publish.yml takes a v* tag through build, twine check, a tag-versus-package check and a wheel install to TestPyPI, PyPI and a GitHub release, and tools/release.py tags it.
+- ✅ **UR20 (CLAUDE.md and friction skill)** **An agent working in this repo or driving urdido has no CLAUDE.md, skill or friction path** — CLAUDE.md gives the gates, commits and code rules, and the urdido-friction skill, installed globally, files from a consumer through roadkeep -C with (from:).
 
 ## Block B — The engine extracted (videomaker without marketing)
 
