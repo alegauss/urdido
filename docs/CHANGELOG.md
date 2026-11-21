@@ -18,3 +18,4 @@
 
 - ✅ **UR6** **A stock clip already rejected for contradicting the narration can come back into a cut without any check refusing it** — Storyboard media can carry rejected with a reason, whole or by range, and preflight and build refuse any beat that meets it (design recorded in `docs/video-maker.md`).
 - ✅ **UR7** **A narration take with the wrong accent cannot be bought again unless its text changes** — urdido prepare --retake buys an unchanged take again, keeps the old one and records the reason, voice and model in retakes.json (design recorded in `docs/video-maker.md`).
+- ✅ **UR1** **Titles and thumbnails go out unchecked, so the Scion thumbnail repeats its title and the feed cuts the title** — urdido thumbnail checks the declared title and thumbnail as a pair, refusing a long, vague or shouting title or a repeating thumbnail, as with Scion (design recorded in `docs/video-maker.md`).

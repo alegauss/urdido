@@ -383,6 +383,17 @@ A title that still does not fit is refused before writing the JPG. The
 `.fit.json` sidecar records the chosen size, each line's measured bounds and
 the rendered image's SHA-256.
 
+Declare the published title beside the thumbnail, `[thumbnail.title] pt-BR = "..."`,
+and the two are checked as a pair before anything is drawn (UR1); `urdido
+thumbnail <video.toml> --language <l> --check` runs the check alone. The pair is
+refused when the title passes 60 characters, carries no number, name or date,
+writes more than two words in capitals or uses an empty superlative, or when the
+thumbnail repeats a meaningful word of the title. A title past 40 characters and
+a thumbnail of more than three words are advised. `[thumbnail.check]` takes
+`stopwords` and `superlatives` (added to the language's defaults) and `drawn`,
+the word fields the layout draws as text. Without a declared title the build
+says the pair went out unchecked.
+
 Illustrated builds produce a description of at most 5,000 UTF-16 units and a
 full `.credits.json` sidecar (VM52). The first paragraph comes from the
 storyboard's `description`, or `[description] summary` in `video.toml`.

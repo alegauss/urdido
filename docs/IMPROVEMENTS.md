@@ -370,30 +370,6 @@ urdido, and `roadkeep lint` passes in both repositories.
 
 ## Block D — Inherited from video-maker (marketing Block B)
 
-### §UR1 Titles and thumbnails checked as a pair (was marketing VM30)
-
-The Scion thumbnail says "O Git não aguentou" and "30 mil merges por dia"; its title is
-"30 mil merges por dia: o Git não aguentou e a Anthropic...", which the Studio list
-itself shows cut. The two say the same thing twice and the end of the title is never
-read.
-
-Rules from youtube-agent-skill's title linter and the thumbnail guides of claude-youtube
-and youtube-agent-pro, read on 2026-11-12:
-
-- a title keeps its point inside 60 characters (desktop search) and ideally 40 (the phone feed); 100 is only YouTube's hard limit;
-- a number, a name or a date in it; at most two words in capitals; no empty superlatives;
-- the thumbnail shares no meaningful word with the title: it adds what the title leaves out (a picture of the stakes, a number the title does not say);
-- three words on the thumbnail at most, legible at about 168 x 94 px, one face or one object, two or three colours;
-- the first five seconds of the video continue the thumbnail's promise;
-- a Short's title stays under 60 characters, with 3 to 5 hashtags in the description.
-
-The check runs where the thumbnail and the description are made, and refuses a pair that
-breaks the first three rules. The Google Ads limits already written in japode/brand
-stay.
-
-Done when the Scion and Docker titles and thumbnails pass the check, or are rewritten
-until they do.
-
 ### §UR2 Shorts cut by the framework (was marketing VM31)
 
 The Docker and Scion Shorts are cut by scripts copied into each video

@@ -35,7 +35,6 @@
 
 ## Block D — Inherited from video-maker (marketing Block B)
 
-- 📋 **UR1** (deps: polyweave: PW699) **Titles and thumbnails go out unchecked, so the Scion thumbnail repeats its title and the feed cuts the title** — A thumbnail should add what the title leaves out, and a title keeps its point inside 40 to 60 characters or the feed cuts it. → §UR1
 - 📋 **UR2** (deps: polyweave: PW697, polyweave: PW698) **Each video cuts its Shorts with its own copied script, and the Shorts rules live only in japode/scion** — Shorts are how a new channel gets found, and the loop, pacing, safe-area and loudness rules learned on 2026-11-12 must hold for every video. → §UR2
 - 📋 **UR3** (deps: marketing: VM28) **Published videos have no end screen or cards pointing to the next video on the subject** — A viewer who finishes the Docker video is not offered the Scion one, and the end screen should point at the continuation, not the newest upload. → §UR3
 - 📋 **UR4** (deps: UR2) **The Japode explainer videos are built by scripts copied into each video, outside video-maker** — video-maker only knows the recorded product demo, so the first video of another kind went around it, and its two copies already differ. → §UR4
