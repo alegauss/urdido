@@ -31,23 +31,6 @@ For consumers, an `urdido` skill on how to declare and build a video, and an
 **Done when** a session in marketing that meets a missing setting files it here through
 the skill, with `(from: marketing)`.
 
-### §UR35 A first video and the declaration reference
-
-Split the video-maker README into what a newcomer needs:
-- a quickstart that builds a short video from a declaration in `examples/`, with
-  synthetic media (ffmpeg lavfi colour and tone, an OFL font), so it runs with nothing
-  bought or recorded;
-- `docs/specs/declaration.md`, generated from the declaration schema (Block B), one section per table
-  and side file;
-- one page per source kind (scenes, illustrated, and chaptered if it stays) and per
-  check (claims, pauses, repetition, text, safe area);
-- the external tools each extra needs.
-
-Ticket ids and personal names leave the prose.
-
-**Done when** the quickstart builds its example in a clean checkout and the reference
-lists every key the schema accepts.
-
 ## Block B — The engine extracted (videomaker without marketing)
 
 ### §UR30 The JavaScript side packaged

@@ -61,4 +61,6 @@ over shots), and points at three files:
 
 To make it your own, change the lines in `script.json`, buy real takes with
 `urdido prepare`, and put your footage under `footage/src/`. Every key a declaration
-can hold is in [the declaration reference](specs/declaration.md).
+can hold is in [the declaration reference](specs/declaration.md); the other kinds of
+video are in [the source kinds](sources.md), what urdido refuses and measures is in
+[the checks](checks.md), and what each extra needs is in [the extras](extras.md).

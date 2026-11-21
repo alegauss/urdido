@@ -1,9 +1,13 @@
 # urdido
 
 urdido builds a narrated video from a declaration: the timeline, the cuts, the mix,
-the cards, the captions and the export. It is being extracted from the `video-maker`
-folder of the Viglet marketing repository; until that lands, the package holds only
-its command line and its packaging.
+the cards, the captions and the export.
+
+- [Build a first video](docs/quickstart.md), with nothing bought or recorded.
+- [The declaration reference](docs/specs/declaration.md): every key a `video.toml` takes.
+- [Source kinds](docs/sources.md), [what urdido checks](docs/checks.md) and
+  [the extras and their tools](docs/extras.md).
+- [The module reference](docs/video-maker.md), for working on urdido itself.
 
 ## Install
 

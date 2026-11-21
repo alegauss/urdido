@@ -2,8 +2,7 @@
 
 ## Block A — Package foundation (urdido installable from PyPI)
 
-- ⏳ **UR20** (deps: UR16 ✅, UR17 ✅, UR35 ⏳) **An agent working in this repo or driving urdido has no CLAUDE.md, skill or friction path** — Consumers still have no urdido skill on declaring and building a video, which waits for the code and its manual. → §UR20
-- ⏳ **UR35** (deps: UR16 ✅, UR23 ✅) **Nobody outside this machine can learn what a declaration accepts or how to build a first video** — Each source kind and each check gets its own page, the extras' tools are listed, and the manual drops ticket ids and personal names. → §UR35
+- ⏳ **UR20** (deps: UR16 ✅, UR17 ✅, UR35 ✅) **An agent working in this repo or driving urdido has no CLAUDE.md, skill or friction path** — Consumers still have no urdido skill on declaring and building a video, which waits for the code and its manual. → §UR20
 
 ## Block B — The engine extracted (videomaker without marketing)
 
@@ -68,11 +67,5 @@
 - **The Japode videos build with urdido and drop their bin scripts** japode/scion and
   japode/docker each build from a video.toml with urdido build, their bin/build.py and
   short.py are gone, and the published cuts come out the same.
-
-## Done when — UR35
-
-- **A newcomer builds a first video from the quickstart alone** Following
-  docs/quickstart.md in a fresh clone, with nothing bought or recorded, builds
-  examples/first-video into an MP4 with its captions.
 
 ## Non-goals

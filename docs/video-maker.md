@@ -14,7 +14,7 @@ A video is a declaration (`turing/wordpress/video.toml`, `developer.toml`,
     python -m videomaker build shio/promo/video.toml --language pt-BR [--cut short:c1]
 
 A path in a declaration is relative to its folder or starts at a root it
-declares (UR22): `[roots]` names each one as a path relative to the
+declares: `[roots]` names each one as a path relative to the
 declaration or as `$VAR`, and `[output] folder` (default `video`) and
 `[output] parts` (default `parts`, inside it) say where the build writes.
 `<root>`, `<video>` and `<recordings>` exist without declaring them; any other
@@ -23,7 +23,7 @@ undeclared one is refused by name. For one release STORY_VIDEO_DIR,
 STORY_RECORDINGS, TURING_WORDPRESS and SHIO_REPO still fill an undeclared
 root, with a notice.
 
-Every service urdido calls goes through `urdido.providers` (UR25): voice
+Every service urdido calls goes through `urdido.providers`: voice
 takes, stock footage, reference frames, web capture, safe-area and measured
 bounds. One adapter, `urdido.providers.polyweave`, runs polyweave as a
 subprocess, parses its answers (a refusal is `ProviderRefused`, a `Refused`
@@ -33,7 +33,7 @@ that is also a `RuntimeError`), and alone reads `polyweave.toml` and names
 fake that answers as polyweave would. The JavaScript take buyer
 (`js/narration/buy.mjs`) still calls polyweave on its own.
 
-`urdido --help` lists every command (UR24): build, check, prepare, words,
+`urdido --help` lists every command: build, check, prepare, words,
 thumbnail, shorts, record, claims, library, storyboard, instance, export and
 publish, each running as `urdido <command>`. The library never exits: it
 raises `urdido.UrdidoError`, as `Refused` (an input cannot make the video;
@@ -42,7 +42,7 @@ raises `urdido.UrdidoError`, as `Refused` (an input cannot make the video;
 line turns one into a message on stderr and exit code 1, so a program that
 embeds urdido catches the exception.
 
-A chaptered video's opening can show pages of the product's site (UR28):
+A chaptered video's opening can show pages of the product's site:
 `[opening] store` names the site per language, and `[opening] screens` the
 pages, in order, each `{ path = "/", scroll = 900 }` or
 `{ follow = "a.woocommerce-LoopProduct-link" }` (the first link that selector
@@ -51,7 +51,7 @@ finds on the page before). The screenshots are kept in
 with no declared screens is refused; the package holds no shop's selectors.
 Transcript and stills publishing were already declared in `publish.json`.
 
-The build is split by concern (UR33): `urdido.project` loads the declaration,
+The build is split by concern: `urdido.project` loads the declaration,
 its roots, folders and side files; `urdido.pipelines.chaptered` and
 `urdido.pipelines.scenes` (which also builds `illustrated`) each build one
 source kind on the finishing stages in `urdido.pipelines.finishing`
@@ -60,7 +60,7 @@ picks the pipeline and runs it. A package adds a source kind by registering a
 function `pipeline(build) -> int` under the entry point group
 `urdido.sources`; `[source] kind` then names it.
 
-An explainer (`[source] kind = "explainer"`, UR4) is narration over Creative
+An explainer (`[source] kind = "explainer"`) is narration over Creative
 Commons shots, as the Japode videos are made. `[source] shots` names the
 shots per take (a source id with its start second, an optional fixed `dur`,
 `speed` and crop `box`; shots without `dur` share what is left of the line),
@@ -73,7 +73,7 @@ card in the styles `[source] styles` names (with `[source] fonts` and the
 words of `[source.closing.<language>]`), the corner mark from `[mark]`, and the
 mix over `[music] bed`, with the captions beside it as the `.srt`.
 
-A video can be built as a variant of another (UR5): `[video] base =
+A video can be built as a variant of another: `[video] base =
 "../wordpress"` in the variant's `video.toml` lays its tables over the base's
 (tables merge key by key, anything else is replaced), and the build reads its
 files from a view of the base folder with the variant's own files laid over.
@@ -83,7 +83,7 @@ must be on one disk. A JSON side file both hold is merged, so a variant
 builds into its own output folder, and a fix in the base reaches it on its
 next build. A base cannot itself be a variant.
 
-`urdido check <video.toml>` checks a declaration without building (UR23):
+`urdido check <video.toml>` checks a declaration without building:
 a key no table takes is refused with the file, the table and the nearest
 valid name (`[narration]: unknown key tempoo; did you mean tempo?`), and so is
 a missing required key or a source without what its kind needs (`folder`,
@@ -93,7 +93,7 @@ work. `urdido check --schema` prints the JSON Schema, for an editor's
 completion and the reference docs.
 
 It grew out of the WordPress demo's 2,900-line assembly script, one module at a time, each step
-keeping that video's output the same, until the script was removed (VM17). Recording stays
+keeping that video's output the same, until the script was removed. Recording stays
 JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 `../docs/ROADMAP.md`.
 
@@ -112,20 +112,20 @@ JavaScript; the assembly is the `videomaker` package. The plan was Block B of
 | `videomaker/cards/` | The card pages (`html.py`: the opening, chapter and closing cards, the backdrop and the two ranges of hills, and the parallax that slides them) in a declared theme, drawn by Playwright for Python (`render.py`). The module holds the layout only. The theme and words are each video's `demo/cards.json`, Tarnfell for the WordPress demo and Quilhara for Viglet Shio | `videomaker/build.py` |
 | `videomaker/sources/` | The chapter model the timeline consumes (`Chapter`: number, title, clip, marks, pacing) and `chaptered_recording`, which reads a `chapters.json` as Turing's specs write it and refuses it as the JS does: no recording, another language, a test run, a missing chapter, a story newer than the recording. A focus mark without a box is a release | `videomaker/build.py` |
 | `videomaker/motion/pushin.py`, `videomaker/edit/stretch.py` | The push-in that follows the action and the time maps that cut a chapter's marked waits, as pure functions of the frame and the marks, equal to the JS they replaced for every chapter of the fixtures (`tests/oracles/motion.json`, frozen from the JS before it was removed) | `videomaker/build.py` |
-| `videomaker/timeline.py` | The timeline as an OpenTimelineIO `Timeline`. Lanes V1 (recording, held frames), V2 (cards) and V3 (shots) are video tracks; each language's takes, the sounds and the bed are audio tracks; chapters are markers, and the encoded file, stills, chapter and dissolves ride in clip metadata. A `Builder` places pieces one after another, `plan()` derives VM1's plan JSON, and `.otio` files round-trip | `videomaker/assemble` |
+| `videomaker/timeline.py` | The timeline as an OpenTimelineIO `Timeline`. Lanes V1 (recording, held frames), V2 (cards) and V3 (shots) are video tracks; each language's takes, the sounds and the bed are audio tracks; chapters are markers, and the encoded file, stills, chapter and dissolves ride in clip metadata. A `Builder` places pieces one after another, `plan()` derives the plan JSON the first demo's script wrote, and `.otio` files round-trip | `videomaker/assemble` |
 | `videomaker/narration.py` | Reads a narration's takes as `narration/takes.mjs` does: each line's take, whether it is current (its provenance records the same spoken text, voice and model), and its length | `videomaker/assemble` |
 | `videomaker/assemble/clip.py` | One chapter as a clip of its own, composed on the timeline from the chapter model, the cards, the takes and the bed, with real encodes. `tests/test_assemble_clip.py` builds chapter 2 and its vertical cut as the golden runner does and gets the golden plans | `videomaker/build.py` |
 | `videomaker/assemble/video.py` | A full video on the timeline: the opening animation and its sound, title cards with shots cut at the narrator's pauses, each chapter's card and clip with its waits cut and its result held, the closing, the dissolves, and the push-ins and time maps as clip effects. Its work folder is the caller's, so two builds can each have their own. `tests/test_assemble_video.py` builds the English and Portuguese story and the developer walkthrough into their golden plans; it encodes for minutes, so it runs with `VIDEO_MAKER_FULL=1` | `videomaker/build.py` |
 | `videomaker/cuts/render.py` | Renders a composed video's cuts through one path: the full cut with its dissolves (only the blended half second encoded again), the 30 s teaser when the video declares one, a chapter clip, and its vertical cut with the captions burned in. Each narrated language is mixed over the bed, and the captions are muxed beside the voice. `tests/test_cuts.py` renders the six variants into the golden `outputs.txt`, captions and chapter lists (`VIDEO_MAKER_FULL=1`) | `videomaker/build.py` |
-| `videomaker/sources/scenes.py`, `videomaker/edit/pacing.py`, `videomaker/assemble/scenes.py` | A video filmed scene by scene: `cenas.json` read into scenes (each clip measured from the file; `filmed: false` kept as such), `fit_to_line` (a short clip holds its last frame, a long one plays faster as a whole, nothing cut), and the composition with every line over its own scene as an OTIO clip with a time warp, or over a card held in the video's theme while the scene is unfilmed | the Viglet Shio promo (VM20) |
-| `videomaker/cuts/selection.py` | A short 9:16 cut made of chosen chapters of the 16:9 scenes: the long cut's scenes fitted to their lines, cropped to their centre (no focus box yet, VM16), cards drawn upright, captions burned in above the bottom fifth, and the voice over the short's own bed. Over its limit, it tightens the breaths and reports what is left over | the Viglet Shio shorts (`shio/promo/demo/shorts.json`, VM20) |
+| `videomaker/sources/scenes.py`, `videomaker/edit/pacing.py`, `videomaker/assemble/scenes.py` | A video filmed scene by scene: `cenas.json` read into scenes (each clip measured from the file; `filmed: false` kept as such), `fit_to_line` (a short clip holds its last frame, a long one plays faster as a whole, nothing cut), and the composition with every line over its own scene as an OTIO clip with a time warp, or over a card held in the video's theme while the scene is unfilmed | the Viglet Shio promo |
+| `videomaker/cuts/selection.py` | A short 9:16 cut made of chosen chapters of the 16:9 scenes: the long cut's scenes fitted to their lines, cropped to their centre (no focus box yet), cards drawn upright, captions burned in above the bottom fifth, and the voice over the short's own bed. Over its limit, it tightens the breaths and reports what is left over | the Viglet Shio shorts (`shio/promo/demo/shorts.json`) |
 | `videomaker/export/` | The DaVinci Resolve project: the `.otio` timeline handed over (it is the video's source of truth; Resolve receives a copy), beside a `media/` folder that holds every file it points at, the recording transcoded to H.264, the bed as one looped clip on A2, the captions and `finish.lua`. `python -m videomaker.export` makes it from a build's plan, as `--project` does. Resolve does not read the push-in and time-map effects or the bed's ducking; that is a limit of the copy, and an edit there starts from the cut as rendered | `videomaker/build.py --project` |
 | `videomaker/publish/` | Publishes outside the video only where its `publish.json` says: the narration's transcript (a TypeScript module and a block between markers in a docs page, per language) and the chapter stills (for the declared story and language). `python -m videomaker.publish transcript` is what `npm run transcript` runs. The WordPress build also keeps the store pages it shows in `video/screens/<language>/` and reuses them until `--refresh-screens`, so it gives the same video whether or not the store is up | `turing/wordpress/bin/transcript.mjs`, `videomaker/build.py` |
 | `videomaker/audio/mix.py` | One language's narration over the music bed: the duck, the bed's trim to a reference level, sounds that come with the picture, and an iterated limiter to the loudness target. Every level is an argument, and the defaults are the WordPress demo's | `videomaker/build.py` |
 
 ## The Python assembly
 
-Narrative evidence is declared separately from media rights (VM64 / PW716):
+Narrative evidence is declared separately from media rights:
 
 ```toml
 [claims]
@@ -173,7 +173,7 @@ review deadline; URLs are not downloaded by this check. Publishing reuses curren
 approved claim citations through the existing description limit, preserving all claim
 metadata and review states in the credits JSON. Existing media credits remain required.
 
-Builds print live stage events with elapsed time (VM63 / PW715). A long-running
+Builds print live stage events with elapsed time. A long-running
 stage emits a heartbeat every ten seconds with its active take, asset or output.
 Known batches show completed/total units; `?` means the total has not been planned.
 Cache events distinguish verified hits from work that must run. Counts describe the
@@ -194,7 +194,7 @@ or exception messages. `not_observed` lists stages the attempt did not finish; a
 or card-only check can finish successfully without encoding any video. Rerunning uses
 the existing verified stage cache; progress does not make a failed output reusable.
 
-Illustrated screen recordings can declare pause budgets (VM62 / PW707) in their
+Illustrated screen recordings can declare pause budgets in their
 storyboard. Mark the relevant media or beat with `"screen_recording": true`:
 
 ```json
@@ -231,7 +231,7 @@ must cover the measured pause and match the current source bytes. Findings retai
 the review record; changed source bytes require another review. This policy is opt-in
 for existing videos. The current WordPress storyboard has no pause budget yet.
 
-Illustrated builds check text integrity and layout before video encoding (VM61 / PW700).
+Illustrated builds check text integrity and layout before video encoding.
 Inputs must decode as UTF-8; replacement characters, likely mojibake and question
 marks inside words are reported with their file and field. Ordinary questions and
 URL query strings remain valid. Glyph checks use the declared scene fonts, including
@@ -263,7 +263,7 @@ This uses the production pages and target frame size. It checks text rather than
 automatically shrinking titles. Font coverage applies to drawn scene text; soft
 subtitles keep their player's font, while their input encoding is still checked.
 
-Prepare narration changes together with their word times and anchor review (VM60 / PW703):
+Prepare narration changes together with their word times and anchor review:
 
 ```powershell
 python -m videomaker prepare japode/wordpress/video.toml --language pt-BR --take outro
@@ -286,7 +286,7 @@ price is assumed. The duration of a newly generated take is known only after voi
 generation; its transcription is checked against the remaining estimate before
 the request. A stopped transcription keeps the generated take for the next run.
 These are estimates from service configuration; the separate Scribe bridge remains
-until PW703 supplies word times through Polyweave.
+until the provider supplies word times.
 
 Reports and immutable attempt records live in `.polyweave/prepare/<plan>/`.
 They list changed takes, price information, affected beats, anchored beats,
@@ -295,7 +295,7 @@ move. A report distinguishes prepared takes from missing steps or anchor review.
 The command leaves scripts and highlight declarations untouched.
 
 A take whose text is right but whose delivery is not (eleven_v3 drifting into European
-Portuguese, say) is bought again with `--retake` and the reason (UR7):
+Portuguese, say) is bought again with `--retake` and the reason:
 
 ```powershell
 urdido prepare japode/wordpress/video.toml --language pt-BR --retake chapter-1 --retake-reason "accent: European Portuguese at 0:28"
@@ -316,7 +316,7 @@ show candidate spans from the actual transcript for review. Similarity suggestio
 never become accepted cue times. Transcription saves a hash of the uploaded bytes
 atomically and refuses a result if its audio changed during the request.
 
-Illustrated preflight measures visual repetition before rendering (VM59 / PW712).
+Illustrated preflight measures visual repetition before rendering.
 `parts/<name>.<language>.repetition.json` records source intervals, screen time,
 adjacency, reuse gaps, overlapping ranges, category shares and affected beat IDs.
 Source aliases and byte-identical copies share budgets. Different exports of one
@@ -325,7 +325,7 @@ their intervals are compared in that source's clock. Filenames and source URLs
 do not supply an inferred identity or activity category.
 
 A media entry a review took out of a cut says so, with its reason, so the next edit cannot
-bring it back (UR6). `rejected` is a reason for the whole asset, or a list of source
+bring it back. `rejected` is a reason for the whole asset, or a list of source
 ranges in seconds; a range without `start` or `end` runs from the start or to the end:
 
 ```json
@@ -357,7 +357,7 @@ Rules are `overlap`, `gap`, `adjacent`, `source_seconds` and `category_share`.
 Every affected beat must be named. Exceptions remain visible in the report;
 the checker never replaces footage or invents category labels.
 
-Keep media candidates and review decisions in a reusable catalogue (VM58 / PW714):
+Keep media candidates and review decisions in a reusable catalogue:
 
 ```powershell
 python -m videomaker library import-storyboard japode/wordpress/media-library.json --source japode/wordpress/storyboard.json --expected-sha256 new
@@ -404,7 +404,7 @@ and includes the catalogue in the build's input manifest. Visual fit and brand
 placement may be overridden. The catalogue does not modify existing storyboard
 selections when importing candidates.
 
-Review motion in an illustrated cut without exporting the whole picture (VM57 / PW713):
+Review motion in an illustrated cut without exporting the whole picture:
 
 ```powershell
 python -m videomaker build japode/wordpress/video.toml --language pt-BR --preview take:intro
@@ -429,7 +429,7 @@ clock even when they began before the preview. Narration and translated subtitle
 retain their production placement as soft tracks.
 
 Illustrated `build` and `build --plan` run the same read-only preflight before
-browser rendering or encoder detection (VM56 / PW712). It collects independent
+browser rendering or encoder detection. It collects independent
 errors in narration provenance, transcript hashes and ordering, highlight anchors,
 subtitle translations, source references, beat timing, footage bounds, image files
 and required font files. Findings name the file, field, take and stable beat ID
@@ -438,7 +438,7 @@ Dependent checks wait for their inputs to be valid; the checker never invents
 word times, buys voice or repairs declarations. Existing media may be probed with
 FFprobe. Browser layout and encoded-media QA still run at their production stages.
 
-Illustrated builds keep verified stage caches beside their outputs (VM55).
+Illustrated builds keep verified stage caches beside their outputs.
 Raster layers, beat clips, take joins, the opening, full join, highlights, audio
 mix and final mux each use their own effective inputs. Output hashes must still
 match before reuse. Embedded fonts and images, renderer code, the browser binary,
@@ -450,7 +450,7 @@ unaffected images. Completed stages remain reusable after a later stage fails.
 `parts/cache.<language>.json` lists every hit and miss, including failed attempts;
 the build also prints their counts. Media hashes are shared across worker threads
 for the duration of one build. QA still measures the finished file on every run.
-Cache keys survive a move (UR32): each input is named by its declared root or
+Cache keys survive a move: each input is named by its declared root or
 by its place in the urdido package and hashed by content, and paths in a
 stage's settings are written the same way, so a project copied to another
 checkout hits the stamps it carries, and an upgrade misses only the stages
@@ -459,7 +459,7 @@ build's cache line counts it. A new immutable revision package starts with
 fresh caches. No speedup is assumed before measuring a cut.
 
 Thumbnail layouts can use `videomaker.thumbnail.fit_title` to fit measured
-title lines to a declared subject-free box (VM54). Japode's layout keeps the
+title lines to a declared subject-free box. Japode's layout keeps the
 title inside its right-hand column, reducing from `title_size` as needed down
 to `title_min_size` (default 64). `title_left` declares the column's left edge.
 Set these fields under `[thumbnail.words.<language>]` in the video declaration.
@@ -469,7 +469,7 @@ the rendered image's SHA-256.
 
 Each thumbnail picture (`[thumbnail.picture]`, `[thumbnail.proof]`) must be a
 media file the storyboard declares, and takes that entry's licence, author and
-URL (UR8). A picture the video never shows is refused unless it declares
+URL. A picture the video never shows is refused unless it declares
 `reason` (why it is in the thumbnail alone) and its `license`, `author` and
 `url`, or has a `.prov.json` beside it. A graphic can declare `fit` (`cover` or
 `contain`), `margin` and `background`, which reach the layout as
@@ -478,7 +478,7 @@ drawn JPG gets a `.prov.json` with each picture's media key or reason, its
 provenance and its SHA-256.
 
 Cards, the brand mark and the site screens are drawn with Playwright's own
-Chromium (UR29), on any system: `python -m playwright install chromium` once.
+Chromium, on any system: `python -m playwright install chromium` once.
 `[cards] channel = "msedge"` (or `E2E_CHANNEL`) draws with another browser
 instead; without Chromium and without a channel the build stops with that
 remedy. A thumbnail's `layout` is a function
@@ -488,7 +488,7 @@ point an installed package registers under `urdido.thumbnail_layouts`, as
 declaration.
 
 Declare the published title beside the thumbnail, `[thumbnail.title] pt-BR = "..."`,
-and the two are checked as a pair before anything is drawn (UR1); `urdido
+and the two are checked as a pair before anything is drawn; `urdido
 thumbnail <video.toml> --language <l> --check` runs the check alone. The pair is
 refused when the title passes 60 characters, carries no number, name or date,
 writes more than two words in capitals or uses an empty superlative, or when the
@@ -498,7 +498,7 @@ a thumbnail of more than three words are advised. `[thumbnail.check]` takes
 the word fields the layout draws as text. Without a declared title the build
 says the pair went out unchecked.
 
-The final verification scans every frame for a flash (UR14): frames are
+The final verification scans every frame for a flash: frames are
 compared grey at 32x18, and a change of at least 6 (mean difference, 0 to
 255) that lasts one or two frames and then returns to within a third of the
 jump is refused, naming the second and, for a scenes cut, the clip it came
@@ -506,7 +506,7 @@ from. A cut changes and stays changed, so it passes. `[qa] flashes = "warn"`
 reports instead of refusing, and `"off"` skips the scan; the findings are in
 the `.qa.json` sidecar under `flashes`.
 
-The opening gate runs in Python (`urdido.opening`, UR30), so `urdido prepare`
+The opening gate runs in Python (`urdido.opening`), so `urdido prepare`
 needs no node: a preamble in the intro, or a first proof later than 20 s at the
 narrator's declared pace, refuses the purchase. The JavaScript helpers under
 `js/` are one npm package, `urdido-record`, versioned with the Python package
@@ -515,14 +515,14 @@ narrator's declared pace, refuses the purchase. The JavaScript helpers under
 the npm registry, install it from the checkout (`npm install ../urdido/js`).
 
 `urdido words <video.toml> --language <l>` writes each take's word record
-(UR26), in the language the declaration gives `[video] languages.<l>`; there
+, in the language the declaration gives `[video] languages.<l>`; there
 is no default language. The transcriber is a seam: any callable
 `(name, audio, language) -> words`. ElevenLabs Scribe
 (`urdido.providers.scribe`, in the `narration` extra) is today's, and a test
 passes a fake. The hash-bound `<take>.words.json` stays what every caller
 reads.
 
-Every bought take is heard back against its line (UR13): its transcript
+Every bought take is heard back against its line: its transcript
 (`<take>.words.json`, written on purchase) is aligned with the line's words.
 A word the script's `pronounce` map names must be heard where the line has
 it, spelled as written or as the map sounds it (`IA` or `iá`); heard as
@@ -532,7 +532,7 @@ or added words are listed in prepare's per-take `heard` report with their
 seconds, for a person to judge.
 
 A terminal chapter's selectors in `terminal.json` can say what the session
-must hold (UR11): `"required": true` refuses a session where the selector
+must hold: `"required": true` refuses a session where the selector
 picks nothing, and `"count": n` one where it picks other than n lines (before
 `first`/`last`). `chooseLines` refuses with the chapter and selector when
 given `{ chapter }`, and `checkSession(lines, chapters, { init, language })`
@@ -542,14 +542,14 @@ reads a tool answer with its JSON escapes undone, so `não` is found in
 `não`.
 
 A full build of a filmed-scenes video writes a contact sheet,
-`review/scenes.html` with `scenes.json` beside it (UR12): a frame from the
+`review/scenes.html` with `scenes.json` beside it: a frame from the
 finished MP4 at the cold open, at the start, middle and end of each chapter
 (found from its `chapter-<n>` take up to the next chapter's or the closing),
 and in the last half second for the closing card, each with its chapter title
 and the line spoken over it. When the thumbnail (`[thumbnail] out`) is drawn,
 the sheet also shows it at 320x180 and 168x94, the feed sizes.
 
-`urdido record <video.toml>` records a scene video with one command (UR10).
+`urdido record <video.toml>` records a scene video with one command.
 Each `[[record.step]]` is a `name`, a `command` (a list runs as is, a string in
 a shell) and the paths it `makes`; `always = true` marks a step that runs last
 even after a failure, such as taking the instance down. The run stops at the
@@ -562,7 +562,7 @@ left.
 
 `urdido shorts <video.toml> --language <l> [n ...]` cuts YouTube Shorts from
 a built video's `plan.json`, its picture without titles and its mix, as
-`[shorts]` and its `[[shorts.cut]]` rows declare (UR2): the takes each Short
+`[shorts]` and its `[[shorts.cut]]` rows declare: the takes each Short
 covers, its two-line hook, its title and its description text. The channel's
 colours and fonts come from `[shorts.look]`; nothing about the look is
 assumed. Every Short loops with no end card (the pointer to the full video
@@ -579,20 +579,20 @@ gets a `.txt` beside it with its title, description, link, credits for the
 sources its shots use, the declared `[shorts.notes]` and the hashtags.
 
 Illustrated builds produce a description of at most 5,000 UTF-16 units and a
-full `.credits.json` sidecar (VM52). The first paragraph comes from the
+full `.credits.json` sidecar. The first paragraph comes from the
 storyboard's `description`, or `[description] summary` in `video.toml`.
 `[description] notes` can replace the longer closing notes for publishing;
 the original notes remain in the full credit record.
 
 A video made of filmed scenes writes the same `<name>.<language>.description.txt`
-when it declares `[description]` (UR9): `summary` opens it, the chapter list
+when it declares `[description]`: `summary` opens it, the chapter list
 follows, then `notes`, any `sources` (`[[description.sources]]` with `label` and
 `url`) and `generated`. Each chapter is dated by when its own take
 (`chapter-<n>`) is heard in the cut, 0.4 s early, so a take bought later moves
 only its own chapter; a chapter whose take the cut lacks is refused. The
 opening's line is the script's `introTitle`.
 
-The description's words come from a table per language (UR27,
+The description's words come from a table per language (
 `urdido.publish.strings`): headings such as `Capítulos` / `Chapters`, the
 licence labels and the default credit line follow the build's language, and
 `[description.strings]` replaces any of them by key (an unknown key is
@@ -611,7 +611,7 @@ protected fields or inferring a missing licence version. The Scion legacy
 build calls the same formatter with `publishing.json` and its 33 used sources.
 
 Builds reserve the bottom 20% of the frame for player captions by default
-(VM48). Configure the expected player's band and response in the video declaration:
+. Configure the expected player's band and response in the video declaration:
 
 ```toml
 [captions.safe_area]
@@ -627,7 +627,7 @@ the same band. Reports identify each label, its bounds and crossing distance.
 The default is a conservative review bound; set it for the player being targeted.
 
 `python -m videomaker storyboard inspect <storyboard.json>` prints the current
-SHA-256 and beat IDs (VM46). On a legacy storyboard, run `storyboard assign-ids`
+SHA-256 and beat IDs. On a legacy storyboard, run `storyboard assign-ids`
 with `--expected-sha256 <hash>` once. IDs stay with their beats through later
 insertions and moves. Add `--dry-run` to preview any edit without writing.
 
@@ -652,14 +652,14 @@ of each declaration it reads and saves them in `parts/<name>.<language>.inputs.j
 a declaration changed during that build prevents success.
 
 Illustrated storyboards accept `brand_mark` on a beat, media asset or document,
-in that order of precedence (VM45). Choose `top-left` (the default),
+in that order of precedence. Choose `top-left` (the default),
 `top-right`, `bottom-left`, `bottom-right`, or `none`. The position applies
 to both overlay layers, so a timed caption leaving the frame cannot restore
 a hidden mark. The WordPress storyboard hides the mark on recorded web pages
 to leave their own headings readable.
 
 `python -m videomaker instance plan <video.toml> <name>` shows a declared
-product fixture without running Docker (VM44). `[instances.<name>]` names
+product fixture without running Docker. `[instances.<name>]` names
 `compose`, `url`, optional `ready`, `ready_status` and `timeout`, and `setup`
 as lists of Compose arguments. `up` starts it and runs setup once; `reset`
 removes that fixture's volumes and starts a new generation; `down` removes it.
@@ -682,7 +682,7 @@ ready fixture for continued filming. Optional `startup_logs_service` keeps the
 actual Compose startup answer and application log for the recorded terminal.
 
 Illustrated plans and builds refuse a spoken highlight while a beat's caption
-is visible (VM43), including duplicate labels. `overlay_seconds` ends that
+is visible, including duplicate labels. `overlay_seconds` ends that
 visibility on full-frame footage and pictures. A highlight crossing a cut
 warns so its end time can be reviewed. Highlight entries can declare
 `"person": "Michel Valdrighi"` or `"event": "WordCamp Brasil"`; alternatively,
@@ -691,7 +691,7 @@ Missing matching `people` or `events` tags on the beat or asset produces a
 warning. These declarations support review; they do not establish identity.
 
 Illustrated beats after the first can declare `"from_word": "Gutenberg"`
-(VM42). The current take's hash-checked transcript places that boundary at the
+. The current take's hash-checked transcript places that boundary at the
 word's start plus the 0.4-second voice lead, rounded to a production frame.
 For a repeated phrase, use `"from_word": {"text": "Mike", "occurrence": 2}`
 (one based), or replace `occurrence` with `"context": "Mike Little"`.
@@ -702,15 +702,15 @@ the trim into the source file. A retake recomputes the timeline from its new
 word times; the first beat always begins at the take's origin.
 
 For illustrated videos, `build --plan` also writes `video/review/index.html`
-and `review.json` (VM41). Each beat has a source-midpoint still or its production
+and `review.json`. Each beat has a source-midpoint still or its production
 card, the overlapping hash-checked narration words, production captions,
 highlights, source range and declared `people`, `events` and `topics` tags.
 Missing or stale word times are refused before drawing the sheet. Source stills
 show the original media; the production overlays are listed beside them.
-Check identity and context against the sources; motion review remains VM57.
+Check identity and context against the sources; motion review stays a person's.
 
 To keep a reviewed cut, set `revision = "v3"` in `[video]` or pass
-`--revision v3` to `build` (VM40). The complete build writes into
+`--revision v3` to `build`. The complete build writes into
 `video/revisions/<name>.<language>.<cut>/v3/`: video, subtitles, description
 and credits when generated, measured QA, first frame, and working parts.
 An existing revision is refused, including an interrupted one; use a new
@@ -725,7 +725,7 @@ and package usable. `--plan` and `--cards` do not reserve revisions. Declaration
 without a revision keep their existing output paths.
 
 Every encoded cut gets a measured `<cut>.qa.json` and a decoded
-`<cut>.first.png` before the build announces success (VM39). The report records
+`<cut>.first.png` before the build announces success. The report records
 the MP4's SHA-256, size, duration and streams, loudness and true peak per audio
 stream, UTF-8 checks of its captions and script, and the first 120 decoded
 frames' presentation intervals and identical-frame runs. Illustrated full cuts
@@ -733,7 +733,7 @@ also include shot, asset, source-file, static-time and highlight counts from
 their build inputs. Other cuts leave those editorial counts null.
 
 Before accepting a build, QA holds every audio stream in the encoded MP4 to
-`[audio] peak` (VM47), using the mix's default ceiling when it is omitted.
+`[audio] peak`, using the mix's default ceiling when it is omitted.
 AAC overshoot therefore fails the build even when the pre-encode limiter passed.
 The error identifies the stream and measured dBTP; increase `[audio] margin`
 and rebuild. A failed peak check removes stale QA and first-frame sidecars and
@@ -746,7 +746,7 @@ measurement is refused. The opening sample measures cadence and repeated
 frames. Camera shakiness and whether a shot fits its sentence still need review.
 
 Before buying voice takes, `narration/buy.mjs` checks the selected language's
-intro for preambles such as "Hoje eu quero te contar" or "Today we will" (VM29).
+intro for preambles such as "Hoje eu quero te contar" or "Today we will".
 This runs for dry plans too, before writing the purchase request.
 
 For a timing estimate, add `opening` to the narration's `script.json`:
@@ -767,7 +767,7 @@ only. This estimate does not verify the footage or measure viewer retention;
 review the rendered opening against the declared shot and later Studio curves.
 
 An illustrated history can also declare `source.kind = "illustrated"` and a
-`source.declaration` JSON, as `japode/wordpress/video.toml` does (VM35). It names
+`source.declaration` JSON, as `japode/wordpress/video.toml` does. It names
 every narration take in order, with weighted editorial beats, their factual
 sources and any licensed local media. Videos and portraits fill the frame by
 default, with transparent lower thirds; `presentation = "panel"` keeps a source
@@ -775,9 +775,9 @@ beside the text. Dates and diagrams use the declared channel theme. Missing or
 stale takes, absent footage, incomplete credits and clips shorter than a beat
 are refused. The existing scene timeline supplies voice placement, mix and
 optional subtitles; the description derives chapter times and media credits.
-This path does not migrate Docker and Scion's existing footage pipelines (VM34).
+This path does not migrate Docker and Scion's existing footage pipelines.
 
-VM36 adds explicit beat lengths (`seconds`), a declared `max_static_seconds`
+A beat can declare its length (`seconds`), a declared `max_static_seconds`
 limit that also covers photos and filmed static pages, and `edit.json` with the
 measured shot schedule. Word-timed highlights are declared in `[highlights]`;
 `python -m videomaker.narration_words <video-root>` keeps hash-checked transcripts
@@ -786,7 +786,7 @@ Footage may opt into motion interpolation through its `smooth` media field.
 
 `video-maker/` is also a Python project (`pyproject.toml`, Python 3.12+, OpenTimelineIO). Run
 `python -m pip install -e "video-maker[test,cards]"` once, then `pytest video-maker` from the
-repository root. The tests read VM1's goldens as data, so each port is proved against them
+repository root. The tests read the first demo's goldens as data, so each port is proved against them
 before the assembler that uses it exists. What the JS assembly computed before it was removed
 (the ffmpeg arguments, the push-in and the time maps) is frozen in `tests/oracles/`, so the ports
 stay held to it.
@@ -820,7 +820,7 @@ maps, the Resolve project as that `.otio` handed over, publishing, and `python -
 build <video.toml>`. Each port is proved against the golden files before the assembler that
 uses it exists. The order and the reason for each step are in the roadmap.
 
-The render stays ffmpeg (VM24, 2026-11-09). `spikes/mlt_chapter.py` rendered chapter 2 of the
+The render stays ffmpeg. `spikes/mlt_chapter.py` rendered chapter 2 of the
 pt-BR story both ways from the same inputs. MLT (`melt` 7.41) gave the same picture and, once
 normalised the same way, the same level (-14.1 LUFS, -2.0 dBTP). But one MLT pass took 55 s
 against 28 s for the whole ffmpeg path, and reaching the target took three whole renders

@@ -55,6 +55,17 @@ def test_the_first_video_builds_as_the_quickstart_says(tmp_path, monkeypatch):
     assert float(probe["format"]["duration"]) > 6
 
 
+def test_the_manual_names_no_ticket_and_every_page_it_links_exists():
+    import re
+
+    pages = ["quickstart.md", "sources.md", "checks.md", "extras.md", "video-maker.md"]
+    for name in pages:
+        text = (ROOT / "docs" / name).read_text(encoding="utf-8")
+        assert not re.search(r"\b(?:VM|UR|PW)\d+\b", text), name
+        for link in re.findall(r"\]\(([^)#]+\.md)", text):
+            assert (ROOT / "docs" / link).is_file(), (name, link)
+
+
 def test_the_quickstart_names_the_files_the_example_has():
     guide = (ROOT / "docs" / "quickstart.md").read_text(encoding="utf-8")
     for name in ("make_media.py", "video.toml", "script.json", "shots.json"):

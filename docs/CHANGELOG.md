@@ -7,7 +7,7 @@
 - ✅ **UR18** **Nothing checks a push: no CI runs ruff and pytest on Linux and Windows** — gates.yml runs ruff and tools/gate.py on Ubuntu and Windows with Python 3.12 and 3.13, naming each skip, though no push has run it yet (design recorded in `.github/workflows/gates.yml`).
 - ✅ **UR19 (release tooling)** **A version cannot reach PyPI except by a hand-run upload with a token** — publish.yml takes a v* tag through build, twine check, a tag-versus-package check and a wheel install to TestPyPI, PyPI and a GitHub release, and tools/release.py tags it.
 - ✅ **UR20 (CLAUDE.md and friction skill)** **An agent working in this repo or driving urdido has no CLAUDE.md, skill or friction path** — CLAUDE.md gives the gates, commits and code rules, and the urdido-friction skill, installed globally, files from a consumer through roadkeep -C with (from:).
-- ✅ **UR35 (declaration reference)** **Nobody outside this machine can learn what a declaration accepts or how to build a first video** — docs/specs/declaration.md is written from the schema by urdido check --reference, one section per table with its purpose, and a test keeps it current.
+- ✅ **UR35** **Nobody outside this machine can learn what a declaration accepts or how to build a first video** — The manual has a quickstart, the declaration reference, pages on source kinds, checks and extras with their tools, and names no ticket; a test keeps it so.
 - ✅ **UR54** **No example builds a first video from a clean clone with nothing bought or recorded** — docs/quickstart.md builds examples/first-video from media its own script makes, with check, build and outputs named, and a test follows it end to end.
 
 ## Block B — The engine extracted (videomaker without marketing)
