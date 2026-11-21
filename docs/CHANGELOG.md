@@ -36,6 +36,7 @@
 - ✅ **UR60** **A side file's default lives in each module that reads it, as the highlight margin did in three** — A side file's default lives in its schema: the highlight margin is read through held() in all three modules.
 - ✅ **UR61** **A storyboard beat's layout, presentation, start, weight and stillness default inside each of eight modules** — A beat's layout, presentation, start, weight and stillness, and a highlight's duration, default in their schemas.
 - ✅ **UR59** **[music] under defaults to 0.2 in a scenes build and 0.07 in an explainer, so one key means two levels** — [music] under defaults by source kind: 0.2, 0.07 for an explainer, both stated in the reference.
+- ✅ **UR62** **A take that says a mapped word as its parts (b2/cafelog as B2 CafeLog) is refused as mispronounced** — A mapped word heard as its own parts joined counts as heard, and a wrong word is still refused.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

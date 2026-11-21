@@ -48,15 +48,33 @@ def compare(line: str, words: list[dict], pronounce: dict | None = None) -> dict
         plain(word): {plain(word), *map(plain, sound.split())}
         for word, sound in pronounce.items()
     }
+    # A mapped word heard as its own parts ("b2/cafelog" as "B2 CafeLog") is one word:
+    # consecutive heard words that join into it are merged, keeping the first's index.
+    merged: list[tuple[str, int]] = []
+    i = 0
+    while i < len(heard):
+        for n in (3, 2):
+            joined = "".join(heard[i : i + n])
+            if i + n <= len(heard) and joined in accepted:
+                merged.append((joined, i))
+                i += n
+                break
+        else:
+            merged.append((heard[i], i))
+            i += 1
     # A mapped word heard as its sound counts as the word itself for the alignment.
     sound_of = {s: word for word, sounds in accepted.items() for s in sounds}
-    aligned = [sound_of.get(w, w) for w in heard]
+    aligned = [sound_of.get(w, w) for w, _ in merged]
     found = {"refused": [], "missing": [], "added": []}
+
+    def at(index: int) -> int:
+        """The transcript index of the merged word `index` (its end, past the last)."""
+        return merged[index][1] if index < len(merged) else len(words)
 
     def second(index: int) -> float:
         if not words:
             return 0.0
-        return round(words[min(index, len(words) - 1)]["start"], 2)
+        return round(words[min(at(index), len(words) - 1)]["start"], 2)
 
     matcher = SequenceMatcher(a=expected, b=aligned, autojunk=False)
     for op, a0, a1, b0, b1 in matcher.get_opcodes():
@@ -65,12 +83,13 @@ def compare(line: str, words: list[dict], pronounce: dict | None = None) -> dict
         for i in range(a0, a1):
             row = {"word": said[i], "at": second(b0)}
             if expected[i] in accepted:
-                instead = " ".join(w["text"] for w in words[b0:b1]) or "nothing"
-                found["refused"].append({**row, "heard": instead})
+                instead = " ".join(w["text"] for w in words[at(b0) : at(b1)])
+                found["refused"].append({**row, "heard": instead or "nothing"})
             else:
                 found["missing"].append(row)
         for j in range(b0, b1):
-            found["added"].append({"word": words[j]["text"], "at": second(j)})
+            text = " ".join(w["text"] for w in words[at(j) : at(j + 1)])
+            found["added"].append({"word": text, "at": second(j)})
     return found
 
 
