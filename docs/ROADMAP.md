@@ -2,7 +2,6 @@
 
 ## Block A — Package foundation (urdido installable from PyPI)
 
-- ⏳ **UR19** (deps: UR18 ✅, UR24 ✅) **A version cannot reach PyPI except by a hand-run upload with a token** — Releasing 0.1.0 still needs the trusted publishers registered on PyPI and TestPyPI, and a wheel that carries urdido build and its package data. → §UR19
 - ⏳ **UR20** (deps: UR16 ✅, UR17 ✅, UR35) **An agent working in this repo or driving urdido has no CLAUDE.md, skill or friction path** — Consumers still have no urdido skill on declaring and building a video, which waits for the code and its manual. → §UR20
 - 📋 **UR35** (deps: UR16 ✅, UR23 ✅) **Nobody outside this machine can learn what a declaration accepts or how to build a first video** — A package on PyPI is read by people who never saw marketing, and today the only manual is a 600-line README full of VM ids. → §UR35
 
