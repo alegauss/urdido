@@ -24,6 +24,7 @@ COMMANDS = {
     "thumbnail": ("urdido.thumbnail", "draw the thumbnail and check it with its title"),
     "shorts": ("urdido.shorts", "cut YouTube Shorts from a built video"),
     "record": ("urdido.record", "record a scene video from its declared steps"),
+    "terminal": ("urdido.terminal", "run a terminal scene's commands for real"),
     "claims": ("urdido.claims", "inspect, report and review the narration's claims"),
     "library": ("urdido.library", "import and review footage candidates"),
     "storyboard": ("urdido.storyboard", "edit a storyboard's beats"),

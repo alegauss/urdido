@@ -220,6 +220,16 @@ SCHEMA = table(
                 )
             }
         ),
+        "terminal": table(
+            {
+                "work": TEXT,
+                "session": TEXT,
+                "shell": TEXT,
+                "title": TEXT,
+                "keep": mapping(TEXT),
+                "scenes": mapping(table({"commands": LIST}, required=("commands",))),
+            }
+        ),
         "instances": mapping(
             table(
                 {
@@ -594,6 +604,7 @@ PURPOSE = {
     "shorts": "YouTube Shorts: the scenes selection, or `urdido shorts` cuts.",
     "record": "The steps `urdido record` runs to record a scene video.",
     "instances": "Product instances a recording runs against, by name.",
+    "terminal": "A terminal scene's commands, run for real by `urdido terminal`.",
 }
 
 

@@ -244,6 +244,17 @@ The steps `urdido record` runs to record a scene video.
 
 - `step`: `name` (required), `command` (required), `makes`, `always`
 
+## [terminal]
+
+A terminal scene's commands, run for real by `urdido terminal`.
+
+- `work`: a string
+- `session`: a string
+- `shell`: a string
+- `title`: a string
+- `keep`: *any name*
+- `scenes`: *any name*
+
 ## [instances]
 
 Product instances a recording runs against, by name.

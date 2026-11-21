@@ -6,8 +6,12 @@
   "engines": {
     "node": ">=20"
   },
+  "bin": {
+    "urdido-film-terminal": "./film-terminal.mjs"
+  },
   "exports": {
     "./terminal-replay": "./terminal-replay.mjs",
+    "./film-terminal": "./film-terminal.mjs",
     "./story-moves": "./story-moves.mjs",
     "./narration/takes": "./narration/takes.mjs",
     "./narration/opening": "./narration/opening.mjs",

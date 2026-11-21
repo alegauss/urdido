@@ -236,6 +236,18 @@ export function markdownHtml(text) {
   return out.join("");
 }
 
+/**
+ * A shell session's lines, from one scene of what `urdido terminal` recorded (UR53): each
+ * command typed as a prompt, then the printed lines its declaration keeps (`shown`), never
+ * a line written here.
+ */
+export function commandLines(steps) {
+  return steps.flatMap((s) => [
+    { kind: "prompt", text: s.command },
+    ...(s.shown?.length ? [{ kind: "answer", text: s.shown.join("\n") }] : []),
+  ]);
+}
+
 // The terminal is a window on a desktop, the way a screen recording of the app looks, filling the
 // top of the frame and leaving the bottom band (where a video's captions sit) to the desktop.
 const PAGE = (title, zoom = 1) => `<!doctype html><meta charset="utf-8"><style>

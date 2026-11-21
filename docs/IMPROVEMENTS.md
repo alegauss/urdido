@@ -336,22 +336,20 @@ honours the retake list.
 
 ### §UR53 Page and terminal films declared
 
-UR4 and its steps (UR51, UR52) moved the Japode explainer's plan, render and description
-into urdido (`urdido.pipelines.explainer`). Two of its sources are still made by scripts
-copied into each video: `bin/film-page.py` films a web page scrolling to a quoted
-sentence with a highlighter drawn over it (the Anthropic post in the Scion video), and
-`bin/capture-terminal.py` with `bin/film-terminal.py` record a real shell session and
-film it as a terminal scene (Scion's Git session, Docker's container commands). The
-explainer reads what they leave, `footage/page/<scene>.webm` and
-`footage/terminal/<scene>.webm`, as `page:<scene>` and `terminal:<scene>` shots.
+The terminal half is in urdido: `[terminal.scenes.<name>] commands`, run for real by
+`urdido terminal` (`urdido.terminal`) into `terminal/session.json`, and filmed by
+`js/film-terminal.mjs` with the terminal replay's window into
+`footage/terminal/<scene>.webm`, the `terminal:<scene>` shots the explainer reads.
 
-What to build: a page film declared by URL, the sentence to highlight and the scroll,
-filmed through the provider's web capture (`capture.web`) with the highlight drawn over
-the found text, never typed into the page; and a terminal scene declared as the commands
-to run in a throwaway folder, recorded for real and filmed with
-`js/terminal-replay.mjs`'s window (the same rule as the agent replay: nothing on screen
-written by hand). Both become `[[record.step]]`s a video declares, so `urdido record`
-makes them in order.
+Left: the page film. Marketing's `japode/scion/bin/film-page.py` opens the post, scrolls
+eased to each quoted sentence and draws a highlighter over it, refusing a sentence the
+page no longer prints. It belongs in a declared visit, and polyweave's `capture.web`
+cannot find a text or draw over it yet (polyweave PW721, beside PW704's eased scroll).
+Once it can, a video declares each quote as a visit (the URL, the sentence, the hold)
+and a `[[record.step]]` runs `capture.web` for it into `footage/page/<scene>.webm`.
 
-Done when the Scion video's page and terminal shots are made by urdido from its
-declaration, and its bin/film-page.py, capture-terminal.py and film-terminal.py go.
+Then marketing drops Scion's and Docker's `bin/film-page.py`, `capture-terminal.py` and
+`film-terminal.py` for declared `[terminal]` scenes and visits (a marketing task once
+this ships).
+
+Done when the Scion video's page and terminal shots are made from its declaration.

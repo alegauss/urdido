@@ -38,6 +38,9 @@ From Python the same steps are `urdido.check(path)`, `urdido.load(path, language
 
 - Narration over Creative Commons footage, with callouts: `explainer`.
 - A product filmed scene by scene (`urdido record` runs the declared steps): `scenes`.
+  A shell session shown in an explainer is declared as `[terminal.scenes.<name>]
+  commands`, run for real by `urdido terminal` and filmed by `film-terminal.mjs`;
+  never write a terminal's output by hand.
 - Editorial cards and declared media per beat: `illustrated`.
 - One recording cut into chapters: `chaptered`.
 - A second opening of a published video: keep the kind and add `[video] base =

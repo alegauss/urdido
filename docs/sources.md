@@ -12,6 +12,15 @@ start second, and optionally a fixed `dur`, a `speed` and a crop `box`. Shots wi
 (`footage` defaults to `footage`), or from a film of your own named `<kind>:<scene>`,
 read from `<footage>/<kind>/<scene>.webm`.
 
+A `terminal:<scene>` film is made from the declaration. `[terminal.scenes.<scene>]
+commands` lists what to type. `urdido terminal video.toml` runs each command for real
+in a cleared folder and keeps what it printed (`[terminal] keep` trims a long output
+to the lines worth reading). Then `node film-terminal.mjs terminal/session.json
+footage/terminal`, from the `urdido-record` npm package, types each command and shows
+its output in the terminal replay's window. Declare both as `[[record.step]]`s and
+`urdido record` makes them in order. Nothing on screen is typed by hand, and a command
+that fails refuses the session.
+
 Keywords declared under `callouts` in the shots file appear when the take says them,
 found in the take's word times; one with a `def` stays longer and shows its
 definition. The title, the callouts and the closing card are drawn in the styles
