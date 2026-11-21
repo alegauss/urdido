@@ -655,6 +655,44 @@ def reference() -> str:
     return "\n".join(out).rstrip() + "\n"
 
 
+def check_document(document: dict, path: Path) -> list[str]:
+    """Every problem in a read declaration, then in the side files it names.
+
+    The side files are checked only once the declaration passes, through the roots it
+    declares; a root read from the environment is not resolved here."""
+    problems = check(document, str(path))
+    if problems:
+        return problems
+    from urdido.project import roots_of
+
+    here = path.resolve().parent
+    roots = roots_of(here, document, env={})
+
+    def resolve(declared: str) -> Path:
+        for name, root in roots.items():
+            if declared.startswith(f"<{name}>"):
+                return Path(declared.replace(f"<{name}>", root))
+        if declared.startswith("<"):
+            raise ValueError("starts at a root this check cannot resolve")
+        return here / declared
+
+    return check_side_files(document, resolve)
+
+
+def check_file(path: str | Path) -> list[str]:
+    """Every problem in a video.toml and its side files; empty when it passes (UR49).
+
+    An unreadable file or bad TOML is refused as a `DeclarationError`."""
+    path = Path(path)
+    try:
+        document = tomllib.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, tomllib.TOMLDecodeError) as unreadable:
+        from urdido.errors import DeclarationError
+
+        raise DeclarationError(f"{path}: {unreadable}") from None
+    return check_document(document, path)
+
+
 def check(document: dict, file: str = "video.toml") -> list[str]:
     """Every problem in a declaration, each naming its file and table."""
     found: list[str] = []
@@ -766,22 +804,7 @@ def main(argv: list[str]) -> int:
     except (OSError, tomllib.TOMLDecodeError) as unreadable:
         print(f"{path}: {unreadable}", file=sys.stderr)
         return 1
-    problems = check(document, str(path))
-    if not problems:
-        from urdido.project import roots_of
-
-        here = path.resolve().parent
-        roots = roots_of(here, document, env={})
-
-        def resolve(declared: str) -> Path:
-            for name, root in roots.items():
-                if declared.startswith(f"<{name}>"):
-                    return Path(declared.replace(f"<{name}>", root))
-            if declared.startswith("<"):
-                raise ValueError("starts at a root this check cannot resolve")
-            return here / declared
-
-        problems = check_side_files(document, resolve)
+    problems = check_document(document, path)
     for problem in problems:
         print(problem, file=sys.stderr)
     if not problems:

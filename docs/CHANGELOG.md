@@ -31,6 +31,7 @@
 - ✅ **UR47 (script and storyboard keys)** **Values in video.toml are untyped and the side files it names are not checked, so a typo inside them is still a KeyError** — urdido check and every build follow the declaration into its script and storyboard and refuse a misspelled key there, naming the file.
 - ✅ **UR56** **A value of the wrong type in video.toml passes the check, so a tempo of fast fails deep in the build** — urdido check refuses a number, text, flag or list key holding another type, naming the type it takes; marketing's declarations all pass.
 - ✅ **UR57** **A misspelled key in the cards, highlights, claims or translation files a declaration names reaches the build unchecked** — urdido check refuses a misspelled key in cards, highlights, claims and translations.
+- ✅ **UR49** **Building a video from Python means filling an argparse Namespace and importing build internals** — urdido.check, urdido.load and urdido.make build from Python without argparse, and no module imports another's underscored name.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

@@ -30,6 +30,23 @@ extras, and code that needs a missing one stops with the `pip install` that fixe
 DaVinci Resolve and Docker are programs rather than Python packages, so the commands
 that use them look for the program and stop by name when it is missing.
 
+## From Python
+
+The commands are also three calls, with the options by keyword:
+
+```python
+import urdido
+
+problems = urdido.check("promo/video.toml")  # [] when the declaration passes
+project = urdido.load("promo/video.toml", "en")  # .decl, .roots, .out, .load()
+urdido.make("promo/video.toml", "en", plan=True, progress="off")  # 0 when it passed
+```
+
+`make` takes the options `urdido build` takes (`cut="chapter:2"`, `vertical`,
+`revision`, ...) and refuses an unknown one by name. A refused build raises
+`urdido.UrdidoError` (`Refused`, `DeclarationError`, `MissingTool`); the library never
+exits.
+
 ## Develop
 
 ```

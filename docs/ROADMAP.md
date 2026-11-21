@@ -6,7 +6,6 @@
 
 - 📋 **UR46** (deps: UR22 ✅, UR37) **Four environment variables still fill undeclared roots, the last root names left in a module** — They were kept for one release so marketing's builds keep working; left longer, the shim becomes a second way to declare a root. → §UR46
 - 🛠 **UR47** (deps: UR23 ✅) **Values in video.toml are untyped and the side files it names are not checked, so a typo inside them is still a KeyError** — Defaults still live in the modules rather than in typed dataclasses the reference reads. → §UR47
-- 📋 **UR49** (deps: UR24 ✅) **Building a video from Python means filling an argparse Namespace and importing build internals** — The package exports only its errors, so an embedding program reaches into Build and the modules' underscored names. → §UR49
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

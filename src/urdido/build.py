@@ -74,7 +74,32 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--progress", choices=["human", "json", "off"], default="human",
                    help="live stage events: human on stderr or JSONL on stdout; also saved beside the build parts")
     a = p.parse_args(argv)
-    build = Build(Path(a.declaration), a)
+    return run(Build(Path(a.declaration), a), a)
+
+
+#: What `make` passes for an option it is not given: the command line's defaults.
+OPTIONS = {
+    "cut": "full", "vertical": False, "project": False, "cards": False, "plan": False,
+    "refresh_screens": False, "revision": None, "preview": None, "context_before": 0.0,
+    "context_after": 0.0, "preview_occurrence": None, "progress": "human",
+}
+
+
+def make(declaration: str | Path, language: str, **options) -> int:
+    """Build a video from its declaration, as `urdido build` does (UR49).
+
+    The options are the command line's, by keyword (`cut="chapter:2"`, `plan=True`,
+    `progress="off"`); an unknown one is refused by name. Returns 0 when the build
+    passed its checks, and raises `urdido.UrdidoError` when it is refused."""
+    unknown = sorted(set(options) - set(OPTIONS))
+    if unknown:
+        raise TypeError(f"urdido.make: no option {', '.join(unknown)}; it takes {', '.join(OPTIONS)}")
+    args = argparse.Namespace(declaration=str(declaration), language=language, **{**OPTIONS, **options})
+    return run(Build(Path(declaration), args), args)
+
+
+def run(build: Build, a: argparse.Namespace) -> int:
+    """The build `main` and `make` share, on a loaded declaration."""
     kind = build.decl["source"]["kind"]
     if a.preview and kind != "illustrated":
         raise Refused("--preview requires an illustrated source")

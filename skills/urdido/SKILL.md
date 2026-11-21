@@ -27,6 +27,12 @@ kinds of video and `checks.md` for what refuses.
    the clip.
 5. **Publish.** `urdido thumbnail video.toml --language <l> --check` checks the title
    and thumbnail as a pair; `urdido shorts video.toml --language <l>` cuts the Shorts.
+   A `[shorts]` table declares one cutter: `declaration` alone (the scenes selection,
+   `--cut short:<c>`) or the `urdido shorts` keys, never both.
+
+From Python the same steps are `urdido.check(path)`, `urdido.load(path, language)` and
+`urdido.make(path, language, plan=True, ...)`, the options by keyword; never fill an
+`argparse.Namespace` or import `urdido.build.Build`.
 
 ## Choosing the source kind
 

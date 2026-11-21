@@ -294,11 +294,11 @@ class Project:
         return value
 
     def write_plan(self, name: str, data: Mapping) -> Path:
-        from urdido.timeline import _rounded
+        from urdido.timeline import rounded
 
         file = self.parts / f"{name}.{self.language}.plan.json"
-        rounded = _rounded(self._portable_all(dict(data)))
-        text = json.dumps(rounded, ensure_ascii=False, indent=TAB) + NEWLINE
+        tidy = rounded(self._portable_all(dict(data)))
+        text = json.dumps(tidy, ensure_ascii=False, indent=TAB) + NEWLINE
         file.write_text(text, encoding="utf-8", newline="")
         return file
 

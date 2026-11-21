@@ -25,7 +25,7 @@ import opentimelineio as otio
 
 from urdido import media as mediamod
 from urdido.jsnum import fixed, number
-from urdido.timeline import KEY, _range
+from urdido.timeline import KEY, time_range
 
 FINISH = Path(__file__).with_name("finish.lua")
 
@@ -94,10 +94,10 @@ def export_project(
         ])
         track = otio.schema.Track(name="A2", kind=otio.schema.TrackKind.Audio)
         if start > 0:
-            track.append(otio.schema.Gap(source_range=_range(0, start)))
+            track.append(otio.schema.Gap(source_range=time_range(0, start)))
         clip = otio.schema.Clip(name="music-bed.m4a",
                                 media_reference=otio.schema.ExternalReference(target_url=_uri(bed)),
-                                source_range=_range(0, length))
+                                source_range=time_range(0, length))
         clip.metadata[KEY] = {"bed": True, "volume": music.get("volume")}
         track.append(clip)
         timeline.tracks.append(track)

@@ -29,7 +29,7 @@ def _time(seconds: float) -> otio.opentime.RationalTime:
     return otio.opentime.RationalTime(seconds * RATE, RATE)
 
 
-def _range(start: float, length: float) -> otio.opentime.TimeRange:
+def time_range(start: float, length: float) -> otio.opentime.TimeRange:
     return otio.opentime.TimeRange(_time(start), _time(length))
 
 
@@ -38,7 +38,7 @@ def _js_fixed3(x: float) -> float:
     return float(f"{x:.3f}") if not float(x).is_integer() else x
 
 
-def _rounded(value: Any) -> Any:
+def rounded(value: Any) -> Any:
     if isinstance(value, bool) or value is None or isinstance(value, str):
         return value
     if isinstance(value, int):
@@ -47,9 +47,9 @@ def _rounded(value: Any) -> Any:
         r = _js_fixed3(value)
         return int(r) if float(r).is_integer() else r
     if isinstance(value, Mapping):
-        return {k: _rounded(v) for k, v in value.items()}
+        return {k: rounded(v) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
-        return [_rounded(v) for v in value]
+        return [rounded(v) for v in value]
     return value
 
 
@@ -79,11 +79,11 @@ class Builder:
         track = self.lanes[lane or "V1"]
         gap = self.clock - self._ends[lane or "V1"]
         if gap > 0:
-            track.append(otio.schema.Gap(source_range=_range(0, gap)))
+            track.append(otio.schema.Gap(source_range=time_range(0, gap)))
         clip = otio.schema.Clip(
             name=file.rsplit("/", 1)[-1],
             media_reference=otio.schema.ExternalReference(target_url=source or file),
-            source_range=_range(at or 0, length),
+            source_range=time_range(at or 0, length),
         )
         clip.metadata[KEY] = {
             "file": file, "lane": lane, "source": source, "at": at,
@@ -155,11 +155,11 @@ class Builder:
         track = self._audio_track(track_name)
         gap = at - self._audio_ends[track_name]
         if gap > 0:
-            track.append(otio.schema.Gap(source_range=_range(0, gap)))
+            track.append(otio.schema.Gap(source_range=time_range(0, gap)))
         clip = otio.schema.Clip(
             name=source.rsplit("/", 1)[-1],
             media_reference=otio.schema.ExternalReference(target_url=source),
-            source_range=_range(source_at, length),
+            source_range=time_range(source_at, length),
         )
         clip.metadata[KEY] = {"at": at, **meta}
         track.append(clip)
@@ -195,7 +195,7 @@ class Builder:
 
     def cue(self, start: float, end: float, chapter: int) -> None:
         """A chapter as it shows: a marker over its span."""
-        marker = otio.schema.Marker(name=f"chapter {chapter + 1}", marked_range=_range(start, end - start))
+        marker = otio.schema.Marker(name=f"chapter {chapter + 1}", marked_range=time_range(start, end - start))
         marker.metadata[KEY] = {"chapter": chapter}
         self.timeline.tracks.markers.append(marker)
 
@@ -282,7 +282,7 @@ def plan(timeline: otio.schema.Timeline) -> dict:
     if "chapter" not in out:
         out["sounds"] = sounds
     out["music"] = _music(meta.get("music"))
-    return _rounded(out)
+    return rounded(out)
 
 
 def _music(music: Mapping | None) -> dict | None:
