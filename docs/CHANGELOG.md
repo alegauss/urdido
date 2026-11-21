@@ -15,6 +15,7 @@
 - ✅ **UR23** **A misspelled or missing key in video.toml fails as a KeyError deep inside the build** — urdido check and every build refuse an unknown video.toml key with its file, table and nearest name, and a missing one; check --schema prints JSON Schema (design recorded in `docs/video-maker.md`).
 - ✅ **UR24** **Library code raises SystemExit and the CLI is an if-chain, so urdido can be neither embedded nor discovered** — urdido --help lists every command; the library raises UrdidoError with a remedy, which only the command line turns into an exit (design recorded in `docs/video-maker.md`).
 - ✅ **UR25** **Polyweave is called through three separate subprocess wrappers, and its polyweave.toml is read directly** — One adapter runs polyweave, parses its answers and reads its config; the rest calls urdido.providers, and tests answer through a fake RUN (design recorded in `docs/video-maker.md`).
+- ✅ **UR26** **Word times come from a direct ElevenLabs Scribe call inside the package, with no provider seam** — Word times come through a transcriber seam, Scribe being one provider and a test a fake, in the language the declaration gives; the language default is gone (design recorded in `docs/video-maker.md`).
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

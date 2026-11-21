@@ -50,20 +50,6 @@ lists every key the schema accepts.
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-### §UR26 A transcriber seam
-
-`narration_words.py:15-47` posts to Scribe with `requests` and `ELEVENLABS_API_KEY`,
-defaults to `pt-BR`/`por`, and `prepare.py` prices it from `polyweave.toml`. Put a
-`Transcriber` protocol in front of it, with the Scribe client as one implementation in
-the `narration` extra and polyweave's `sound.speech` as another once PW703 lands. The
-language comes from the declaration, never a default. The hash-bound word records stay
-the contract every caller reads.
-
-UR13 (takes heard back) and UR7 (re-roll) build on the same seam.
-
-**Done when** the anchor, highlight and prepare tests run against a fake transcriber,
-and the language default is gone.
-
 ### §UR27 Publishing texts by locale and by target
 
 `publish/description.py:39-157` holds "Capítulos", "Fontes e demonstrações", "Apoio",

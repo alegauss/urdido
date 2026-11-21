@@ -450,6 +450,14 @@ from. A cut changes and stays changed, so it passes. `[qa] flashes = "warn"`
 reports instead of refusing, and `"off"` skips the scan; the findings are in
 the `.qa.json` sidecar under `flashes`.
 
+`urdido words <video.toml> --language <l>` writes each take's word record
+(UR26), in the language the declaration gives `[video] languages.<l>`; there
+is no default language. The transcriber is a seam: any callable
+`(name, audio, language) -> words`. ElevenLabs Scribe
+(`urdido.providers.scribe`, in the `narration` extra) is today's, and a test
+passes a fake. The hash-bound `<take>.words.json` stays what every caller
+reads.
+
 Every bought take is heard back against its line (UR13): its transcript
 (`<take>.words.json`, written on purchase) is aligned with the line's words.
 A word the script's `pronounce` map names must be heard where the line has
