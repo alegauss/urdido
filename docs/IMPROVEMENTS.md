@@ -160,22 +160,6 @@ marketing, `tests/marketing.py` goes.
 urdido with the expected files unchanged, and urdido's suite runs in CI with no path
 outside this repository.
 
-### §UR40 Marketing's agent rules point at urdido
-
-`.claude/hooks/video-maker-gate.py` exempts `video-maker/` and any ffmpeg command
-mentioning videomaker, and tells the agent to add a module and a Block B task;
-`.claude/settings.json:37-46` wires it; `.claude/skills/video-maker-friction` files into
-Block B; `roadkeep-gui-roadmap-docs` has the install line, the pytest and node gates and
-the `feat(video-maker)` scope; `CLAUDE.md:8-28,43,56` describes the framework.
-
-Reword the hook for `urdido` (the exemption and the guidance), replace the friction
-skill with urdido's (UR20), update the gates to marketing's own tests, and rewrite the
-CLAUDE.md rules: every video is built by urdido, and framework friction becomes a UR
-task.
-
-**Done when** a new script in a video folder still asks first, and the guidance names
-urdido and its roadmap.
-
 ### §UR41 Every video rebuilt and compared
 
 Rebuild every declared video with urdido and compare with the last video-maker build:
