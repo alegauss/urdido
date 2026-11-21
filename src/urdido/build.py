@@ -462,6 +462,13 @@ class Build:
             description(document, script, plan_of(timeline), self.language, self.out, self.name, self.decl.get("description"))
             edit = self.load(str(self.parts / "illustrated" / "edit.json"))
             check_labels(document, edit, highlights, video.opening)
+        elif self.decl.get("description"):
+            from urdido.publish.description import scenes as scenes_description
+            from urdido.publish.description import write as write_description
+
+            text, provenance = scenes_description(script, plan_of(timeline), self.language,
+                                                  self.decl["description"])
+            write_description(self.out, f"{self.name}.{self.language}", text, provenance)
         if self.args.plan:
             if illustrated:
                 from urdido.review import sheet

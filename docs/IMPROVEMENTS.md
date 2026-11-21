@@ -434,22 +434,6 @@ Sequenced after UR33: the overlay must resolve every relative path through the b
 about 25 call sites read `build.here` directly; UR33's declaration loader is the one
 place it belongs.
 
-### §UR9 Descriptions for scene videos (was marketing VM80)
-
-`[description]` writes a ready description with measured chapter times, but only for the
-illustrated source (`sources/illustrated.py`). The Viglet Shio promo is made of filmed
-scenes, so on 2026-11-17 its chapter times were read by hand: the first caption of each
-chapter's card line, matched by its first words in promo.pt-BR.srt. Two takes bought
-later the same day moved five chapters by a second, and the draft had to be corrected
-again.
-
-The timeline already knows where each chapter starts; the scenes build should write the
-same description file from it, with the chapter titles from the script and the notes
-from `[description]`.
-
-**Done when** the Viglet Shio promo's build writes its description with chapter times,
-and the draft in alegauss/visibility takes them from it.
-
 ### §UR10 One command records a scene video (was marketing VM81)
 
 Recording the Viglet Shio promo is six commands from its README, in an order that

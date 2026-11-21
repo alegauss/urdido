@@ -149,6 +149,38 @@ def illustrated(document: dict, chapters: list[str], options: dict | None = None
                   **({"claims": claim_report} if claim_report else {})}
 
 
+def chapter_lines(script: dict, spoken: list[dict], language: str, lead: float = 0.4) -> list[str]:
+    """UR9: `0:00 Title` lines, each chapter dated by when its own take is heard.
+
+    A placement is matched to its take by file name (`chapter-<n>.mp3`, at any tempo),
+    never by its position, so a take bought later or a missing result line moves nothing
+    else. A chapter whose take is not in the cut is refused rather than guessed."""
+    from urdido.captions import intro_title
+
+    heard = {}
+    for placement in spoken:
+        heard.setdefault(Path(placement["file"]).stem, placement["at"])
+    lines = [f"0:00 {intro_title(script, language)}"]
+    for key, chapter in script["chapters"].items():
+        take = f"chapter-{key}"
+        if take not in heard:
+            raise ValueError(f"description: {take} is not heard in the cut, so chapter {key} has no time")
+        at = int(max(0, heard[take] - lead))
+        lines.append(f"{at // 60}:{at % 60:02} {chapter['title'][language]}")
+    return lines
+
+
+def scenes(script: dict, plan: dict, language: str, options: dict) -> tuple[str, dict]:
+    """UR9: a filmed-scenes video's description, its chapters measured off the cut."""
+    if not options.get("summary"):
+        raise ValueError("description: a scenes video declares [description] summary")
+    chapters = chapter_lines(script, plan["spoken"][language], language)
+    sources = [{"label": s["label"], "url": s["url"]} for s in options.get("sources", [])]
+    text = format_description(options["summary"], chapters, [], sources=sources,
+                              notes=options.get("notes", ""), generated=options.get("generated", ""))
+    return text, {"chapters": chapters, "sources": sources}
+
+
 def scion(plan: dict, sources: dict, publishing: dict, language: str = "pt-BR") -> tuple[str, dict]:
     used = dict.fromkeys(s["src"] for s in plan["shots"] if ":" not in s["src"])
     credits = [{"title": sources[key]["title"], "author": sources[key]["channel"],

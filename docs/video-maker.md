@@ -428,6 +428,14 @@ storyboard's `description`, or `[description] summary` in `video.toml`.
 `[description] notes` can replace the longer closing notes for publishing;
 the original notes remain in the full credit record.
 
+A video made of filmed scenes writes the same `<name>.<language>.description.txt`
+when it declares `[description]` (UR9): `summary` opens it, the chapter list
+follows, then `notes`, any `sources` (`[[description.sources]]` with `label` and
+`url`) and `generated`. Each chapter is dated by when its own take
+(`chapter-<n>`) is heard in the cut, 0.4 s early, so a take bought later moves
+only its own chapter; a chapter whose take the cut lacks is refused. The
+opening's line is the script's `introTitle`.
+
 The public text groups shared licence links and declared modification notes,
 shortens YouTube watch links while retaining their time parameters, credits
 Pixabay stock by service, and groups the video's own screen recordings by

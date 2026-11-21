@@ -90,3 +90,38 @@ def test_grouping_cannot_discard_explicit_attribution_obligations_vm52():
     cc = {**credit, "kind": "own", "attribution_required": False, "license": "CC BY 3.0",
           "license_url": "https://creativecommons.org/licenses/by/3.0/"}
     assert cc["title"] in format_description("Summary", [], [cc])
+
+
+SCRIPT = {
+    "introTitle": {"pt-BR": "Abertura"},
+    "chapters": {"1": {"title": {"pt-BR": "Instalar"}}, "2": {"title": {"pt-BR": "Buscar"}}},
+}
+
+
+def test_scene_chapters_are_dated_by_their_own_take_not_their_position_ur9():
+    from urdido.publish.description import chapter_lines
+
+    spoken = [
+        {"file": "takes/pt-BR/intro.mp3", "at": 0.0},
+        {"file": "takes/pt-BR/chapter-1.mp3", "at": 12.6},
+        {"file": "takes/pt-BR/tempo-1.1/chapter-2.mp3", "at": 75.3},
+        {"file": "takes/pt-BR/chapter-2-result.mp3", "at": 90.0},
+    ]
+    assert chapter_lines(SCRIPT, spoken, "pt-BR") == ["0:00 Abertura", "0:12 Instalar", "1:14 Buscar"]
+    with pytest.raises(ValueError, match="chapter-2 is not heard"):
+        chapter_lines(SCRIPT, spoken[:2], "pt-BR")
+
+
+def test_a_scenes_video_writes_its_description_from_the_declaration_ur9():
+    from urdido.publish.description import scenes
+
+    plan = {"spoken": {"pt-BR": [{"file": "chapter-1.mp3", "at": 5.0}, {"file": "chapter-2.mp3", "at": 61.0}]}}
+    options = {"summary": "O Shio em três minutos.", "notes": "Mais em shio.dev",
+               "sources": [{"label": "Shio", "url": "https://github.com/openviglet/shio"}]}
+    text, record = scenes(SCRIPT, plan, "pt-BR", options)
+    assert text.startswith("O Shio em três minutos.\n")
+    assert "0:04 Instalar\n1:00 Buscar" in text
+    assert "Shio: https://github.com/openviglet/shio" in text and "Mais em shio.dev" in text
+    assert record["chapters"][0] == "0:00 Abertura"
+    with pytest.raises(ValueError, match="summary"):
+        scenes(SCRIPT, plan, "pt-BR", {})
