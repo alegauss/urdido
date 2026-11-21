@@ -1,4 +1,4 @@
-"""The cuts a video is rendered into (VM9), ported from `turing/wordpress/bin/story-video.mjs`:
+"""The cuts a video is rendered into (VM9), ported from the first demo's `story-video.mjs`:
 the full cut with its dissolves, the 30 s teaser, a chapter clip and its vertical cut. Each is a
 timeline (VM7) rendered by one path: its pieces joined, each narrated language mixed over the bed
 (VM5), and its captions (VM4) muxed in, or burned in on a vertical cut, whose player draws its

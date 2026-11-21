@@ -1,6 +1,6 @@
 """One language's narration mixed over the music bed, to a loudness target (VM5).
 
-Ported from `turing/wordpress/bin/story-video.mjs` (`ducked`, `musicGain`, `duckExpression`,
+Ported from the first demo's `story-video.mjs` (`ducked`, `musicGain`, `duckExpression`,
 `musicTrim`, `voiceTrack`). Nothing here is the WordPress demo's: the duck, the bed (its file,
 where it starts, the level it is trimmed to), the sounds that come with pieces of picture and the
 loudness target are arguments, so the Viglet Shio long cut and each short cut bring their own.

@@ -1,9 +1,9 @@
 """The pages a video's cards are drawn from, in its theme (VM6).
 
-Ported from `turing/wordpress/bin/story-video.mjs` (`style`, `card`, `linksCard`, the backdrop
+Ported from the first demo's `story-video.mjs` (`style`, `card`, `linksCard`, the backdrop
 and the hills). The module holds the layout; the theme (fonts, colours, backdrop, the ridges of
 the parallax and how fast they slide) and every word are the video's declaration, such as
-`turing/wordpress/demo/cards.json`. Each page here is byte for byte the one the JS builds for the
+the first demo's `cards.json`. Each page here is byte for byte the one the JS builds for the
 same video and language, which `tests/test_cards.py` holds against the goldens.
 """
 

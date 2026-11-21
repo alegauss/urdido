@@ -42,6 +42,15 @@ raises `urdido.UrdidoError`, as `Refused` (an input cannot make the video;
 line turns one into a message on stderr and exit code 1, so a program that
 embeds urdido catches the exception.
 
+A chaptered video's opening can show pages of the product's site (UR28):
+`[opening] store` names the site per language, and `[opening] screens` the
+pages, in order, each `{ path = "/", scroll = 900 }` or
+`{ follow = "a.woocommerce-LoopProduct-link" }` (the first link that selector
+finds on the page before). The screenshots are kept in
+`video/screens/<language>/` and reused until `--refresh-screens`. A store
+with no declared screens is refused; the package holds no shop's selectors.
+Transcript and stills publishing were already declared in `publish.json`.
+
 `urdido check <video.toml>` checks a declaration without building (UR23):
 a key no table takes is refused with the file, the table and the nearest
 valid name (`[narration]: unknown key tempoo; did you mean tempo?`), and so is

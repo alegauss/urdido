@@ -1,5 +1,5 @@
 """A full video composed on the timeline (VM7), ported from the main build of
-`turing/wordpress/bin/story-video.mjs`.
+the first demo's `story-video.mjs`.
 
 The opening animation with its own sound; the opening card, held while the narrator's first
 line runs, its shots cut at her pauses; each chapter's card and its clip, the waits cut, her line

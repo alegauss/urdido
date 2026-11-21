@@ -1,6 +1,6 @@
 """One long recording with chapter marks, read into the chapter model (VM8).
 
-`chapters.json` is read as Turing's specs write it, unchanged: `record` (a recording, not a test
+`chapters.json` is read as the product's e2e specs write it, unchanged: `record` (a recording, not a test
 run), `language` (the store it played in, D298) and `chapters`, each with its `title`
 (`3. Asks…`), `start`, `end` and the marks (`voice`, `result`, `highlight`, `focus`, `skip`).
 It is refused as `story-video.mjs` refuses it, with the command to run.

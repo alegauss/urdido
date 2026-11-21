@@ -1,6 +1,6 @@
 """Captions, the YouTube chapter list and chapter titles (VM4).
 
-Ported from the caption and chapter-list writers of `turing/wordpress/bin/story-video.mjs`
+Ported from the caption and chapter-list writers of the first demo's `story-video.mjs`
 (`stamp`, `subtitles`, `captionCues`, `narrationCaptions`, `chapterList`). A narrated video's
 captions are its narration, cut into cues of two short lines; a silent cut is captioned with its
 chapter titles. Titles come from the narration script (`chapters[n].title` by language, and

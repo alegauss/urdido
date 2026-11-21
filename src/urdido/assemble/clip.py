@@ -1,5 +1,5 @@
 """One chapter as a clip of its own (D279), composed on the timeline (VM7), ported from
-`chapterClip` in `turing/wordpress/bin/story-video.mjs`.
+`chapterClip` in the first demo's `story-video.mjs`.
 
 The clip is its title card, the action with the narrator's line over it, the result (played on
 when she speaks over the action, held still otherwise) and the closing card. Where that runs past

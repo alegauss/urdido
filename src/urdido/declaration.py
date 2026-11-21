@@ -97,6 +97,7 @@ SCHEMA = table(
                 "footage": ANY,
                 "photos": ANY,
                 "store": ANY,
+                "screens": array(table({"path": ANY, "scroll": ANY, "follow": ANY})),
             }
         ),
         "cuts": table({"teaser": ANY}),

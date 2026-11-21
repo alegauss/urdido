@@ -50,23 +50,6 @@ lists every key the schema accepts.
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-### §UR28 One video's needs out of the core
-
-`build.py:299-343` visits `/?post_type=product` with WooCommerce selectors to take store
-screenshots for the opening; `build.py:357-360` copies stills into the Turing site;
-`publish/__init__.py:46-75` writes a TypeScript module and a marked block into Turing's
-docs. The chaptered pipeline (`sources/recording`, `assemble/clip`, `assemble/video`,
-the teaser and vertical cuts) reads `chapters.json` as Turing's e2e specs write it and
-keeps JS-parity rounding.
-
-Decide per piece: the chaptered source stays as a generic kind if its contract can be
-stated without Turing; the store screenshots become declared web captures; the
-transcript and stills publishing become a declared output, or a hook marketing owns.
-Nothing in the package writes into another repository unless the declaration says where.
-
-**Done when** no module names WooCommerce, Turing or a path outside the declared roots,
-and the WordPress demo still builds.
-
 ### §UR29 Browser and layout without machine assumptions
 
 `cards/render.py:35-41` and `build.py:316` default the Playwright channel to `msedge`

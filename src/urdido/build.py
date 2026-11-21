@@ -1,9 +1,9 @@
 """`urdido build <video.toml>`: a product video built from its declaration (VM17).
 
-    urdido build turing/wordpress/video.toml --language pt-BR [--project]
-    urdido build turing/wordpress/video.toml --language pt-BR --cut chapter:2 [--vertical]
-    urdido build turing/wordpress/developer.toml --language en
-    urdido build shio/promo/video.toml --language pt-BR [--cut short:c1]
+    urdido build demo/video.toml --language pt-BR [--project]
+    urdido build demo/video.toml --language pt-BR --cut chapter:2 [--vertical]
+    urdido build demo/developer.toml --language en
+    urdido build promo/video.toml --language pt-BR [--cut short:c1]
     ... --plan     stop once the timeline is decided, nothing encoded past it
     ... --cards    draw the cards alone, as previews, and stop
 
@@ -12,7 +12,7 @@ narration, its cards' theme and words, its music, its cuts and where it publishe
 relative to its folder or start at a root it declares (UR22):
 
     [roots]
-    plugin = "../../../turing/latest/wordpress"   # relative to the declaration
+    plugin = "../../product/plugin"   # relative to the declaration
     shio = "$SHIO_REPO"                            # or an environment variable
 
     [output]
@@ -343,8 +343,12 @@ class Build:
         render(named, frame, str(self.parts))
 
     def screens(self, opening: Mapping) -> list[str]:
-        """The store pages the opening shows, kept in video/screens/<language>/ and reused until
-        --refresh-screens; taken only when none are kept and the store answers."""
+        """The site pages the opening shows, kept in video/screens/<language>/ and reused until
+        --refresh-screens; taken only when none are kept and the site answers.
+
+        Which pages, in order, is the declaration's (UR28): `[opening] screens` is a list of
+        `{ path = "/", scroll = 900 }` (a page of the site, scrolled) or
+        `{ follow = "<css selector>" }` (the first link the selector finds on the page before)."""
         kept = self.out / "screens" / self.language
         if not self.args.refresh_screens and kept.is_dir():
             files = sorted(str(p) for p in kept.glob("screen-*.png"))
@@ -353,6 +357,13 @@ class Build:
         store = os.environ.get("STORE_URL") or opening["store"].get(self.language)
         if not store or self.args.cut != "full":
             return []
+        steps = opening.get("screens")
+        if not steps:
+            raise DeclarationError("urdido build: [opening] store has no screens to take; declare "
+                                   '[opening] screens = [{ path = "/" }, { follow = "a.product" }, ...]')
+        if not all(isinstance(s, dict) and (("path" in s) != ("follow" in s)) for s in steps):
+            raise DeclarationError("urdido build: each [opening] screens entry is a path (with an optional "
+                                   "scroll) or a follow selector")
         try:
             from playwright.sync_api import sync_playwright
         except ImportError:
@@ -374,17 +385,16 @@ class Build:
                 except Exception:  # a page the store does not have, or no store at all
                     pass
 
-            shot("/")
-            shot("/", 900)
-            shot("/?post_type=product")
-            try:
-                product = page.locator('a.woocommerce-LoopProduct-link, .wc-block-components-product-name, '
-                                       'a[href*="/product/"], a[href*="/produto/"]').first.get_attribute("href", timeout=3000)
-            except Exception:
-                product = None
-            if product:
-                shot(product)
-            shot("/?pagename=journal")
+            for step in steps:
+                if "path" in step:
+                    shot(step["path"], step.get("scroll", 0))
+                    continue
+                try:
+                    link = page.locator(step["follow"]).first.get_attribute("href", timeout=3000)
+                except Exception:  # nothing on the page before matches
+                    link = None
+                if link:
+                    shot(link, step.get("scroll", 0))
             browser.close()
         return files
 
