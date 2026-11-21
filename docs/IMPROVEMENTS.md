@@ -406,3 +406,25 @@ one inside the other. Either way, one table means one thing.
 
 Done when each key under `[shorts]` belongs to exactly one cutter and the schema says
 which.
+
+### §UR53 Page and terminal films declared
+
+UR4 and its steps (UR51, UR52) moved the Japode explainer's plan, render and description
+into urdido (`urdido.pipelines.explainer`). Two of its sources are still made by scripts
+copied into each video: `bin/film-page.py` films a web page scrolling to a quoted
+sentence with a highlighter drawn over it (the Anthropic post in the Scion video), and
+`bin/capture-terminal.py` with `bin/film-terminal.py` record a real shell session and
+film it as a terminal scene (Scion's Git session, Docker's container commands). The
+explainer reads what they leave, `footage/page/<scene>.webm` and
+`footage/terminal/<scene>.webm`, as `page:<scene>` and `terminal:<scene>` shots.
+
+What to build: a page film declared by URL, the sentence to highlight and the scroll,
+filmed through the provider's web capture (`capture.web`) with the highlight drawn over
+the found text, never typed into the page; and a terminal scene declared as the commands
+to run in a throwaway folder, recorded for real and filmed with
+`js/terminal-replay.mjs`'s window (the same rule as the agent replay: nothing on screen
+written by hand). Both become `[[record.step]]`s a video declares, so `urdido record`
+makes them in order.
+
+Done when the Scion video's page and terminal shots are made by urdido from its
+declaration, and its bin/film-page.py, capture-terminal.py and film-terminal.py go.

@@ -60,13 +60,21 @@ def project(folder):
         "callouts": {"intro": [{"show": "Git", "def": "version control"}]},
     }
     (folder / "shots.json").write_text(json.dumps(shots), encoding="utf-8")
+    sources = {
+        "a": {"title": "A talk", "channel": "Speaker", "url": "https://v.test/a"}
+    }
+    (folder / "sources.json").write_text(json.dumps(sources), encoding="utf-8")
     toml = folder / "video.toml"
     toml.write_text(
         '[video]\nname = "demo"\nlanguages = { "pt-BR" = "por" }\n'
         '[source]\nkind = "explainer"\nshots = "shots.json"\nend = 1.5\n'
+        'sources = "sources.json"\n'
         '[source.closing.pt-BR]\ntitle = "Até a próxima!"\n'
         '[narration]\nscript = "script.json"\ntakes = "narration"\n'
-        "[audio]\npeak = -1.0\n",
+        "[audio]\npeak = -1.0\n"
+        '[description]\nsummary = "Um teste."\nlicense_label = "CC BY 3.0"\n'
+        'license_url = "https://creativecommons.org/licenses/by/3.0/"\n'
+        'changes = "Cortadas e reenquadradas."\n',
         encoding="utf-8",
     )
     return toml
@@ -109,6 +117,10 @@ def test_an_explainer_renders_with_titles_callouts_captions_and_mix(
     assert "Fixture" in ass and "an explainer" in ass and "Até a próxima!" in ass
     assert "version control" in ass
     assert (tmp_path / "video" / "demo.pt-BR.qa.json").exists()
+    text = (tmp_path / "video" / "demo.pt-BR.description.txt").read_text("utf-8")
+    assert text.startswith("Um teste.\n\nCapítulos\n0:00 Introdução")
+    assert "A talk — Speaker: https://v.test/a" in text
+    assert "CC BY 3.0: https://creativecommons.org/licenses/by/3.0/" in text
 
 
 def test_the_titles_follow_the_plan_and_the_declared_closing():

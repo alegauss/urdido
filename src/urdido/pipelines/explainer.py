@@ -344,7 +344,59 @@ class Explainer(Finishing):
             ]
         )
         print(self.checked_output(str(final)))
+        if self.decl.get("description"):
+            self.describe_explainer(made, source)
         return 0
+
+    def describe_explainer(self, made: dict, source: dict) -> Path:
+        """The description: the summary, chapters from the plan, and the credits of the
+        footage the cut actually shows (`[source] sources` names each clip's title,
+        channel and URL; `[description]` its licence label, URL and changes)."""
+        from urdido.publish.description import format_description, write
+        from urdido.publish.strings import strings
+
+        options = self.decl["description"]
+        words = strings(self.language, options.get("strings"))
+        catalogue = self.load(source["sources"]) if source.get("sources") else {}
+        intro = (made["script"].get("introTitle") or {}).get(self.language)
+        chapters = [f"0:00 {intro or words['intro']}"]
+        for segment in made["segments"]:
+            if segment["chapter"] is not None:
+                at = int(segment["start"])
+                title = made["script"]["chapters"][str(segment["chapter"])]["title"]
+                chapters.append(f"{at // 60}:{at % 60:02} {title[self.language]}")
+        used = dict.fromkeys(s["src"] for s in made["shots"] if ":" not in s["src"])
+        missing = [key for key in used if key not in catalogue]
+        if missing:
+            raise DeclarationError(
+                f"[source] sources has no credit for {', '.join(missing)}"
+            )
+        credits = [
+            {
+                "title": catalogue[key]["title"],
+                "author": catalogue[key]["channel"],
+                "url": catalogue[key]["url"],
+                "license": options["license_label"],
+                "license_url": options.get("license_url", ""),
+                "changes": options.get("changes", ""),
+            }
+            for key in used
+        ]
+        text = format_description(
+            options["summary"],
+            chapters,
+            credits,
+            sources=options.get("sources", []),
+            notes=options.get("notes", ""),
+            generated=options.get("generated", ""),
+            words=words,
+        )
+        return write(
+            self.out,
+            f"{self.name}.{self.language}",
+            text,
+            {"assets": credits, "chapters": chapters},
+        )
 
 
 #: Title, keyword, definition and closing styles, used where `[source] styles` names

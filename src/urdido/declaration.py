@@ -88,6 +88,7 @@ SCHEMA = table(
                 "styles": ANY,
                 "closing": LANGUAGES,
                 "fonts": ANY,
+                "sources": ANY,
             },
             required=("kind",),
         ),
@@ -128,6 +129,9 @@ SCHEMA = table(
                 "sources": ANY,
                 "generated": ANY,
                 "strings": ANY,
+                "license_label": ANY,
+                "license_url": ANY,
+                "changes": ANY,
             }
         ),
         "text_checks": table({"action": ANY, "protected_tokens": ANY, "glyphs": ANY}),

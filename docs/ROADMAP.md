@@ -26,11 +26,12 @@
 ## Block D — Inherited from video-maker (marketing Block B)
 
 - 📋 **UR3** (deps: marketing: VM28) **Published videos have no end screen or cards pointing to the next video on the subject** — A viewer who finishes the Docker video is not offered the Scion one, and the end screen should point at the continuation, not the newest upload. → §UR3
-- 🛠 **UR4** (deps: UR2 ✅, UR33 ✅) **The Japode explainer videos are built by scripts copied into each video, outside video-maker** — The Japode videos declare their styles, closing, mark and credits, build with urdido, drop their bin scripts and reproduce their published cuts. → §UR4
+- 🛠 **UR4** (deps: UR2 ✅, UR33 ✅, UR36, UR53) **The Japode explainer videos are built by scripts copied into each video, outside video-maker** — The Japode videos declare their styles, closing, mark and credits, build with urdido, drop their bin scripts and reproduce their published cuts. → §UR4
 - ⏳ **UR5** (deps: UR21 ✅, marketing: VM32) **A second cut of a video, to test a new opening, means copying the whole video folder and its declaration** — The review records which variant was uploaded and which retention report it is compared against, once marketing's VM32 review exists. → §UR5
 - 📋 **UR44** (deps: polyweave: PW720) **A retake moves the old take's files aside by hand because voice.lines cannot buy a current take again** — Moving files behind polyweave's back is a workaround that a crash mid-run can leave half done. → §UR44
 - 📋 **UR45** (deps: UR14 ✅) **The flash scan's threshold was set on synthetic frames, never on the Shio flash or a published cut** — At 32x18 a same-brightness flash may slip under the threshold, and a published cut may be refused for a blink that is fine. → §UR45
 - 📋 **UR48** (deps: UR2 ✅) **[shorts] is read by two cutters with different keys, so nothing says which cutter a key belongs to** — The scenes selection and urdido shorts share one table name, and a declaration can mix their keys unnoticed. → §UR48
+- 📋 **UR53** (deps: UR51 ✅) **An explainer's page film and terminal session are recorded by scripts copied into each video** — The Scion and Docker videos film a highlighted web page and a real shell session with their own bin scripts. → §UR53
 
 ## Done when — UR19
 
