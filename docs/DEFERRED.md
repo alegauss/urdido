@@ -6,6 +6,8 @@
 
 ## Block B — The engine extracted (videomaker without marketing)
 
+- ⏸ **UR30** (deps: UR21 ✅) **The Python build shells out to node for the opening gate, and the JavaScript helpers have no install path** — set aside (Needs npm publish.): urdido-record is published to the npm registry, so marketing's scripts and the e2e specs install it by name rather than from the checkout. → §UR30
+
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
 ## Block D — Inherited from video-maker (marketing Block B)
