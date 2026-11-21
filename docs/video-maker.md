@@ -51,6 +51,15 @@ finds on the page before). The screenshots are kept in
 with no declared screens is refused; the package holds no shop's selectors.
 Transcript and stills publishing were already declared in `publish.json`.
 
+The build is split by concern (UR33): `urdido.project` loads the declaration,
+its roots, folders and side files; `urdido.pipelines.chaptered` and
+`urdido.pipelines.scenes` (which also builds `illustrated`) each build one
+source kind on the finishing stages in `urdido.pipelines.finishing`
+(verification, translated captions, the opening, the cards); `build.py` only
+picks the pipeline and runs it. A package adds a source kind by registering a
+function `pipeline(build) -> int` under the entry point group
+`urdido.sources`; `[source] kind` then names it.
+
 A video can be built as a variant of another (UR5): `[video] base =
 "../wordpress"` in the variant's `video.toml` lays its tables over the base's
 (tables merge key by key, anything else is replaced), and the build reads its

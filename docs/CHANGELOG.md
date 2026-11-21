@@ -23,7 +23,7 @@
 - ✅ **UR31** **Ten test files read japode, shio and turing folders, so the suite cannot run outside marketing** — Publish, card, cache, preview, motion and source tests run on fixtures; what still reads marketing checks its own videos and moves there with UR39.
 - ✅ **UR50** **Motion, sources, cache and preview tests read marketing's chapter timelines and Japode's fonts** — The chapter timelines live in tests/fixtures/recordings and the cache and preview builds draw generated fonts, so those four files run without marketing.
 - ✅ **UR32** **Every stage cache is keyed on absolute module and input paths, so moving the code invalidates every cache** — Cache keys name inputs by declared root or package place, hashed by content, so a moved project hits its stamps and an upgrade misses only changed code (design recorded in `docs/video-maker.md`).
-- ✅ **UR33 (declaration loader)** **build.py holds both pipelines, the mux, the mix and every root in one 600-line class** — urdido.project.Project loads the declaration, its roots, folders and hash-pinned side files once, and Build extends it with the pipelines.
+- ✅ **UR33** **build.py holds both pipelines, the mux, the mix and every root in one 600-line class** — Each source kind builds in its own pipeline module on shared finishing stages, build.py only dispatches, and a package adds a kind through urdido.sources (design recorded in `docs/video-maker.md`).
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

@@ -66,20 +66,6 @@ once, in Python, with the JS reading the result.
 **Done when** `urdido prepare` runs without node, and marketing's scripts can import the
 helpers from the npm package.
 
-### §UR33 One pipeline per source kind
-
-`Build` in `build.py` resolves roots, loads hash-pinned JSON, runs the chaptered
-(`:188`) and scenes (`:377`) pipelines, scrapes the store, writes stills, the Resolve
-project, the final mux and the mix, and imports about thirty modules; `prepare.py:22`
-imports it back. Split it into a declaration loader, one pipeline per source kind behind
-a common interface, and shared finishing stages (mix, mux, QA, revisions, description).
-
-The illustrated path, today the most checked, sets the shape the others follow. Sources
-become pluggable through an entry point group, so a project can add one without forking.
-
-**Done when** each pipeline has its own module and tests, and `build.py` is the
-orchestration alone.
-
 ### §UR34 Where polyweave ends and urdido begins
 
 polyweave PW712 (preflight and repetition), PW713 (interval preview), PW714 (media

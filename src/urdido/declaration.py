@@ -228,14 +228,17 @@ def check(document: dict, file: str = "video.toml") -> list[str]:
     walk(document, SCHEMA, file, "", found)
     source = document.get("source")
     if isinstance(source, dict) and "kind" in source:
+        from urdido.pipelines import kinds
+
         kind = source["kind"]
-        if kind not in KIND_NEEDS:
+        known = kinds()
+        if kind not in known:
             found.append(
                 f"{file} [source]: kind is {kind!r}; it is one of "
-                + ", ".join(sorted(KIND_NEEDS))
+                + ", ".join(sorted(known))
             )
         else:
-            for key in KIND_NEEDS[kind]:
+            for key in KIND_NEEDS.get(kind, ()):
                 if key not in source:
                     found.append(f"{file} [source]: a {kind} source needs {key}")
     return found

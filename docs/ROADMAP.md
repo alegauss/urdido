@@ -7,7 +7,6 @@
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-- ⏳ **UR33** (deps: UR22 ✅, UR28 ✅, UR23 ✅) **build.py holds both pipelines, the mux, the mix and every root in one 600-line class** — The chaptered and scenes pipelines and the shared finishing stages still live in Build, and sources are not pluggable through an entry point group. → §UR33
 - 📋 **UR34** (deps: —) **Polyweave's open tasks PW712 to PW716 describe video composition that urdido now owns** — Two roadmaps planning the same preflight, preview, progress and claims will build them twice or wait on each other. → §UR34
 - 📋 **UR43** (deps: UR21 ✅) **The imported modules pass ruff only through a per-file baseline of ignored rules and unformatted files** — Each ignored B023 or B905 may hide a real bug, and new code in those files is checked against nothing. → §UR43
 - 📋 **UR46** (deps: UR22 ✅, UR37) **Four environment variables still fill undeclared roots, the last root names left in a module** — They were kept for one release so marketing's builds keep working; left longer, the shim becomes a second way to declare a root. → §UR46
@@ -27,7 +26,7 @@
 ## Block D — Inherited from video-maker (marketing Block B)
 
 - 📋 **UR3** (deps: marketing: VM28) **Published videos have no end screen or cards pointing to the next video on the subject** — A viewer who finishes the Docker video is not offered the Scion one, and the end screen should point at the continuation, not the newest upload. → §UR3
-- 🛠 **UR4** (deps: UR2 ✅, UR33 ⏳) **The Japode explainer videos are built by scripts copied into each video, outside video-maker** — video-maker only knows the recorded product demo, so the first video of another kind went around it, and its two copies already differ. → §UR4
+- 🛠 **UR4** (deps: UR2 ✅, UR33 ✅) **The Japode explainer videos are built by scripts copied into each video, outside video-maker** — video-maker only knows the recorded product demo, so the first video of another kind went around it, and its two copies already differ. → §UR4
 - ⏳ **UR5** (deps: UR21 ✅, marketing: VM32) **A second cut of a video, to test a new opening, means copying the whole video folder and its declaration** — The review records which variant was uploaded and which retention report it is compared against, once marketing's VM32 review exists. → §UR5
 - 📋 **UR44** (deps: polyweave: PW720) **A retake moves the old take's files aside by hand because voice.lines cannot buy a current take again** — Moving files behind polyweave's back is a workaround that a crash mid-run can leave half done. → §UR44
 - 📋 **UR45** (deps: UR14 ✅) **The flash scan's threshold was set on synthetic frames, never on the Shio flash or a published cut** — At 32x18 a same-brightness flash may slip under the threshold, and a published cut may be refused for a blink that is fine. → §UR45
@@ -57,12 +56,6 @@
 - **urdido's suite runs in CI with no path outside its repository** With
   URDIDO_MARKETING pointing nowhere, the gate's summary names no test skipped for the
   marketing checkout or a sibling repository.
-
-## Done when — UR33
-
-- **Each pipeline has its own module and tests, build.py only orchestrates** chaptered,
-  scenes and illustrated each run from a module of their own with their own tests, and
-  build.py holds no stage code, only the choice of pipeline and the finishing order.
 
 ## Done when — UR5
 
