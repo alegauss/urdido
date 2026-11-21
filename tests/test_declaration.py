@@ -125,6 +125,29 @@ def test_a_translation_table_takes_lists_of_sentences_and_a_note_ur47(tmp_path):
     assert found[0].endswith("en.json [outro]: is 'Bye.', and it takes a array")
 
 
+def test_one_shorts_table_declares_one_cutter_ur48(tmp_path):
+    from urdido import shorts
+    from urdido.declaration import reference, shorts_cutter
+
+    selection = {"declaration": "demo/shorts.json"}
+    feed = {"plan": "p.json", "cut": [{"n": 1}]}
+    assert check({**GOOD, "shorts": selection}) == []
+    assert check({**GOOD, "shorts": feed}) == []
+    assert check({**GOOD, "shorts": {**selection, **feed}}) == [
+        "video.toml [shorts]: declaration is a scenes build's selection "
+        "(--cut short:<c>) and plan, cut belong to urdido shorts; "
+        "one [shorts] table declares one cutter"
+    ]
+    assert shorts_cutter(selection) == "selection"
+    assert shorts_cutter(feed) == "urdido shorts"
+    assert "## Shorts cutters" in reference()
+
+    toml = tmp_path / "video.toml"
+    toml.write_text('[shorts]\ndeclaration = "demo/shorts.json"\n', encoding="utf-8")
+    with pytest.raises(ValueError, match="declares a scenes selection"):
+        shorts.declared(toml)
+
+
 def test_a_value_of_the_wrong_type_is_refused_ur47():
     bad = {
         **GOOD,

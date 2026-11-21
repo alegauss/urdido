@@ -15,6 +15,13 @@ check first.
 - `illustrated` needs `declaration`
 - `explainer` needs `shots`
 
+## Shorts cutters
+
+`[shorts]` declares one of two cutters, never both:
+
+- the scenes selection, cut by `urdido build --cut short:<c>`: `declaration` and nothing else;
+- `urdido shorts`: every other key in the table below.
+
 ## [video]
 
 The video's name, its languages and, for a variant, its base.

@@ -123,7 +123,18 @@ class Scenes(Finishing):
         if cut.startswith("short:"):
             from urdido.cuts.selection import selection
 
-            shorts = self.load(self.decl["shorts"]["declaration"])
+            declared = (self.decl.get("shorts") or {}).get("declaration")
+            if not declared:
+                raise DeclarationError(
+                    f"urdido build: --cut {cut} cuts the scenes selection, which "
+                    "[shorts] declaration names; this [shorts] declares "
+                    + (
+                        "urdido shorts' cuts, which `urdido shorts` makes"
+                        if self.decl.get("shorts")
+                        else "nothing"
+                    )
+                )
+            shorts = self.load(declared)
             key = cut.split(":", 1)[1].lower()
             short = selection(
                 video,

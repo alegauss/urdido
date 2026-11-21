@@ -175,8 +175,8 @@ SCHEMA = table(
                 "check": table({"stopwords": ANY, "superlatives": ANY, "drawn": ANY}),
             }
         ),
-        # Two cutters read [shorts]: a scenes build's selection (`declaration`) and
-        # `urdido shorts` (the rest).
+        # Two cutters read [shorts], one per table (UR48): a scenes build's selection
+        # (`declaration` alone, SELECTION_KEYS) or `urdido shorts` (the rest).
         "shorts": table(
             {
                 "declaration": ANY,
@@ -541,6 +541,33 @@ KIND_NEEDS = {
     "explainer": ("shots",),
 }
 
+#: The `[shorts]` keys a scenes build's `--cut short:<c>` reads; every other key there
+#: is `urdido shorts`'s, and one table holds one cutter's keys (UR48).
+SELECTION_KEYS = ("declaration",)
+
+
+def shorts_cutter(shorts: dict) -> str | None:
+    """Which cutter a `[shorts]` table declares, or None when it is empty."""
+    if not shorts:
+        return None
+    return "selection" if set(shorts) <= set(SELECTION_KEYS) else "urdido shorts"
+
+
+def check_shorts(shorts, file: str) -> list[str]:
+    """A `[shorts]` that mixes the selection's keys with `urdido shorts`' is refused."""
+    if not isinstance(shorts, dict):
+        return []
+    selection = [k for k in shorts if k in SELECTION_KEYS]
+    others = [k for k in shorts if k not in SELECTION_KEYS]
+    if not (selection and others):
+        return []
+    return [
+        f"{file} [shorts]: {', '.join(selection)} is a scenes build's selection "
+        f"(--cut short:<c>) and {', '.join(others)} belong to urdido shorts; "
+        "one [shorts] table declares one cutter"
+    ]
+
+
 #: What each table is for, in one line, for the reference (UR35).
 PURPOSE = {
     "video": "The video's name, its languages and, for a variant, its base.",
@@ -605,6 +632,17 @@ def reference() -> str:
         f"- `{kind}` needs " + ", ".join(f"`{k}`" for k in needs)
         for kind, needs in KIND_NEEDS.items()
     ]
+    out += [
+        "",
+        "## Shorts cutters",
+        "",
+        "`[shorts]` declares one of two cutters, never both:",
+        "",
+        "- the scenes selection, cut by `urdido build --cut short:<c>`: "
+        + ", ".join(f"`{k}`" for k in SELECTION_KEYS)
+        + " and nothing else;",
+        "- `urdido shorts`: every other key in the table below.",
+    ]
     for name, shape in SCHEMA["keys"].items():
         out += ["", f"## [{name}]", "", PURPOSE.get(name, ""), ""]
         if shape is ANY or "map" in shape:
@@ -636,6 +674,7 @@ def check(document: dict, file: str = "video.toml") -> list[str]:
             for key in KIND_NEEDS.get(kind, ()):
                 if key not in source:
                     found.append(f"{file} [source]: a {kind} source needs {key}")
+    found += check_shorts(document.get("shorts"), file)
     return found
 
 

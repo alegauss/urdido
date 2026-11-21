@@ -591,6 +591,14 @@ def declared(declaration: Path) -> Declared:
     if "shorts" not in document:
         raise ValueError(f"shorts: {declaration.name} declares no [shorts]")
     spec = document["shorts"]
+    from urdido.declaration import shorts_cutter
+
+    if shorts_cutter(spec) == "selection":
+        raise ValueError(
+            f"shorts: {declaration.name}'s [shorts] declares a scenes selection, which "
+            "`urdido build --cut short:<c>` cuts; urdido shorts reads plan, picture, "
+            "mix, words, out, tags and [[shorts.cut]]"
+        )
     needed = ("plan", "picture", "mix", "words", "out", "tags", "cut")
     missing = [key for key in needed if key not in spec]
     if missing:

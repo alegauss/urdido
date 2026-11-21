@@ -353,24 +353,6 @@ from the provenance if PW720 records it there).
 **Done when** `retaken` moves no file and the UR7 tests pass against a voice fake that
 honours the retake list.
 
-### §UR48 One table, one Shorts cutter
-
-Two things read `[shorts]` in a video.toml. A scenes build's `--cut short:<c>` reads
-`[shorts] declaration`, a JSON file of chapter selections cut by `cuts/selection.py`
-(VM12). `urdido shorts` (UR2) reads `[shorts]` with `plan`, `picture`, `mix`, `look`,
-`[[shorts.cut]]` and the rest, for a video built outside the scenes pipeline. The key
-schema (UR23) accepts the union of both, so a declaration can mix them and nothing says
-which cutter a key belongs to; the Viglet Shio promo already uses the first and a Japode
-video moving onto urdido would use the second.
-
-What to build: decide whether the selection cutter's Shorts follow the UR2 rules (loop,
-punch-ins, word captions, loudness) and become one cutter, or keep two and give the
-newer one its own table name (`[shorts.feed]`, say) with the schema refusing a key of
-one inside the other. Either way, one table means one thing.
-
-Done when each key under `[shorts]` belongs to exactly one cutter and the schema says
-which.
-
 ### §UR53 Page and terminal films declared
 
 UR4 and its steps (UR51, UR52) moved the Japode explainer's plan, render and description
