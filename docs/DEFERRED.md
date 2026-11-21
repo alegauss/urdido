@@ -11,6 +11,8 @@
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
+- ⏸ **UR36** (deps: UR21 ✅) **Marketing installs the framework from its own folder with pip -e, with no version pinned** — set aside (Needs edits in marketing's repo.): Replacing the folder needs an install that does not point into it, and a pin says which urdido a video was built with. → §UR36
+
 ## Block D — Inherited from video-maker (marketing Block B)
 
 - ⏸ **UR15** (deps: marketing VM3) **The recording driver and the pointer exist in three copies, and the copies already differ** — set aside (Needs the demo stacks up and a commit in Turing.): The story, the walkthrough and Viglet Shio's scenes each carry their own pointer. → §UR15

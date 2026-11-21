@@ -11,10 +11,9 @@
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
-- 📋 **UR36** (deps: UR21 ✅) **Marketing installs the framework from its own folder with pip -e, with no version pinned** — Replacing the folder needs an install that does not point into it, and a pin says which urdido a video was built with. → §UR36
-- 📋 **UR37** (deps: UR36, UR24 ✅) **Marketing's npm scripts, READMEs, bin scripts and brand code call python -m videomaker or import videomaker** — A flag-day rename across about twenty files would break whichever video is mid-build, so the switch needs a bridge. → §UR37
-- 📋 **UR38** (deps: UR30 ✅, UR36) **Project scripts and Turing's e2e specs import narration and recording helpers by a relative path into video-maker/** — Turing's story specs reach takes.mjs through marketing, so removing the folder breaks a recording in another repository. → §UR38
-- 📋 **UR39** (deps: UR36, UR31 ✅) **The golden check proves one marketing video but lives inside the framework, reading the Turing repository** — It belongs to the WordPress demo, and in urdido it would be a test that only runs on one machine. → §UR39
+- 📋 **UR37** (deps: UR36 ⏸, UR24 ✅) **Marketing's npm scripts, READMEs, bin scripts and brand code call python -m videomaker or import videomaker** — A flag-day rename across about twenty files would break whichever video is mid-build, so the switch needs a bridge. → §UR37
+- 📋 **UR38** (deps: UR30 ✅, UR36 ⏸) **Project scripts and Turing's e2e specs import narration and recording helpers by a relative path into video-maker/** — Turing's story specs reach takes.mjs through marketing, so removing the folder breaks a recording in another repository. → §UR38
+- 📋 **UR39** (deps: UR36 ⏸, UR31 ✅) **The golden check proves one marketing video but lives inside the framework, reading the Turing repository** — It belongs to the WordPress demo, and in urdido it would be a test that only runs on one machine. → §UR39
 - 📋 **UR40** (deps: UR20 ✅) **Marketing's video-maker gate hook, friction skill and CLAUDE.md rules point at a folder and a Block B that will be gone** — The rule that every friction becomes a framework task stops working the day the folder leaves, unless it points here. → §UR40
 - 📋 **UR41** (deps: UR37, UR38, UR39) **Nothing proves that each published video comes out the same when built by urdido instead of video-maker** — A changed cut found after re-upload costs a published video, and the owner should not be the check. → §UR41
 - 📋 **UR42** (deps: UR41, UR40) **video-maker/ still sits in marketing after every video is built by urdido** — Two copies of the framework drift on the first fix applied to only one of them. → §UR42
@@ -22,7 +21,7 @@
 ## Block D — Inherited from video-maker (marketing Block B)
 
 - 📋 **UR3** (deps: marketing: VM28) **Published videos have no end screen or cards pointing to the next video on the subject** — A viewer who finishes the Docker video is not offered the Scion one, and the end screen should point at the continuation, not the newest upload. → §UR3
-- 🛠 **UR4** (deps: UR2 ✅, UR33 ✅, UR36, UR53) **The Japode explainer videos are built by scripts copied into each video, outside video-maker** — The Japode videos declare their styles, closing, mark and credits, build with urdido, drop their bin scripts and reproduce their published cuts. → §UR4
+- 🛠 **UR4** (deps: UR2 ✅, UR33 ✅, UR36 ⏸, UR53) **The Japode explainer videos are built by scripts copied into each video, outside video-maker** — The Japode videos declare their styles, closing, mark and credits, build with urdido, drop their bin scripts and reproduce their published cuts. → §UR4
 - ⏳ **UR5** (deps: UR21 ✅, marketing: VM32) **A second cut of a video, to test a new opening, means copying the whole video folder and its declaration** — The review records which variant was uploaded and which retention report it is compared against, once marketing's VM32 review exists. → §UR5
 - 📋 **UR44** (deps: polyweave: PW720) **A retake moves the old take's files aside by hand because voice.lines cannot buy a current take again** — Moving files behind polyweave's back is a workaround that a crash mid-run can leave half done. → §UR44
 - 📋 **UR45** (deps: UR14 ✅) **The flash scan's threshold was set on synthetic frames, never on the Shio flash or a published cut** — At 32x18 a same-brightness flash may slip under the threshold, and a published cut may be refused for a blink that is fine. → §UR45
