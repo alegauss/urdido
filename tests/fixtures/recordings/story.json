@@ -1,0 +1,160 @@
+{
+	"chapters": [
+		{
+			"title": "1. Arrives: popular searches show the catalog",
+			"start": 0.005,
+			"highlight": 20.834,
+			"voice": {
+				"name": "chapter-1",
+				"at": 2.744
+			},
+			"end": 23.334
+		},
+		{
+			"title": "2. Says what she needs, in a sentence",
+			"start": 23.335,
+			"highlight": 50.207,
+			"voice": {
+				"name": "chapter-2",
+				"at": 25.837
+			},
+			"focus": [
+				{
+					"at": 24.494,
+					"box": {
+						"x": 580,
+						"y": 324.953125,
+						"width": 660.53125,
+						"height": 53.90625
+					}
+				},
+				{
+					"at": 43.427
+				}
+			],
+			"end": 52.707
+		},
+		{
+			"title": "3. Asks the Site assistant, and gets an answer with its sources",
+			"start": 52.708,
+			"highlight": 74.868,
+			"voice": {
+				"name": "chapter-3",
+				"at": 55.011
+			},
+			"focus": [
+				{
+					"at": 53.966,
+					"box": {
+						"x": 672,
+						"y": 345.8125,
+						"width": 576,
+						"height": 388.375
+					}
+				},
+				{
+					"at": 67.408
+				}
+			],
+			"end": 77.503
+		},
+		{
+			"title": "4. Compares three products side by side",
+			"start": 77.504,
+			"highlight": 92.816,
+			"voice": {
+				"name": "chapter-4",
+				"at": 79.512
+			},
+			"end": 95.316
+		},
+		{
+			"title": "5. Builds the kit and puts it in the cart",
+			"start": 95.316,
+			"highlight": 153.433,
+			"voice": {
+				"name": "chapter-5",
+				"at": 96.761
+			},
+			"focus": [
+				{
+					"at": 95.834,
+					"box": {
+						"x": 384,
+						"y": 614.734375,
+						"width": 985.921875,
+						"height": 53.90625
+					}
+				},
+				{
+					"at": 110.242
+				}
+			],
+			"skip": [
+				{
+					"from": 110.242,
+					"to": 124.388
+				}
+			],
+			"result": {
+				"name": "chapter-5-result",
+				"at": 124.589
+			},
+			"end": 155.934
+		},
+		{
+			"title": "6. Checks one item: Related, and a question about it",
+			"start": 155.934,
+			"highlight": 172.789,
+			"voice": {
+				"name": "chapter-6",
+				"at": 156.694
+			},
+			"focus": [
+				{
+					"at": 159.262,
+					"box": {
+						"x": 1041.515625,
+						"y": 724.734375,
+						"width": 374.421875,
+						"height": 53.90625
+					}
+				},
+				{
+					"at": 164.345
+				}
+			],
+			"end": 175.289
+		},
+		{
+			"title": "7. Buys, in test mode",
+			"start": 175.29,
+			"highlight": 191.779,
+			"voice": {
+				"name": "chapter-7",
+				"at": 175.916
+			},
+			"end": 194.279
+		},
+		{
+			"title": "8. Backstage: the native search, then her searches in insights",
+			"start": 194.279,
+			"highlight": 246.668,
+			"voice": {
+				"name": "chapter-8",
+				"at": 194.911
+			},
+			"skip": [
+				{
+					"from": 217.718,
+					"to": 222.589
+				}
+			],
+			"result": {
+				"name": "chapter-8-result",
+				"at": 222.625
+			},
+			"end": 249.168
+		}
+	]
+}

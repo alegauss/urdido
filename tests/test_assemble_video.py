@@ -69,7 +69,7 @@ def compose_full(variant: str, tmp_path: Path):
     synthetic_recording(fixture, False, tmp_path).replace(webm)
     timeline = recorded / "chapters.json"
     timeline.write_text(
-        json.dumps({"record": True, "language": language, **load(GOLDEN / "fixtures" / f"{fixture}.json")}),
+        json.dumps({"record": True, "language": language, **load((Path(__file__).parent / "fixtures" / "recordings") / f"{fixture}.json")}),
         encoding="utf-8",
     )
     recording = chaptered_recording(str(webm), str(timeline), language=language, chapters=count)

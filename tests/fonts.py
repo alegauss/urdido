@@ -24,6 +24,32 @@ COVERED = [
 ]
 
 
+DISPLAY, TEXT = "Urdido Test Display", "Urdido Test Text"
+
+
+def card_theme(folder: Path) -> tuple[dict, dict]:
+    """A cards theme with its two fonts made in `folder`, and the words cards print."""
+    synthetic_font(folder / "display.ttf", DISPLAY)
+    synthetic_font(folder / "text.ttf", TEXT)
+    theme = {
+        "fonts": {
+            "dir": str(folder),
+            "display": {"family": DISPLAY, "files": {"800": "display.ttf"}},
+            "text": {"family": TEXT, "file": "text.ttf"},
+        },
+        "colors": {"text": "#F5FCF7", "muted": "#D4F7DF", "accent": "#2BCB6B"},
+        "background": "linear-gradient(135deg, #0b1410, #102b1d)",
+    }
+    words = {
+        "brand": "Fixture",
+        "what": "a test video",
+        "line": "Made for the suite",
+        "chapter": "Chapter",
+        "store": "Store",
+    }
+    return theme, words
+
+
 def synthetic_font(path: Path, family: str = "Urdido Test") -> Path:
     """Write a TrueType font covering `COVERED` to `path` and return it."""
     from fontTools.fontBuilder import FontBuilder

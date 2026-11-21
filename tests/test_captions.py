@@ -54,7 +54,7 @@ def test_variant_captions_equal_the_goldens(variant):
     fixture, script_file = VARIANTS[variant]
     folder = GOLDEN / "expected" / variant
     plan = load(main_plan(folder))
-    chapters = c.chapters_of(load(GOLDEN / "fixtures" / f"{fixture}.json"))
+    chapters = c.chapters_of(load((Path(__file__).parent / "fixtures" / "recordings") / f"{fixture}.json"))
     script = load(NARRATION / script_file)
 
     written = c.caption_files(

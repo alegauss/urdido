@@ -51,7 +51,7 @@ def test_pages_equal_the_js_cards(variant):
     plan = load(main_plan(folder))
     frame = html.Frame(plan["size"]["width"], plan["size"]["height"])
     words = DECLARATION["words"][story][plan["language"]]
-    chapters = captions.chapters_of(load(GOLDEN / "fixtures" / f"{fixture}.json"))
+    chapters = captions.chapters_of(load((Path(__file__).parent / "fixtures" / "recordings") / f"{fixture}.json"))
 
     built = html.pages(
         THEME, frame, words, chapters, load(NARRATION / script_file), plan["language"],
@@ -149,7 +149,7 @@ def test_pictures_match_the_js_cards(variant, tmp_path):
     theme = html.Theme.load(DECLARATION["theme"], {"turing": str(TURING_WORDPRESS)})
     pages = html.pages(
         theme, frame, DECLARATION["words"][story][plan["language"]],
-        captions.chapters_of(load(GOLDEN / "fixtures" / f"{fixture}.json")),
+        captions.chapters_of(load((Path(__file__).parent / "fixtures" / "recordings") / f"{fixture}.json")),
         load(NARRATION / script_file), plan["language"], clip_chapter=plan.get("chapter"),
     )
     try:

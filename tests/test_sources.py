@@ -7,9 +7,8 @@ from pathlib import Path
 import pytest
 
 from urdido.sources import RecordingRefused, chaptered_recording
-from marketing import GOLDEN, needs_marketing
 
-FIXTURES = GOLDEN / "fixtures"
+FIXTURES = Path(__file__).parent / "fixtures" / "recordings"
 COUNTS = {"story": 8, "story-vertical": 8, "developer": 6}
 
 
@@ -24,7 +23,6 @@ def recorded(tmp_path: Path, fixture: str, **extra) -> tuple[str, str, dict]:
     return str(webm), str(timeline), data
 
 
-@needs_marketing
 @pytest.mark.parametrize("fixture", sorted(COUNTS))
 def test_fixture_reads_into_chapters_equal_to_its_json(tmp_path, fixture):
     webm, timeline, data = recorded(tmp_path, fixture)
@@ -47,7 +45,6 @@ def test_fixture_reads_into_chapters_equal_to_its_json(tmp_path, fixture):
         assert chapter.pacing == {}
 
 
-@needs_marketing
 def test_every_mark_appears_in_some_fixture(tmp_path):
     """So the comparison above is not vacuous for any mark."""
     seen = set()
@@ -66,7 +63,6 @@ def test_refuses_a_missing_recording(tmp_path):
         )
 
 
-@needs_marketing
 def test_refuses_a_missing_chapter(tmp_path):
     webm, timeline, data = recorded(tmp_path, "story")
     data["chapters"].pop()
@@ -75,28 +71,24 @@ def test_refuses_a_missing_chapter(tmp_path):
         chaptered_recording(webm, timeline, language="en", chapters=8)
 
 
-@needs_marketing
 def test_refuses_another_language(tmp_path):
     webm, timeline, _ = recorded(tmp_path, "story", language="en")
     with pytest.raises(RecordingRefused, match="is in en, not pt-BR"):
         chaptered_recording(webm, timeline, language="pt-BR", chapters=8)
 
 
-@needs_marketing
 def test_refuses_a_recording_that_does_not_say_its_language(tmp_path):
     webm, timeline, _ = recorded(tmp_path, "story", language=None)
     with pytest.raises(RecordingRefused, match="does not say its language"):
         chaptered_recording(webm, timeline, language="pt-BR", chapters=8)
 
 
-@needs_marketing
 def test_refuses_a_test_run(tmp_path):
     webm, timeline, _ = recorded(tmp_path, "story", record=False)
     with pytest.raises(RecordingRefused, match="the test, not the recording"):
         chaptered_recording(webm, timeline, language="pt-BR", chapters=8)
 
 
-@needs_marketing
 def test_refuses_a_recording_older_than_its_story(tmp_path):
     webm, timeline, _ = recorded(tmp_path, "story")
     story = tmp_path / "story.md"

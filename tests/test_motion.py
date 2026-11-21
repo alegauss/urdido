@@ -13,10 +13,9 @@ import pytest
 from urdido.edit.stretch import along, kept
 from urdido.motion import pushin
 from urdido.sources import chaptered_recording
-from marketing import GOLDEN, needs_marketing
 
 HERE = Path(__file__).parent
-FIXTURES = GOLDEN / "fixtures"
+FIXTURES = (Path(__file__).parent / "fixtures" / "recordings")
 FRAMES = {
     "story": (pushin.Frame(1920, 1080), False),
     "story-vertical": (pushin.Frame(1080, 1920), True),
@@ -38,7 +37,6 @@ def chapters_of(fixture: str, tmp: Path):
     ).chapters
 
 
-@needs_marketing
 @pytest.mark.parametrize("fixture", sorted(FRAMES))
 def test_every_chapter_moves_as_the_js(fixture, tmp_path):
     frame, vertical = FRAMES[fixture]

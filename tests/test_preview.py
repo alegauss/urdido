@@ -10,7 +10,7 @@ import pytest
 from urdido import cache, captions, media
 from urdido.preview import clip_cues, select
 from urdido.sources.model import RecordingRefused
-from marketing import MARKETING, needs_marketing
+from fonts import TEXT, card_theme
 
 
 def test_take_beat_context_and_intervals_snap_to_production_frames():
@@ -37,22 +37,20 @@ def test_spoken_cue_refuses_ambiguity_and_selects_declared_occurrence(tmp_path):
     assert select("cue:intro:Hello", [], placed, 3, occurrence=2) == (1.6, 1.8)
 
 
-@needs_marketing
 def test_preview_uses_only_selected_clips_and_matches_full_cut_frames_and_cues(tmp_path, monkeypatch):
     pytest.importorskip("playwright.sync_api")
+    pytest.importorskip("fontTools")
     if not (shutil.which("ffmpeg") and shutil.which("ffprobe")):
         pytest.skip("ffmpeg and ffprobe required")
     from urdido.build import main
 
-    root = MARKETING
     def write(name, data):
         (tmp_path / name).write_text(json.dumps(data), encoding="utf-8")
     script = {"voice": "fixture", "model": "fixture", "intro": {"en": "Hello"}, "outro": {"en": "Goodbye"}, "chapters": {}}
     write("script.json", script)
-    cards = json.loads((root / "japode/wordpress/cards.json").read_text("utf-8"))
-    cards["theme"]["fonts"]["dir"] = str(root / "japode/brand/fonts")
-    cards["words"] = {"en": cards["words"]["pt-BR"]}
-    write("cards.json", cards)
+    fonts = tmp_path / "fonts"
+    theme, words = card_theme(fonts)
+    write("cards.json", {"theme": theme, "words": {"en": words}})
     (tmp_path / "logo.svg").write_text('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"/>')
     media.ffmpeg(["-f", "lavfi", "-i", "testsrc2=size=640x360:rate=30:duration=4", "-c:v", "libx264", str(tmp_path / "asset.mp4")])
     for name, frequency in (("intro", 440), ("outro", 550)):
@@ -66,7 +64,7 @@ def test_preview_uses_only_selected_clips_and_matches_full_cut_frames_and_cues(t
         "sources": {"own": {"label": "Fixture", "url": "https://example.org"}},
         "media": {"motion": {"file": "asset.mp4", "title": "Test motion", "license": "Own fixture", "author": "Test", "url": "https://example.org"}},
         "scenes": {name: [{"id": name + "-stable", "title": "Motion", "caption": "", "kicker": "", "source": "own", "layout": "footage", "asset": "motion", "at": .7 if name == "outro" else 0}] for name in ("intro", "outro")}})
-    write("highlights.json", {"style": {"font": "Japode Jakarta SemiBold", "color": "#00ff00", "margin": 300}, "lines": {"intro": [{"show": "Hello"}]}})
+    write("highlights.json", {"style": {"font": TEXT, "color": "#00ff00", "margin": 300}, "lines": {"intro": [{"show": "Hello"}]}})
     write("translations.json", {"intro": ["Olá"], "outro": ["Tchau"]})
     declaration = tmp_path / "video.toml"
     declaration.write_text('''[video]
@@ -88,7 +86,7 @@ peak=-2.0
 margin=3.0
 [highlights]
 declaration="highlights.json"
-fonts="'''+str(root / "japode/brand/fonts").replace("\\", "/")+'''"
+fonts="fonts"
 [captions.translations.pt]
 file="translations.json"
 track="por"

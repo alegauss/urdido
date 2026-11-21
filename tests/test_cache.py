@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from urdido import cache, media
-from marketing import MARKETING, needs_marketing
+from fonts import TEXT, card_theme
 
 
 def test_partial_failure_retains_only_completed_stages_and_checks_output_bytes(tmp_path):
@@ -60,19 +60,16 @@ def test_reused_input_is_hashed_once_and_context_reaches_workers(tmp_path, monke
     assert count == 1
 
 
-@needs_marketing
 def test_tiny_illustrated_cut_reuses_stages_and_invalidates_visual_audio_fonts(tmp_path, monkeypatch):
     pytest.importorskip("playwright.sync_api")
+    pytest.importorskip("fontTools")
     if not (shutil.which("ffmpeg") and shutil.which("ffprobe")):
         pytest.skip("ffmpeg and ffprobe required")
     from urdido.build import main
 
-    root = MARKETING
     fonts = tmp_path / "fonts"
-    shutil.copytree(root / "japode/brand/fonts", fonts)
-    cards = json.loads((root / "japode/wordpress/cards.json").read_text("utf-8"))
-    cards["theme"]["fonts"]["dir"] = str(fonts)
-    cards["words"] = {"en": cards["words"]["pt-BR"]}
+    theme, words = card_theme(fonts)
+    cards = {"theme": theme, "words": {"en": words}}
     def write(name, data):
         (tmp_path / name).write_text(json.dumps(data), encoding="utf-8")
     write("cards.json", cards)
@@ -95,7 +92,7 @@ def test_tiny_illustrated_cut_reuses_stages_and_invalidates_visual_audio_fonts(t
         Path(str(file) + ".prov.json").write_text(json.dumps({"prompt": script[name]["en"], "details": {"voice": "test"}, "engine": {"model": "test"}}), encoding="utf-8")
     audio("intro", 440)
     audio("outro", 550)
-    write("highlights.json", {"style": {"font": "Japode Jakarta SemiBold", "color": "#00ff00", "margin": 300}, "lines": {"intro": [{"show": "Hello"}]}})
+    write("highlights.json", {"style": {"font": TEXT, "color": "#00ff00", "margin": 300}, "lines": {"intro": [{"show": "Hello"}]}})
     declaration = tmp_path / "video.toml"
     declaration.write_text('''[video]
 name="cache-test"
@@ -156,7 +153,7 @@ action="off"
     changed = build()
     assert all(e["hit"] for e in changed if e["stage"] == "raster")
     assert not next(e["hit"] for e in changed if e["stage"] == "audio mix")
-    shutil.copyfile(fonts / "JapodeJakarta-ExtraBold.ttf", fonts / "JapodeJakarta-SemiBold.ttf")
+    shutil.copyfile(fonts / "display.ttf", fonts / "text.ttf")
     changed_font = build()
     assert not any(e["hit"] for e in changed_font if e["stage"] in {"raster", "highlights"})
     assert next(e["hit"] for e in changed_font if e["stage"] == "audio mix")

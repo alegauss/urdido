@@ -53,7 +53,7 @@ def load(path: Path):
 
 def synthetic_recording(fixture: str, vertical: bool, folder: Path) -> Path:
     """The golden runner's synthetic WebM, made with its exact arguments."""
-    chapters = load(GOLDEN / "fixtures" / f"{fixture}.json")["chapters"]
+    chapters = load((Path(__file__).parent / "fixtures" / "recordings") / f"{fixture}.json")["chapters"]
     file = folder / f"{fixture}.webm"
     media.ffmpeg([
         "-f", "lavfi", "-i",
@@ -90,7 +90,7 @@ def compose_clip(variant: str, tmp_path: Path):
 
     webm = synthetic_recording(fixture, vertical, tmp_path)
     timeline = tmp_path / "chapters.json"
-    timeline.write_text(json.dumps({"record": True, "language": "pt-BR", **load(GOLDEN / "fixtures" / f"{fixture}.json")}),
+    timeline.write_text(json.dumps({"record": True, "language": "pt-BR", **load((Path(__file__).parent / "fixtures" / "recordings") / f"{fixture}.json")}),
                         encoding="utf-8")
     recording = chaptered_recording(str(webm), str(timeline), language="pt-BR", chapters=8)
 

@@ -21,6 +21,7 @@
 - ✅ **UR29** **Cards render only with a Windows Edge install, and thumbnail layouts load any brand.py by its path** — Cards draw with Playwright's own Chromium unless [cards] channel names another; a thumbnail layout loads as an entry point, module function or path (design recorded in `docs/video-maker.md`).
 - ✅ **UR30 (Python opening gate, npm package)** **The Python build shells out to node for the opening gate, and the JavaScript helpers have no install path** — urdido prepare runs the opening gate in Python with no node, and js/ is the npm package urdido-record, versioned with the Python package by the release.
 - ✅ **UR31 (preflight fixture font)** **Ten test files read japode, shio and turing folders, so the suite cannot run outside marketing** — The preflight fixture draws its font from fontTools at test time, so 87 tests across ten files run without the marketing checkout.
+- ✅ **UR50** **Motion, sources, cache and preview tests read marketing's chapter timelines and Japode's fonts** — The chapter timelines live in tests/fixtures/recordings and the cache and preview builds draw generated fonts, so those four files run without marketing.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

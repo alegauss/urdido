@@ -7,7 +7,7 @@ import pytest
 from marketing import GOLDEN, needs_marketing
 
 PLANS = sorted((GOLDEN / "expected").glob("*/*.plan.json"))
-FIXTURES = sorted((GOLDEN / "fixtures").glob("*.json"))
+FIXTURES = sorted((Path(__file__).parent / "fixtures" / "recordings").glob("*.json"))
 
 
 @needs_marketing

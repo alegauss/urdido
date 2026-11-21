@@ -1,0 +1,55 @@
+{
+	"chapters": [
+		{
+			"title": "1. Installs the plugin from the release zip",
+			"start": 0,
+			"highlight": 17.5,
+			"voice": { "name": "chapter-1", "at": 1.2 },
+			"end": 19.8
+		},
+		{
+			"title": "2. Connects it to Viglet Turing",
+			"start": 19.8,
+			"highlight": 41.2,
+			"voice": { "name": "chapter-2", "at": 20.6 },
+			"focus": [
+				{ "at": 22.4, "box": { "x": 380, "y": 310, "width": 620, "height": 180 } },
+				{ "at": 33.9 }
+			],
+			"end": 43.6
+		},
+		{
+			"title": "3. Chooses what to index",
+			"start": 43.6,
+			"highlight": 60.1,
+			"voice": { "name": "chapter-3", "at": 44.5 },
+			"end": 62.4
+		},
+		{
+			"title": "4. Runs the first index",
+			"start": 62.4,
+			"highlight": 95.6,
+			"voice": { "name": "chapter-4", "at": 63.1 },
+			"skip": [ { "from": 70.2, "to": 86.9 } ],
+			"end": 98.2
+		},
+		{
+			"title": "5. Searches the storefront",
+			"start": 98.2,
+			"highlight": 116.4,
+			"voice": { "name": "chapter-5", "at": 99 },
+			"focus": [
+				{ "at": 101.3, "box": { "x": 640, "y": 90, "width": 520, "height": 64 } }
+			],
+			"result": { "name": "chapter-5-result", "at": 110.8 },
+			"end": 119.6
+		},
+		{
+			"title": "6. Reads the insights",
+			"start": 119.6,
+			"highlight": 134.2,
+			"voice": { "name": "chapter-6", "at": 120.3 },
+			"end": 136.5
+		}
+	]
+}
