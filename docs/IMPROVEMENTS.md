@@ -89,23 +89,39 @@ Done when no module names a root and no test sets one of the four variables.
 
 ### §UR47 The side files and values checked
 
-UR23 gave video.toml a key schema (`urdido.declaration.SCHEMA`): every table and key the
-code reads, unknown keys refused with the nearest name, required keys and each source
-kind's needs checked by `urdido check` and before every build. The values are not typed
-(a `tempo` of "fast" passes), the defaults still live at each `.get(key, default)` in
-the modules, and the side files a declaration names are not checked at all: the
-narration script, the cards declaration, the storyboard, the highlights, the claims and
-the translation tables still fail as a KeyError when a key is misspelled inside them.
+UR23 gave video.toml a key schema (`urdido.declaration.SCHEMA`). UR56 typed its values
+(NUMBER, TEXT, FLAG, LIST), and the steps since check every side file the declaration
+names against its own shape with the same did-you-mean refusal: the narration script,
+the storyboard, the cards, the highlights, the claims and the translation tables
+(`side_files`, `check_side_files`, run by `urdido check` and by `Project` before any
+work).
 
-What to build: give each table and each side file a dataclass with its types and its
-defaults, load the declaration once into them (the loader UR33 splits out of `Build`),
-and let `urdido check` follow every path the declaration names, through its roots, and
-check that file against its own model with the same did-you-mean refusal. The JSON
-Schema export then comes from the dataclasses rather than from the key table.
+What is left: the defaults still live at each `.get(key, default)` in the modules, so
+the reference and the JSON Schema cannot say what an absent key means. Give each table a
+dataclass holding its types and its defaults, load the declaration into them once in
+`Project`, and let `reference()` and `json_schema()` read the dataclasses rather than
+the key table.
 
-Done when a misspelled key inside storyboard.json or script.json is refused by `urdido
-check` with its file and the nearest name, and no module reads a default that the model
-does not hold.
+Done when no module reads a default that the model does not hold, and
+docs/specs/declaration.md names each key's default.
+
+### Â§UR47 The side files and values checked
+
+UR23 gave video.toml a key schema (`urdido.declaration.SCHEMA`). UR56 typed its values
+(NUMBER, TEXT, FLAG, LIST), and the steps since check every side file the declaration
+names against its own shape with the same did-you-mean refusal: the narration script,
+the storyboard, the cards, the highlights, the claims and the translation tables
+(`side_files`, `check_side_files`, run by `urdido check` and by `Project` before any
+work).
+
+What is left: the defaults still live at each `.get(key, default)` in the modules, so
+the reference and the JSON Schema cannot say what an absent key means. Give each table a
+dataclass holding its types and its defaults, load the declaration into them once in
+`Project`, and let `reference()` and `json_schema()` read the dataclasses rather than
+the key table.
+
+Done when no module reads a default that the model does not hold, and
+docs/specs/declaration.md names each key's default.
 
 ### §UR49 A declared Python API
 

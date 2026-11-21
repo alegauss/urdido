@@ -92,6 +92,39 @@ def test_the_cli_checks_a_file_and_prints_the_json_schema(tmp_path, capsys):
     }
 
 
+def test_a_typo_in_the_cards_or_highlights_is_refused_ur47(tmp_path):
+    from urdido.declaration import check_side_files
+
+    (tmp_path / "cards.json").write_text(
+        json.dumps({"theme": {"colours": {}, "fonts": {"dir": "f"}}, "words": {}}),
+        encoding="utf-8",
+    )
+    (tmp_path / "highlights.json").write_text(
+        json.dumps({"style": {"font": "A"}, "lines": {"intro": [{"shwo": "Git"}]}}),
+        encoding="utf-8",
+    )
+    decl = {
+        "cards": {"declaration": "cards.json"},
+        "highlights": {"declaration": "highlights.json"},
+    }
+    found = check_side_files(decl, lambda declared: tmp_path / declared)
+    assert any("[theme]: unknown key colours; did you mean colors?" in f for f in found)
+    assert any(
+        "[lines.intro]: unknown key shwo; did you mean show?" in f for f in found
+    )
+    assert any("[lines.intro]: needs show" in f for f in found)
+
+
+def test_a_translation_table_takes_lists_of_sentences_and_a_note_ur47(tmp_path):
+    from urdido.declaration import check_side_files
+
+    table = {"_": "one sentence per spoken sentence", "intro": ["Hi."], "outro": "Bye."}
+    (tmp_path / "en.json").write_text(json.dumps(table), encoding="utf-8")
+    found = check_side_files(GOOD, lambda declared: tmp_path / declared)
+    assert len(found) == 1
+    assert found[0].endswith("en.json [outro]: is 'Bye.', and it takes a array")
+
+
 def test_a_value_of_the_wrong_type_is_refused_ur47():
     bad = {
         **GOOD,

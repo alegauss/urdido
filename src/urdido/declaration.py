@@ -422,9 +422,83 @@ STORYBOARD = table(
 )
 
 
+#: The cards declaration (`[cards] declaration`): the theme and the words, UR47.
+CARDS = table(
+    {
+        "theme": table(
+            {
+                "name": ANY,
+                "source": ANY,
+                "palette": ANY,
+                "background": ANY,
+                "colors": mapping(ANY),
+                "fonts": table({"dir": ANY, "display": ANY, "text": ANY}),
+                "glow": table({"color": ANY, "landscape": ANY, "portrait": ANY}),
+                "ridges": table({"far": ANY, "near": ANY, "height": ANY, "drift": ANY}),
+            }
+        ),
+        "words": mapping(ANY),
+    },
+    required=("theme",),
+)
+#: The highlights declaration (`[highlights] declaration`), UR47.
+HIGHLIGHTS = table(
+    {
+        "style": table({"font": ANY, "color": ANY, "margin": ANY}),
+        "lines": mapping(
+            array(
+                table(
+                    {"show": ANY, "hear": ANY, "duration": ANY, "look": ANY},
+                    required=("show",),
+                )
+            )
+        ),
+    }
+)
+#: The claims declaration (`[claims] declaration`), UR47.
+CLAIMS = table(
+    {
+        "version": ANY,
+        "claims": array(
+            table(
+                {
+                    k: ANY
+                    for k in (
+                        "id",
+                        "take",
+                        "language",
+                        "text",
+                        "anchor",
+                        "kind",
+                        "evidence",
+                        "illustrations",
+                        "review",
+                        "reviews",
+                    )
+                }
+            )
+        ),
+    },
+    required=("version", "claims"),
+)
+
+
 def side_files(decl: dict) -> list[tuple[str, dict]]:
     """The side files a declaration names that have a schema: (declared path, shape)."""
     found = []
+    translations = ((decl.get("captions") or {}).get("translations") or {}).values()
+    for spec in translations:
+        if isinstance(spec, dict) and isinstance(spec.get("file"), str):
+            # a translation table: each take's sentences, in the take's order
+            found.append((spec["file"], mapping(LIST)))
+    for name, shape in (
+        ("cards", CARDS),
+        ("highlights", HIGHLIGHTS),
+        ("claims", CLAIMS),
+    ):
+        declared = (decl.get(name) or {}).get("declaration")
+        if isinstance(declared, str):
+            found.append((declared, shape))
     script = (decl.get("narration") or {}).get("script")
     if isinstance(script, str):
         found.append((script, SCRIPT))
@@ -587,6 +661,8 @@ def walk(value, shape, file: str, where: str, found: list[str]) -> None:
         return
     if "map" in shape:
         for name, item in value.items():
+            if name == "_" and isinstance(item, str):
+                continue  # a note for the reader, as the translation tables carry
             walk(item, shape["map"], file, f"{where}.{name}" if where else name, found)
         return
     keys = shape["keys"]

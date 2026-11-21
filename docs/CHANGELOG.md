@@ -30,6 +30,7 @@
 - ✅ **UR55** **The imported modules suppress B023 and B905, so a late-bound closure or a truncating zip goes unseen** — Every closure over a loop variable binds what it reads, every zip says strict=, and B023 and B905 are gone from the baseline; none was a live late-binding bug.
 - ✅ **UR47 (script and storyboard keys)** **Values in video.toml are untyped and the side files it names are not checked, so a typo inside them is still a KeyError** — urdido check and every build follow the declaration into its script and storyboard and refuse a misspelled key there, naming the file.
 - ✅ **UR56** **A value of the wrong type in video.toml passes the check, so a tempo of fast fails deep in the build** — urdido check refuses a number, text, flag or list key holding another type, naming the type it takes; marketing's declarations all pass.
+- ✅ **UR57** **A misspelled key in the cards, highlights, claims or translation files a declaration names reaches the build unchecked** — urdido check refuses a misspelled key in cards, highlights, claims and translations.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
