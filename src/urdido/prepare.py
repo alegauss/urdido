@@ -8,7 +8,6 @@ import json
 import math
 import os
 import re
-import subprocess
 import uuid
 from datetime import datetime, timezone
 from difflib import SequenceMatcher
@@ -24,19 +23,10 @@ from urdido.sources.model import RecordingRefused
 
 
 def opening(script_file, language):
-    """Reuse VM29's existing Node gate; no duplicate opening rules or purchases."""
-    # The checkout's js/ until UR30 gives the helpers an install path.
-    folder = Path(__file__).resolve().parents[2] / "js" / "narration"
-    code = """const {pathToFileURL}=await import('node:url');
-const {readFileSync}=await import('node:fs');
-const {takes}=await import(pathToFileURL(process.argv[1]));
-const {checkOpening}=await import(pathToFileURL(process.argv[2]));
-const script=JSON.parse(readFileSync(process.argv[3],'utf8').replace(/^\\uFEFF/,''));
-checkOpening({narration:takes({script,dir:'.'}),locale:process.argv[4]});"""
-    run = subprocess.run(["node", "--input-type=module", "-e", code, str(folder / "takes.mjs"),
-                          str(folder / "opening.mjs"), str(script_file), language], capture_output=True, text=True, encoding="utf-8")
-    if run.returncode:
-        raise RecordingRefused(run.stderr or run.stdout)
+    """VM29's opening gate, in Python (UR30): refuse before any take is bought."""
+    from urdido import opening as gate
+
+    gate.check(json.loads(Path(script_file).read_text("utf-8-sig")), language)
 
 
 def voice(root, lines_file, language, service, *, keys=None, spend=False):

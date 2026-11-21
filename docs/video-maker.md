@@ -469,6 +469,14 @@ from. A cut changes and stays changed, so it passes. `[qa] flashes = "warn"`
 reports instead of refusing, and `"off"` skips the scan; the findings are in
 the `.qa.json` sidecar under `flashes`.
 
+The opening gate runs in Python (`urdido.opening`, UR30), so `urdido prepare`
+needs no node: a preamble in the intro, or a first proof later than 20 s at the
+narrator's declared pace, refuses the purchase. The JavaScript helpers under
+`js/` are one npm package, `urdido-record`, versioned with the Python package
+(`0.1.0.dev0` is `0.1.0-dev.0`) and imported by name:
+`import { sessionLines } from "urdido-record/terminal-replay"`. Until it is on
+the npm registry, install it from the checkout (`npm install ../urdido/js`).
+
 `urdido words <video.toml> --language <l>` writes each take's word record
 (UR26), in the language the declaration gives `[video] languages.<l>`; there
 is no default language. The transcriber is a seam: any callable

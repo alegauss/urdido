@@ -6,7 +6,9 @@
     python tools/release.py 0.1.0        exactly that (0.1.0.dev0 -> 0.1.0 included)
     python tools/release.py patch --dry-run
 
-The version lives in `src/urdido/__init__.py` alone. This writes it, commits it, tags
+The version lives in `src/urdido/__init__.py`, and `js/package.json` (the npm package
+`urdido-record`) carries the same number in npm's spelling. This writes both, commits,
+tags
 the commit `v<version>` and pushes the branch and the tag together; the tag starts
 .github/workflows/publish.yml, which publishes to TestPyPI, then PyPI, then makes the
 GitHub release. PyPI takes a number once, so everything is checked first: on main, a
@@ -23,6 +25,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "src" / "urdido" / "__init__.py"
+#: The JavaScript helpers' package, versioned with the Python one (UR30).
+NPM = ROOT / "js" / "package.json"
 
 VERSION = re.compile(
     r'^__version__ = "(\d+)\.(\d+)\.(\d+)(?:\.dev(\d+))?"$', re.MULTILINE
@@ -70,6 +74,19 @@ def rewritten(text: str, version: str) -> str:
     return VERSION.sub(f'__version__ = "{version}"', text, count=1)
 
 
+def npm_version(version: str) -> str:
+    """The Python version as npm spells it: `0.1.0.dev2` is `0.1.0-dev.2` (UR30)."""
+    base, _, dev = version.partition(".dev")
+    return f"{base}-dev.{dev}" if dev else base
+
+
+def repackaged(text: str, version: str) -> str:
+    """`js/package.json` with its version set to the npm spelling of `version`."""
+    return re.sub(
+        r'("version":\s*")[^"]*(")', rf"\g<1>{npm_version(version)}\g<2>", text, count=1
+    )
+
+
 def git(*args: str) -> str:
     done = subprocess.run(
         ["git", *args], cwd=ROOT, capture_output=True, text=True, check=False
@@ -115,7 +132,9 @@ def main(argv: list[str]) -> int:
             return 0
         text = PACKAGE.read_text("utf-8")
         PACKAGE.write_text(rewritten(text, version), encoding="utf-8", newline="\n")
-        git("add", "--", str(PACKAGE.relative_to(ROOT)))
+        npm = NPM.read_text("utf-8")
+        NPM.write_text(repackaged(npm, version), encoding="utf-8", newline="\n")
+        git("add", "--", str(PACKAGE.relative_to(ROOT)), str(NPM.relative_to(ROOT)))
         git("commit", "--quiet", "-m", f"chore(release): urdido {version}")
         git("tag", "-a", tag, "-m", f"urdido {version}")
         git("push", "--atomic", "origin", "main", tag)

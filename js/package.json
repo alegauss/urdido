@@ -1,0 +1,22 @@
+{
+  "name": "urdido-record",
+  "version": "0.1.0-dev.0",
+  "description": "urdido's recording and narration helpers: the terminal replay, the story moves, take reading, the opening gate and the take buyer.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    "./terminal-replay": "./terminal-replay.mjs",
+    "./story-moves": "./story-moves.mjs",
+    "./narration/takes": "./narration/takes.mjs",
+    "./narration/opening": "./narration/opening.mjs",
+    "./narration/buy": "./narration/buy.mjs",
+    "./recording/seconds": "./recording/seconds.mjs"
+  },
+  "files": [
+    "*.mjs",
+    "narration/*.mjs",
+    "recording/*.mjs"
+  ]
+}

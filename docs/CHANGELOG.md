@@ -19,6 +19,7 @@
 - ✅ **UR27** **Description, chapter and credit texts are hardcoded in Portuguese, and the description is shaped only for YouTube** — Description words follow the build language's table, overridable by [description.strings]; YouTube's limit and links live in a target (design recorded in `docs/video-maker.md`).
 - ✅ **UR28** **The Turing WordPress demo's store scraper, stills and transcript publishing live inside the core build** — The opening's site screens are declared as paths and follow selectors, publishing writes only where publish.json says, and no module names a shop (design recorded in `docs/video-maker.md`).
 - ✅ **UR29** **Cards render only with a Windows Edge install, and thumbnail layouts load any brand.py by its path** — Cards draw with Playwright's own Chromium unless [cards] channel names another; a thumbnail layout loads as an entry point, module function or path (design recorded in `docs/video-maker.md`).
+- ✅ **UR30 (Python opening gate, npm package)** **The Python build shells out to node for the opening gate, and the JavaScript helpers have no install path** — urdido prepare runs the opening gate in Python with no node, and js/ is the npm package urdido-record, versioned with the Python package by the release.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
