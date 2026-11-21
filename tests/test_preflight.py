@@ -8,7 +8,7 @@ import pytest
 from urdido import cache, media
 from urdido.build import Build, main
 from urdido.preflight import PreflightRefused, illustrated
-from marketing import MARKETING
+from fonts import synthetic_font
 
 
 @pytest.fixture
@@ -29,10 +29,8 @@ def cut(tmp_path, monkeypatch):
         path.write_bytes(name.encode())
         write(f"narration/en/{name}.mp3.prov.json", {"prompt": script[name]["en"], "details": {"voice": "test"}, "engine": {"model": "test"}})
         write(f"narration/en/{name}.words.json", {"sha256": cache.file_hash(path), "words": [{"text": script[name]["en"], "start": 0.1, "end": 1.0}]})
-    font = MARKETING / "japode/brand/fonts/JapodeJakarta-ExtraBold.ttf"
-    if not font.is_file():
-        pytest.skip(f"needs the Japode font from the marketing checkout ({font})")
-    (tmp_path / "font.ttf").write_bytes(font.read_bytes())
+    pytest.importorskip("fontTools")
+    synthetic_font(tmp_path / "font.ttf")
     (tmp_path / "logo.svg").write_text("logo fixture")
     cards = {"theme": {"fonts": {"dir": str(tmp_path), "display": {"files": {"800": "font.ttf"}}, "text": {"file": "font.ttf"}},
                        "colors": {"text": "#fff", "muted": "#ccc", "accent": "#0f0"}, "background": "#000"}}

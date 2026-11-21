@@ -7,7 +7,7 @@
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-- 📋 **UR31** (deps: UR21 ✅) **Ten test files read japode, shio and turing folders, so the suite cannot run outside marketing** — CI here has none of those folders, and a test that skips everywhere but one machine proves nothing. → §UR31
+- ⏳ **UR31** (deps: UR21 ✅) **Ten test files read japode, shio and turing folders, so the suite cannot run outside marketing** — Cards, captions, sources, terminal, scenes, motion, preview, cache and golden tests still read marketing's videos, fonts or goldens. → §UR31
 - 📋 **UR32** (deps: UR21 ✅, UR22 ✅) **Every stage cache is keyed on absolute module and input paths, so moving the code invalidates every cache** — Each marketing video would rebuild from scratch on install, and caches would never be shared between two checkouts. → §UR32
 - 📋 **UR33** (deps: UR22 ✅, UR28 ✅, UR23 ✅) **build.py holds both pipelines, the mux, the mix and every root in one 600-line class** — Each new source kind or check lands in that class, and nobody can test one pipeline without loading the others. → §UR33
 - 📋 **UR34** (deps: —) **Polyweave's open tasks PW712 to PW716 describe video composition that urdido now owns** — Two roadmaps planning the same preflight, preview, progress and claims will build them twice or wait on each other. → §UR34
@@ -21,7 +21,7 @@
 - 📋 **UR36** (deps: UR21 ✅) **Marketing installs the framework from its own folder with pip -e, with no version pinned** — Replacing the folder needs an install that does not point into it, and a pin says which urdido a video was built with. → §UR36
 - 📋 **UR37** (deps: UR36, UR24 ✅) **Marketing's npm scripts, READMEs, bin scripts and brand code call python -m videomaker or import videomaker** — A flag-day rename across about twenty files would break whichever video is mid-build, so the switch needs a bridge. → §UR37
 - 📋 **UR38** (deps: UR30 ✅, UR36) **Project scripts and Turing's e2e specs import narration and recording helpers by a relative path into video-maker/** — Turing's story specs reach takes.mjs through marketing, so removing the folder breaks a recording in another repository. → §UR38
-- 📋 **UR39** (deps: UR36, UR31) **The golden check proves one marketing video but lives inside the framework, reading the Turing repository** — It belongs to the WordPress demo, and in urdido it would be a test that only runs on one machine. → §UR39
+- 📋 **UR39** (deps: UR36, UR31 ⏳) **The golden check proves one marketing video but lives inside the framework, reading the Turing repository** — It belongs to the WordPress demo, and in urdido it would be a test that only runs on one machine. → §UR39
 - 📋 **UR40** (deps: UR20 ⏳) **Marketing's video-maker gate hook, friction skill and CLAUDE.md rules point at a folder and a Block B that will be gone** — The rule that every friction becomes a framework task stops working the day the folder leaves, unless it points here. → §UR40
 - 📋 **UR41** (deps: UR37, UR38, UR39) **Nothing proves that each published video comes out the same when built by urdido instead of video-maker** — A changed cut found after re-upload costs a published video, and the owner should not be the check. → §UR41
 - 📋 **UR42** (deps: UR41, UR40) **video-maker/ still sits in marketing after every video is built by urdido** — Two copies of the framework drift on the first fix applied to only one of them. → §UR42
@@ -53,5 +53,11 @@
 - **urdido-record installs from the npm registry by name** npm install urdido-record in
   a fresh folder brings the helpers at the Python package's version, and an import of
   urdido-record/terminal-replay resolves.
+
+## Done when — UR31
+
+- **The suite runs in CI with no path outside this repository** With URDIDO_MARKETING
+  pointing nowhere, the gate's summary names no test skipped for the marketing checkout,
+  Turing's fonts or a sibling path.
 
 ## Non-goals
