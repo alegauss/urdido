@@ -16,21 +16,6 @@ card templates, and the JavaScript helpers if they ship inside it (Block B decid
 **Done when** `0.1.0` installs from PyPI into a fresh virtualenv and `urdido build
 --help` answers.
 
-### §UR20 Agent guidance and a friction skill
-
-A `CLAUDE.md` for this repository: the gates, the governed docs, one task per commit
-through `run-commit.cmd -m`, and the rules video-maker kept (nothing on screen is
-staged; a product's brand, words and URLs live in the declaration, never in a module;
-media is never versioned).
-
-For consumers, an `urdido` skill on how to declare and build a video, and an
-`urdido-friction` skill, shaped like `polyweave-friction`, that files a line here
-(prefix UR) when the framework gets in the way. It replaces marketing's
-`video-maker-friction`, which files into marketing's own Block B.
-
-**Done when** a session in marketing that meets a missing setting files it here through
-the skill, with `(from: marketing)`.
-
 ## Block B — The engine extracted (videomaker without marketing)
 
 ### §UR30 The JavaScript side packaged

@@ -37,6 +37,14 @@ def test_no_arguments_answers_the_help_naming_every_command_ur24():
         assert f"\n    {command} " in said, command
 
 
+def test_the_consumer_skill_names_only_commands_that_exist_ur20():
+    import re
+
+    skill = (ROOT / "skills" / "urdido" / "SKILL.md").read_text(encoding="utf-8")
+    named = set(re.findall(r"`urdido (\w+)", skill))
+    assert named and named <= set(cli.COMMANDS), named - set(cli.COMMANDS)
+
+
 def test_every_command_module_has_a_main_ur24():
     import importlib
 

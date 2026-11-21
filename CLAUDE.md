@@ -53,6 +53,12 @@ the owner runs: it pushes a tag that `publish.yml` takes to PyPI.
   `urdido.extras.require`, which names the `pip install urdido[<extra>]` that fixes it.
   DaVinci Resolve and Docker are programs: find the binary and refuse by name.
 
+## The consumer skill
+
+`skills/urdido/SKILL.md` (installed in `~/.claude/skills/`) teaches a project that
+drives urdido to declare and build a video: the order of work, the source kinds, and
+the rules above. Keep it in step with `docs/` when a command or a key changes.
+
 ## Friction from consumers
 
 A project that drives urdido files what got in its way here, through the

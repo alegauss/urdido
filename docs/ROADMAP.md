@@ -2,8 +2,6 @@
 
 ## Block A — Package foundation (urdido installable from PyPI)
 
-- ⏳ **UR20** (deps: UR16 ✅, UR17 ✅, UR35 ✅) **An agent working in this repo or driving urdido has no CLAUDE.md, skill or friction path** — Consumers still have no urdido skill on declaring and building a video, which waits for the code and its manual. → §UR20
-
 ## Block B — The engine extracted (videomaker without marketing)
 
 - 📋 **UR43** (deps: UR21 ✅) **The imported modules pass ruff only through a per-file baseline of ignored rules and unformatted files** — Each ignored B023 or B905 may hide a real bug, and new code in those files is checked against nothing. → §UR43
@@ -17,7 +15,7 @@
 - 📋 **UR37** (deps: UR36, UR24 ✅) **Marketing's npm scripts, READMEs, bin scripts and brand code call python -m videomaker or import videomaker** — A flag-day rename across about twenty files would break whichever video is mid-build, so the switch needs a bridge. → §UR37
 - 📋 **UR38** (deps: UR30 ✅, UR36) **Project scripts and Turing's e2e specs import narration and recording helpers by a relative path into video-maker/** — Turing's story specs reach takes.mjs through marketing, so removing the folder breaks a recording in another repository. → §UR38
 - 📋 **UR39** (deps: UR36, UR31 ✅) **The golden check proves one marketing video but lives inside the framework, reading the Turing repository** — It belongs to the WordPress demo, and in urdido it would be a test that only runs on one machine. → §UR39
-- 📋 **UR40** (deps: UR20 ⏳) **Marketing's video-maker gate hook, friction skill and CLAUDE.md rules point at a folder and a Block B that will be gone** — The rule that every friction becomes a framework task stops working the day the folder leaves, unless it points here. → §UR40
+- 📋 **UR40** (deps: UR20 ✅) **Marketing's video-maker gate hook, friction skill and CLAUDE.md rules point at a folder and a Block B that will be gone** — The rule that every friction becomes a framework task stops working the day the folder leaves, unless it points here. → §UR40
 - 📋 **UR41** (deps: UR37, UR38, UR39) **Nothing proves that each published video comes out the same when built by urdido instead of video-maker** — A changed cut found after re-upload costs a published video, and the owner should not be the check. → §UR41
 - 📋 **UR42** (deps: UR41, UR40) **video-maker/ still sits in marketing after every video is built by urdido** — Two copies of the framework drift on the first fix applied to only one of them. → §UR42
 
@@ -36,13 +34,6 @@
 - **0.1.0 installs from PyPI and urdido build --help answers** In a fresh virtualenv,
   pip install urdido==0.1.0 succeeds and urdido build --help prints its usage, which
   needs the trusted publishers registered and the build command in the wheel.
-
-## Done when — UR20
-
-- **An urdido skill teaches a consumer to declare and build a video** A session in
-  marketing, given only the skill, writes a video.toml that urdido build accepts, with
-  the commands and tables taken from the manual UR35 writes rather than from
-  video-maker's README.
 
 ## Done when — UR30
 
