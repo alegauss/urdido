@@ -83,11 +83,17 @@ export function initLine(jsonl, plugin) {
  * - `{ "tools": [...], "first": n }` the calls (and their answers) of these tools
  * - `{ "kind": "text", "match": "re", "last": n }` lines of a kind, matching, first or last n
  *
+ * Any selector may add `"required": true` (the session must hold a line it picks) and
+ * `"count": n` (the session must hold exactly n, before `first`/`last`); a session that fails
+ * either is refused, naming the chapter and the selector (UR11, `checkSession`).
+ *
  * @param {Array<Object>} lines     The session's lines (`sessionLines`).
  * @param {Array<Object>} selectors The chapter's declaration.
  * @param {{prompt?: string, init?: ?Object}} from The prompt file's text and the init line.
  */
-export function chooseLines(lines, selectors, { prompt, init } = {}) {
+export function chooseLines(lines, selectors, { prompt, init, chapter } = {}) {
+  const missing = selectorFindings(lines, selectors, { init, chapter: chapter ?? "a chapter" });
+  if (missing.length) throw new Error(`terminal-replay: ${missing.map((f) => f.message).join("; ")}`);
   const chosen = [];
   for (const s of selectors) {
     if (s.init) {
@@ -99,14 +105,86 @@ export function chooseLines(lines, selectors, { prompt, init } = {}) {
       chosen.push({ kind: "prompt", text: prompt });
       continue;
     }
-    const pattern = s.match ? new RegExp(s.match, s.flags ?? "i") : null;
-    let picked = lines.filter((l) =>
-      (!s.tools || s.tools.includes(l.tool)) && (!s.kind || l.kind === s.kind) && (!pattern || pattern.test(l.text)));
+    let picked = matching(lines, s);
     if (s.first !== undefined) picked = picked.slice(0, s.first);
     if (s.last !== undefined) picked = picked.slice(-s.last);
     chosen.push(...picked);
   }
   return chosen;
+}
+
+/**
+ * A tool's answer as its words read: JSON escapes (`é`, `\n`, `\"`) undone, so a selector
+ * matching "não" finds it inside an answer the tool returned as escaped JSON (UR11).
+ */
+export function searchable(text) {
+  return text
+    .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/\\n/g, "\n")
+    .replace(/\\"/g, '"');
+}
+
+/** Every line one selector picks, before `first` or `last` narrows them. */
+function matching(lines, s) {
+  const pattern = s.match ? new RegExp(s.match, s.flags ?? "i") : null;
+  return lines.filter((l) =>
+    (!s.tools || s.tools.includes(l.tool)) && (!s.kind || l.kind === s.kind)
+    && (!pattern || pattern.test(l.text) || pattern.test(searchable(l.text))));
+}
+
+/** What one chapter's selectors find wanting: a `required` one that picks nothing, a `count` missed. */
+function selectorFindings(lines, selectors, { init, chapter }) {
+  const found = [];
+  selectors.forEach((s, index) => {
+    const what = JSON.stringify(s);
+    if (s.prompt) return;
+    const picked = s.init ? (init ? [init] : []) : matching(lines, s);
+    if (s.required && picked.length === 0) {
+      found.push({ chapter, selector: index, rule: "required",
+        message: `${chapter}: selector ${index} ${what} is required and finds nothing in the session` });
+    }
+    if (s.count !== undefined && picked.length !== s.count) {
+      found.push({ chapter, selector: index, rule: "count", found: picked.length,
+        message: `${chapter}: selector ${index} ${what} wants ${s.count} line(s) and finds ${picked.length}` });
+    }
+  });
+  return found;
+}
+
+const STOPWORDS = {
+  pt: new Set(["o", "a", "os", "as", "de", "do", "da", "dos", "das", "que", "e", "em", "no", "na", "um", "uma",
+    "para", "com", "não", "por", "mais", "se", "como", "mas", "já", "está", "também", "isso", "você", "foi", "ao"]),
+  en: new Set(["the", "and", "is", "are", "to", "of", "in", "it", "that", "for", "with", "on", "this", "was",
+    "be", "as", "at", "by", "not", "have", "you", "will", "now", "all", "done", "i", "an", "or", "from"]),
+};
+
+/** The language a line reads in, by its common words, or null when too short to tell. */
+export function guessLanguage(text) {
+  const words = text.toLowerCase().match(/[\p{L}']+/gu) ?? [];
+  if (words.length < 4) return null;
+  const scores = Object.entries(STOPWORDS).map(([lang, set]) => [lang, words.filter((w) => set.has(w)).length]);
+  scores.sort((x, y) => y[1] - x[1]);
+  const [[best, top], [, next]] = scores;
+  return top >= 2 && top > next ? best : null;
+}
+
+/**
+ * A session judged against its chapters before anything is filmed after it (UR11): each chapter's
+ * `required` selectors must pick a line and each `count` must match, and the agent's text lines in
+ * another language than the video's are reported. `passed` is false only for the first two.
+ *
+ * @param {Array<Object>} lines    The session's lines (`sessionLines`).
+ * @param {Object} chapters        The declaration's chapters, id to selectors.
+ * @param {{init?: ?Object, language?: string}} from The init line, and the video's language.
+ * @return {{passed: boolean, findings: Array<Object>, language: Array<Object>}}
+ */
+export function checkSession(lines, chapters, { init, language } = {}) {
+  const findings = Object.entries(chapters).flatMap(([chapter, selectors]) =>
+    selectorFindings(lines, selectors, { init, chapter }));
+  const want = language ? language.split("-")[0].toLowerCase() : null;
+  const foreign = want ? lines.filter((l) => l.kind === "text").map((l) => ({ text: l.text, language: guessLanguage(l.text) }))
+    .filter((l) => l.language && l.language !== want) : [];
+  return { passed: findings.length === 0, findings, language: foreign };
 }
 
 const escape = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

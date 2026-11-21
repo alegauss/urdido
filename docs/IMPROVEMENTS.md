@@ -434,26 +434,6 @@ Sequenced after UR33: the overlay must resolve every relative path through the b
 about 25 call sites read `build.here` directly; UR33's declaration loader is the one
 place it belongs.
 
-### §UR11 A session checked against its chapters (was marketing VM82)
-
-The Viglet Shio promo's chapters 3 to 6 replay a real Claude Code session, and the
-narration says what happens in it: the plugin's skill loads, the agent asks Viglet Shio
-what is there, a call goes wrong and Viglet Shio says how to fix it, the agent checks
-its work once before saying it is done. On 2026-11-17 three sessions were recorded and
-read by hand with one-off Python: one had no skill and no verify, the next no skill and
-no error, and the agent wrote one line in English in a Portuguese session. The fourth,
-on the new image, did have Viglet Shio's teaching errors (inside shio_read's answer),
-but the hand check missed them because the text was escaped in the JSON, and a correct
-line was rewritten and bought twice before the cut showed them in red.
-
-terminal.json's selectors already name what each chapter shows. A selector marked
-required should refuse a session where it picks nothing, a count should refuse two
-reports where one is wanted, and lines in the wrong language should be reported, so a
-session is judged before anything is filmed after it.
-
-**Done when** a session missing a required beat is refused with the chapter and the
-selector that found nothing.
-
 ### §UR12 A review sheet for scene videos (was marketing VM83)
 
 `videomaker build --plan` prints a review sheet for illustrated videos (`review.sheet`),

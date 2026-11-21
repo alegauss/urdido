@@ -404,6 +404,16 @@ a thumbnail of more than three words are advised. `[thumbnail.check]` takes
 the word fields the layout draws as text. Without a declared title the build
 says the pair went out unchecked.
 
+A terminal chapter's selectors in `terminal.json` can say what the session
+must hold (UR11): `"required": true` refuses a session where the selector
+picks nothing, and `"count": n` one where it picks other than n lines (before
+`first`/`last`). `chooseLines` refuses with the chapter and selector when
+given `{ chapter }`, and `checkSession(lines, chapters, { init, language })`
+judges every chapter at once, reporting the agent's text lines in another
+language than the video's without refusing them. A selector's `match` also
+reads a tool answer with its JSON escapes undone, so `não` is found in
+`não`.
+
 `urdido record <video.toml>` records a scene video with one command (UR10).
 Each `[[record.step]]` is a `name`, a `command` (a list runs as is, a string in
 a shell) and the paths it `makes`; `always = true` marks a step that runs last
