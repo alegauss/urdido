@@ -113,6 +113,12 @@ def illustrated(build):
                 words[name] = transcript
                 if transcript and transcript[-1]["end"] > take.length + 0.1:
                     issue(file.with_suffix(".words.json"), "words.end", "word times extend beyond the audio", name)
+                from urdido import heard
+
+                said = heard.compare(takes.lines[name][build.language], transcript,
+                                     script.get("pronounce", {}).get(build.language, {}))
+                if said["refused"]:
+                    issue(file.with_suffix(".words.json"), "words.pronounce", heard.message(name, said), name)
             for language, spec, table in translations:
                 if table is None:
                     continue

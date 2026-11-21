@@ -17,7 +17,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from types import SimpleNamespace
 
-from urdido import keywords, media
+from urdido import heard, keywords, media
 from urdido.build import Build
 from urdido.cache import file_hash
 from urdido.narration import Takes
@@ -202,8 +202,9 @@ def prepare(args):
             except (RecordingRefused, ValueError, KeyError, OSError):
                 words = None
             beats = document.get("scenes", {}).get(name, [])
+            said = heard.compare(takes.lines[name][args.language], words, report["pronounce"]) if words else None
             rows.append({"take": name, "voice_current": current, "voice_needed": name in remaining_voice,
-                         "transcript_current": words is not None,
+                         "transcript_current": words is not None, "heard": said,
                          "transcription_estimate": media.seconds(str(audio)) * rate if current and words is None and rate is not None else (0 if words is not None else None),
                          "impacts": {"beats": [b.get("id", f"{name}-{i}") for i, b in enumerate(beats)],
                                      "word_anchored_beats": [b.get("id", f"{name}-{i}") for i, b in enumerate(beats) if "from_word" in b],
@@ -284,7 +285,9 @@ def prepare(args):
         if acquired:
             lock.unlink(missing_ok=True)
         report["takes"] = states()
-        report["needs_review"] = [*report["speech_review"], *[{"take": row["take"], **anchor} for row in report["takes"] for anchor in row["anchors"] if anchor["status"] == "needs_review"]]
+        report["needs_review"] = [*report["speech_review"], *[{"take": row["take"], **anchor} for row in report["takes"] for anchor in row["anchors"] if anchor["status"] == "needs_review"],
+                                  *[{"take": row["take"], "status": "misheard", **refused} for row in report["takes"]
+                                    for refused in (row.get("heard") or {}).get("refused", [])]]
         report["selected_takes_ready"] = all(row["voice_current"] and row["transcript_current"] for row in report["takes"]) and not report["needs_review"]
         if report["status"] == "prepared" and not report["selected_takes_ready"]:
             report["status"] = "needs_review" if report["needs_review"] else "partial"

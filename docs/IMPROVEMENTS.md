@@ -434,23 +434,6 @@ Sequenced after UR33: the overlay must resolve every relative path through the b
 about 25 call sites read `build.here` directly; UR33's declaration loader is the one
 place it belongs.
 
-### §UR13 Takes heard back (was marketing VM84)
-
-`pronounce` in a script changes what is sent to the voice, but nothing listens to what
-came back. On 2026-11-17 the Alexandre heard "agentes de Ía" at the start of the Viglet
-Shio promo; "IA" went into the pt-BR pronounce map as "iá" and three takes were bought
-again, and the only proof was the text sent (lines.json), not the sound. No
-speech-to-text is installed on this machine.
-
-After a take is bought, a transcription of it should be compared with the line: words
-missing or added, and every word the pronounce map names, reported per take with its
-second, so a take that says something else is refused before it is cut in. The
-transcriber is a declared dependency of video-maker, not something each session
-installs.
-
-**Done when** the Viglet Shio promo's takes are transcribed on purchase and a take that
-drops or garbles a mapped word is reported.
-
 ### §UR14 A flash refused before the owner sees it (was marketing VM86)
 
 On 2026-11-17 the Alexandre saw the Viglet Shio promo flash at 0:40. One frame at 40.667

@@ -404,6 +404,15 @@ a thumbnail of more than three words are advised. `[thumbnail.check]` takes
 the word fields the layout draws as text. Without a declared title the build
 says the pair went out unchecked.
 
+Every bought take is heard back against its line (UR13): its transcript
+(`<take>.words.json`, written on purchase) is aligned with the line's words.
+A word the script's `pronounce` map names must be heard where the line has
+it, spelled as written or as the map sounds it (`IA` or `iá`); heard as
+anything else, or not at all, the take is refused, with the second it should
+have been said, by preflight and in prepare's `needs_review`. Other missing
+or added words are listed in prepare's per-take `heard` report with their
+seconds, for a person to judge.
+
 A terminal chapter's selectors in `terminal.json` can say what the session
 must hold (UR11): `"required": true` refuses a session where the selector
 picks nothing, and `"count": n` one where it picks other than n lines (before
