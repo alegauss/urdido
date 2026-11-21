@@ -1,6 +1,6 @@
 """VM41: source stills paired with the words actually overlapping each beat.
 
-PW708 tracks exact-time, editorially labelled contact sheets in polyweave.
+PW708 tracks exact-time, editorially labelled contact sheets in the provider.
 """
 from __future__ import annotations
 

@@ -168,37 +168,53 @@ def test_the_encoded_short_is_held_to_length_loudness_peak_and_a_moving_end():
 
 
 def test_a_short_past_its_measures_is_refused_naming_each_miss(tmp_path, monkeypatch):
-    from urdido import extras, library
+    from types import SimpleNamespace
 
-    asked = {}
+    from urdido.providers import polyweave as provider
 
-    def answer(operation, root, **parameters):
-        asked.update(operation=operation, **parameters)
-        return {
-            "passed": False,
-            "predicates": [
-                {"measure": "video_seconds", "value": 30.0, "max": 60, "passed": True},
+    asked = []
+
+    def run(args, **options):
+        asked.extend(args)
+        return SimpleNamespace(
+            returncode=0,
+            stderr="",
+            stdout=json.dumps(
                 {
-                    "measure": "video_loudness",
-                    "value": -19.2,
-                    "min": -15,
-                    "max": -13,
                     "passed": False,
-                },
-            ],
-        }
+                    "predicates": [
+                        {
+                            "measure": "video_seconds",
+                            "value": 30.0,
+                            "max": 60,
+                            "passed": True,
+                        },
+                        {
+                            "measure": "video_loudness",
+                            "value": -19.2,
+                            "min": -15,
+                            "max": -13,
+                            "passed": False,
+                        },
+                    ],
+                }
+            ),
+        )
 
-    monkeypatch.setattr(extras, "require", lambda *a, **k: None)
-    monkeypatch.setattr(library, "delegate", answer)
+    monkeypatch.setattr(provider, "RUN", run)
     video = tmp_path / "shorts" / "demo-1.mp4"
     (video.parent / "work").mkdir(parents=True)
     with pytest.raises(ValueError, match="video_loudness is -19.2, held to -15 to -13"):
         shorts.measures(video, tmp_path, shorts.Rules())
-    assert asked == {
-        "operation": "accept.check",
-        "spec": "shorts/work/demo-1.spec.toml",
-        "subject": "shorts/demo-1.mp4",
-    }
+    assert asked[3:10] == [
+        "accept.check",
+        "--spec",
+        "shorts/work/demo-1.spec.toml",
+        "--subject",
+        "shorts/demo-1.mp4",
+        "--root",
+        str(tmp_path.resolve()),
+    ]
 
 
 def test_without_polyweave_the_short_says_it_went_unmeasured(tmp_path, capsys):

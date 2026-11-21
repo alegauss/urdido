@@ -87,9 +87,9 @@ def test_capture_records_hash_and_refuses_changed_containers_vm44(instance, monk
         assert 'instance="demo"' not in forwarded.read_text()
         assert hashlib.sha256(forwarded.read_bytes()).hexdigest() in forwarded.name
         (instance.root / "capture.webm").write_bytes(b"actual capture")
-        return SimpleNamespace(stdout='{"ok": true}')
+        return SimpleNamespace(returncode=0, stdout='{"ok": true}', stderr="")
 
-    monkeypatch.setattr("urdido.instances.subprocess.run", capture)
+    monkeypatch.setattr("urdido.providers.polyweave.RUN", capture)
     output = instance.capture(visit)
     proof = json.loads(output.with_suffix(".webm.instance.json").read_text())
     assert proof["fixture"]["generation"] == "fresh" and len(proof["sha256"]) == 64

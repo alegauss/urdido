@@ -23,6 +23,16 @@ undeclared one is refused by name. For one release STORY_VIDEO_DIR,
 STORY_RECORDINGS, TURING_WORDPRESS and SHIO_REPO still fill an undeclared
 root, with a notice.
 
+Every service urdido calls goes through `urdido.providers` (UR25): voice
+takes, stock footage, reference frames, web capture, safe-area and measured
+bounds. One adapter, `urdido.providers.polyweave`, runs polyweave as a
+subprocess, parses its answers (a refusal is `ProviderRefused`, a `Refused`
+that is also a `RuntimeError`), and alone reads `polyweave.toml` and names
+`.polyweave/`. Without polyweave installed a call refuses with
+`pip install urdido[polyweave]`. Tests replace `providers.polyweave.RUN` with a
+fake that answers as polyweave would. The JavaScript take buyer
+(`js/narration/buy.mjs`) still calls polyweave on its own.
+
 `urdido --help` lists every command (UR24): build, check, prepare, words,
 thumbnail, shorts, record, claims, library, storyboard, instance, export and
 publish, each running as `urdido <command>`. The library never exits: it

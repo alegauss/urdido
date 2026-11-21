@@ -50,22 +50,6 @@ lists every key the schema accepts.
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-### §UR25 One polyweave adapter behind provider seams
-
-`prepare.py:43-54` (`voice.lines`), `library.py:225-239` (`stock.fetch`,
-`reference.register`, `reference.frames`, `provenance.credits`) and `instances.py:253`
-(`capture.web`, with the PW710 workaround) each run `python -m polyweave ... --json`;
-`prepare.py:136` reads `polyweave.toml` for Scribe prices.
-
-One `urdido.providers.polyweave` module owns the subprocess contract and the refusal
-parsing, behind small protocols the rest of the code calls: voice, stock, reference
-frames, web capture. It stays a subprocess: polyweave's stable contract is its CLI, not
-its modules. Without polyweave installed, an operation that needs it refuses with `pip
-install urdido[polyweave]`.
-
-**Done when** no module outside the adapter mentions polyweave, and the library, prepare
-and instance tests pass against a fake provider.
-
 ### §UR26 A transcriber seam
 
 `narration_words.py:15-47` posts to Scribe with `requests` and `ELEVENLABS_API_KEY`,

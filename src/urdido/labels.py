@@ -1,4 +1,4 @@
-"""VM43: temporal label conflicts; PW709 tracks a reusable polyweave check."""
+"""VM43: temporal label conflicts; PW709 tracks a reusable check in the provider."""
 from __future__ import annotations
 
 import warnings

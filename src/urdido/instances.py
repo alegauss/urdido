@@ -15,7 +15,6 @@ import os
 import re
 import shlex
 import subprocess
-import sys
 import time
 import tomllib
 import uuid
@@ -241,7 +240,7 @@ class Instance:
         before = out.stat().st_mtime_ns if out.exists() else None
         data = self.status()
         self.wait()
-        # PW710: capture.web's strict web schema does not yet accept instance.
+        # PW710: the capture's strict web schema does not yet accept instance.
         compatible = re.sub(r"(?m)^[ \t]*instance[ \t]*=.*(?:\n|$)", "", source, count=1)
         expected = {**original, "web": {k: v for k, v in web.items() if k != "instance"}}
         if tomllib.loads(compatible) != expected:
@@ -249,16 +248,9 @@ class Instance:
         capture_sha = hashlib.sha256(compatible.encode()).hexdigest()
         forwarded = self.record.parent / f"capture-{capture_sha}.web.toml"
         forwarded.write_text(compatible, encoding="utf-8", newline="")
-        try:
-            result = subprocess.run([sys.executable, "-m", "polyweave", "capture.web", "--source",
-                                     str(forwarded.relative_to(self.root)), "--root", str(self.root), "--json"],
-                                    capture_output=True, text=True, encoding="utf-8", check=True,
-                                    env={**os.environ, "PYTHONIOENCODING": "utf-8"})
-        except subprocess.CalledProcessError as error:
-            raise RuntimeError(f"capture.web failed: {error.stdout or error.stderr}") from None
-        answer = json.loads(result.stdout)
-        if answer.get("ok") is False:
-            raise RuntimeError("capture.web refused the visit: " + str(answer.get("why", answer)))
+        from urdido import providers
+
+        providers.capture_web(self.root, forwarded.relative_to(self.root).as_posix())
         if self.containers() != data["containers"]:
             raise RuntimeError("instance changed during capture")
         if not out.is_file() or out.stat().st_mtime_ns == before:

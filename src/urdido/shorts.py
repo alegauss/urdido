@@ -53,7 +53,7 @@ What every Short keeps (`[shorts.rules]` moves a number, never drops a rule):
 - a title of 60 characters at most, 3 to 5 hashtags, 20 to 55 s, opening on a number.
 
 A title, hashtag count or length past those bounds is refused; a hook with no number
-and a length outside 20-55 s but under a minute are advised. With the polyweave extra,
+and a length outside 20-55 s but under a minute are advised. Where the provider runs,
 the burned .ass is held to `video.safe_area`'s youtube-shorts bounds before encoding,
 and the encoded file to `accept.check`: under a minute, loudness within 1 LU of the
 target, true peak under -1 dBTP and no frozen end.
@@ -502,19 +502,17 @@ def background(look: Look, path: Path) -> Path:
 
 
 def safe_area(ass: Path, root: Path, fonts: Path | None) -> None:
-    """Hold the burned .ass to polyweave's youtube-shorts bounds (PW698)."""
-    from urdido import extras, library
+    """Hold the burned .ass to the provider's youtube-shorts bounds (PW698)."""
+    from urdido import providers
 
-    try:
-        extras.require("polyweave")
-    except extras.MissingExtra as missing:
-        print(f"shorts: the safe area is unchecked: {missing}", file=sys.stderr)
+    if not providers.available():
+        why = providers.unavailable()
+        print(f"shorts: the safe area is unchecked: {why}", file=sys.stderr)
         return
-    answer = library.delegate(
-        "video.safe_area",
+    answer = providers.safe_area(
         root,
-        subtitles=ass.relative_to(root).as_posix(),
-        fonts=fonts.relative_to(root).as_posix() if fonts else None,
+        ass.relative_to(root).as_posix(),
+        fonts.relative_to(root).as_posix() if fonts else None,
     )
     if not answer.get("passed", False):
         rows = []
@@ -555,22 +553,16 @@ def relative(path: Path, root: Path) -> str:
 
 
 def measures(video: Path, root: Path, rules: Rules) -> dict | None:
-    """Hold the encoded Short to polyweave's video measures (PW697), where installed."""
-    from urdido import extras, library
+    """Hold the encoded Short to the provider's video measures (PW697)."""
+    from urdido import providers
 
-    try:
-        extras.require("polyweave")
-    except extras.MissingExtra as missing:
-        print(f"shorts: {video.name} is unmeasured: {missing}", file=sys.stderr)
+    if not providers.available():
+        why = providers.unavailable()
+        print(f"shorts: {video.name} is unmeasured: {why}", file=sys.stderr)
         return None
     spec = video.parent / "work" / f"{video.stem}.spec.toml"
     spec.write_text(spec_text(video.stem, rules), encoding="utf-8")
-    answer = library.delegate(
-        "accept.check",
-        root,
-        spec=relative(spec, root),
-        subject=relative(video, root),
-    )
+    answer = providers.accept(root, relative(spec, root), relative(video, root))
     if not answer.get("passed", False):
         rows = []
         for row in answer.get("predicates", []):

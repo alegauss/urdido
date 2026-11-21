@@ -1,7 +1,7 @@
 """Original editorial illustrations, declared per take and assembled as scene clips (VM35).
 
 These are illustrations, never replicas of a historical screen. PW700 tracks the HTML-to-still
-step not yet offered by polyweave; cards.render is the framework's existing implementation.
+step not yet offered by the provider; cards.render is the framework's existing implementation.
 """
 from __future__ import annotations
 

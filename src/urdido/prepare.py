@@ -9,15 +9,13 @@ import math
 import os
 import re
 import subprocess
-import sys
-import tomllib
 import uuid
 from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from pathlib import Path
 from types import SimpleNamespace
 
-from urdido import heard, keywords, media
+from urdido import heard, keywords, media, providers
 from urdido.build import Build
 from urdido.cache import file_hash
 from urdido.narration import Takes
@@ -42,17 +40,8 @@ checkOpening({narration:takes({script,dir:'.'}),locale:process.argv[4]});"""
 
 
 def voice(root, lines_file, language, service, *, keys=None, spend=False):
-    args = [sys.executable, "-m", "polyweave", "voice.lines", "--script", str(lines_file), "--locale", language,
-            "--service", service, "--spend", str(spend).lower(), "--root", str(root), "--json"]
-    if keys:
-        args += ["--keys", *keys]
-    run = subprocess.run(args, capture_output=True, text=True, encoding="utf-8")
-    if run.returncode:
-        raise RuntimeError(f"voice.lines refused: {run.stderr or run.stdout}")
-    answer = json.loads(run.stdout)
-    if answer.get("ok") is False or answer.get("error"):
-        raise RuntimeError(f"voice.lines refused: {json.dumps(answer, ensure_ascii=False)}")
-    return answer
+    """The voice seam (UR25): plan or buy the listed takes."""
+    return providers.voice_lines(root, str(lines_file), language, service, keys=keys or None, spend=spend)
 
 
 def suggestions(words, phrase):
@@ -134,8 +123,8 @@ def prepare(args):
     if args.max_cost is not None and (not math.isfinite(args.max_cost) or args.max_cost < 0):
         raise ValueError("--max-cost must be a finite nonnegative estimate ceiling")
     opening(script_file, args.language)
-    config_file = root / "polyweave.toml"
-    config = tomllib.loads(config_file.read_text("utf-8-sig"))
+    config_file = providers.config_file(root)
+    config = providers.config(root)
     profiles = config.get("service", {})
     matching = [name for name, profile in profiles.items() if script["model"] in profile.get("prices", {})]
     service = args.service or (matching[0] if len(matching) == 1 else None)
@@ -152,7 +141,7 @@ def prepare(args):
                          for name in selected],
                **{key: script[key] for key in ("stability", "similarity", "style", "speed") if key in script}}
     identity = hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:16]
-    work = root / ".polyweave/prepare" / identity
+    work = providers.work_dir(root, "prepare", identity)
     work.mkdir(parents=True, exist_ok=True)
     lines_file = work / "lines.json"
     lines_file.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -216,7 +205,7 @@ def prepare(args):
 
     report["takes"] = states()
     report["planned_takes"] = copy.deepcopy(report["takes"])
-    lock = root / ".polyweave/prepare/EXECUTING.lock"
+    lock = providers.work_dir(root, "prepare", "EXECUTING.lock")
     acquired = False
     try:
         verify_inputs()
@@ -319,7 +308,7 @@ def retaken(args):
     """Buy again takes whose text is unchanged (UR7), then run `prepare`.
 
     voice.lines counts a take current while its words, voice and model are unchanged and
-    has no way to buy it again (polyweave PW720), so each `--retake` take, its provenance
+    has no way to buy it again (PW720), so each `--retake` take, its provenance
     and its word times move to `<language>/retakes/` before the quote. With the take gone,
     the plan prices it and an authorized run buys it. A dry plan, or a run that did not
     buy the new take, puts the old one back. A bought retake is recorded with its reason

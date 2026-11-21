@@ -157,11 +157,13 @@ def test_picture_review_applies_to_whole_image_and_filename_does_not_confirm_ide
 
 
 def test_delegate_surfaces_refusal_and_boolean_flags(monkeypatch, tmp_path):
+    from urdido.providers import polyweave as provider
+
     seen = []
     def run(args, **kwargs):
         seen.extend(args)
         return SimpleNamespace(returncode=0, stdout='{"ok":false,"why":"source refused"}', stderr="")
-    monkeypatch.setattr(library.subprocess, "run", run)
+    monkeypatch.setattr(provider, "RUN", run)
     with pytest.raises(RuntimeError, match="source refused"):
         library.delegate("provenance.credits", tmp_path, all=True)
     assert "--all" in seen and "True" not in seen

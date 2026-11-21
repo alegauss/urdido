@@ -9,7 +9,6 @@ import math
 import os
 import re
 import subprocess
-import sys
 import tempfile
 from datetime import date, datetime, timezone
 from fractions import Fraction
@@ -261,20 +260,10 @@ def check_rejected(beat, asset, frames):
 
 
 def delegate(operation, root, **parameters):
-    args = [sys.executable, "-m", "polyweave", operation, "--root", str(Path(root).resolve()), "--json"]
-    for name, value in parameters.items():
-        if isinstance(value, bool):
-            if value:
-                args += ["--" + name]
-        elif value is not None:
-            args += ["--" + name, str(value)]
-    run = subprocess.run(args, capture_output=True, text=True, encoding="utf-8")
-    if run.returncode:
-        raise RuntimeError(f"{operation} refused: {run.stderr or run.stdout}")
-    result = json.loads(run.stdout)
-    if result.get("ok") is False or result.get("error"):
-        raise RuntimeError(f"{operation} refused: {json.dumps(result, ensure_ascii=False)}")
-    return result
+    """The stock, reference and credits seam (UR25): one provider operation, as data."""
+    from urdido import providers
+
+    return providers.operation(operation, root, **parameters)
 
 
 def add(data, key, candidate):
