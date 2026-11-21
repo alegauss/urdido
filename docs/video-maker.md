@@ -404,6 +404,14 @@ a thumbnail of more than three words are advised. `[thumbnail.check]` takes
 the word fields the layout draws as text. Without a declared title the build
 says the pair went out unchecked.
 
+The final verification scans every frame for a flash (UR14): frames are
+compared grey at 32x18, and a change of at least 6 (mean difference, 0 to
+255) that lasts one or two frames and then returns to within a third of the
+jump is refused, naming the second and, for a scenes cut, the clip it came
+from. A cut changes and stays changed, so it passes. `[qa] flashes = "warn"`
+reports instead of refusing, and `"off"` skips the scan; the findings are in
+the `.qa.json` sidecar under `flashes`.
+
 Every bought take is heard back against its line (UR13): its transcript
 (`<take>.words.json`, written on purchase) is aligned with the line's words.
 A word the script's `pronounce` map names must be heard where the line has

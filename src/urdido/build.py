@@ -109,7 +109,7 @@ class Build:
         file.write_text(text, encoding="utf-8", newline="")
         return file
 
-    def checked_output(self, file: str, *, illustrated: bool = False) -> str:
+    def checked_output(self, file: str, *, illustrated: bool = False, clips=()) -> str:
         """VM39: no finished export is announced until its measured sidecar exists."""
         from urdido.qa import report
 
@@ -127,7 +127,8 @@ class Build:
 
         progress.run("verification", Path(file).name,
                      lambda: report(file, edit=edit, highlights=highlights, assets=assets, text_files=texts,
-                                    peak_ceiling=self.decl.get("audio", {}).get("peak", mix.Loudness().peak)))
+                                    peak_ceiling=self.decl.get("audio", {}).get("peak", mix.Loudness().peak),
+                                    clips=clips, flash_action=(self.decl.get("qa") or {}).get("flashes", "error")))
         self.checked.append(file)
         return file
 
@@ -519,7 +520,12 @@ class Build:
         mux_inputs = [mux_args[i + 1] for i, arg in enumerate(mux_args) if arg == "-i"]
         cache.run("final mux", [file], mux_args, lambda: media.ffmpeg(mux_args),
                   inputs=[__file__, media.__file__, *mux_inputs], tools=["ffmpeg"])
-        print(self.checked_output(file, illustrated=illustrated))
+        clips, at = [], 0.0
+        for row in plan_of(timeline)["pieces"]:
+            if "track" not in row:
+                clips.append({"file": row["file"], "start": at, "end": at + row["length"]})
+                at += row["length"]
+        print(self.checked_output(file, illustrated=illustrated, clips=clips))
         if not illustrated:
             from urdido.review import scene_sheet
 

@@ -434,27 +434,6 @@ Sequenced after UR33: the overlay must resolve every relative path through the b
 about 25 call sites read `build.here` directly; UR33's declaration loader is the one
 place it belongs.
 
-### §UR14 A flash refused before the owner sees it (was marketing VM86)
-
-On 2026-11-17 the Alexandre saw the Viglet Shio promo flash at 0:40. One frame at 40.667
-s averaged 234 in luma between frames of 26 to 43: the first frame of chapter-2.webm,
-which Playwright films as the empty white page before the scene's first navigation
-paints. Six of the sixteen scene clips start on that white frame; the others did not
-show because the page after them is light too. The recording now cuts each clip at its
-first paint, but nothing in the build would have refused the flash.
-
-After that fix the Alexandre still saw 0:40 flash: one frame of the console's loading
-dashboard, the same brightness as its neighbours (luma 39 against 43) but a different
-picture (ffmpeg YDIF 7.6, then 7.9 back), which a brightness scan let through. The final
-verification should compare each frame with its neighbours, by picture difference and
-not only brightness, and refuse a change that lasts a frame or two and comes back (a
-flash), naming the second and the clip it came from, so a blank frame from any source is
-refused rather than published. polyweave's `measure.flashes` may already be the
-measurement.
-
-**Done when** the build refuses a cut with a one-frame white flash between dark frames,
-and the Viglet Shio promo passes.
-
 ### §UR15 One recording driver (was marketing VM16)
 
 `tests/e2e/story/shopper.story.mjs` and `developer/install.developer.mjs` in the Turing
@@ -493,3 +472,23 @@ from the provenance if PW720 records it there).
 
 **Done when** `retaken` moves no file and the UR7 tests pass against a voice fake that
 honours the retake list.
+
+### §UR45 The flash scan calibrated on real cuts
+
+UR14 put a flash scan in the final verification (`qa.flashes`): every frame is decoded
+grey at 32x18, and a change of at least 6 (mean absolute difference, 0 to 255) that
+lasts one or two frames and comes back within a third of the jump is refused. The
+threshold and the size were set on synthetic frames, not on a real cut.
+
+Two things are unknown. The second Shio promo flash (2026-11-17, 40.667 s) was a
+different picture of the same brightness, ffmpeg YDIF 7.6 at full size; averaged down to
+32x18 its difference may fall under 6, and then the scan lets it through. And no
+published video has been scanned yet: an animated card, a blinking cursor or a quick
+zoom might read as a flash, which would refuse a cut that is fine.
+
+What to do: run `qa.flashes` over the Shio promo's chapter-2 clip as it was before the
+fix and over each published Japode and Viglet cut, and set the size and threshold from
+what separates them; keep both in `[qa]` if one value does not fit every channel. Record
+the numbers next to the test that encodes the dashboard case.
+
+Done when the Shio promo's old chapter 2 is refused and every published cut passes.

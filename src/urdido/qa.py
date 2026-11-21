@@ -42,6 +42,82 @@ def opening_frames(log: str) -> dict:
             "identical_frame_runs": repeats}
 
 
+#: The size frames are compared at, grey: enough for a picture change, cheap for a long cut.
+SCAN = (32, 18)
+
+
+def difference(a: bytes, b: bytes) -> float:
+    """Mean absolute difference of two grey frames, 0 to 255."""
+    return sum(abs(x - y) for x, y in zip(a, b, strict=True)) / len(a)
+
+
+def flashes(frames: list[bytes], fps: float, *, threshold: float = 6.0, longest: int = 2) -> list[dict]:
+    """UR14: changes that last a frame or two and come back, by picture difference.
+
+    A flash at frame i is a run of 1..`longest` frames that each differ from frame i-1 by at
+    least `threshold`, while the frame after the run is back near frame i-1 (within a third
+    of the jump): a white page between dark frames, or a different picture of the same
+    brightness. A cut changes and stays changed, so it is not one."""
+    found, i = [], 1
+    while i < len(frames) - 1:
+        jump = difference(frames[i - 1], frames[i])
+        if jump < threshold:
+            i += 1
+            continue
+        hit = None
+        for run in range(1, longest + 1):
+            after = i + run
+            if after >= len(frames):
+                break
+            if any(difference(frames[i - 1], frames[k]) < threshold for k in range(i, after)):
+                break
+            back = difference(frames[i - 1], frames[after])
+            if back <= jump / 3:
+                hit = {"at": round(i / fps, 3), "frames": run, "jump": round(jump, 1), "back": round(back, 1)}
+                break
+        if hit:
+            found.append(hit)
+            i += hit["frames"] + 1
+        else:
+            i += 1
+    return found
+
+
+def scan_frames(file: Path) -> tuple[list[bytes], float]:
+    """Every frame of the file, grey at SCAN size, and its frame rate."""
+    width, height = SCAN
+    probe = json.loads(subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=avg_frame_rate",
+         "-of", "json", str(file)], check=True, capture_output=True, text=True, encoding="utf-8").stdout)
+    fps = float(Fraction(probe["streams"][0]["avg_frame_rate"]))
+    raw = subprocess.run(
+        ["ffmpeg", "-v", "error", "-i", str(file), "-map", "0:v:0", "-an", "-sn", "-fps_mode", "passthrough",
+         "-vf", f"scale={width}:{height}:flags=area,format=gray", "-f", "rawvideo", "-"],
+        check=True, capture_output=True).stdout
+    size = width * height
+    return [raw[k:k + size] for k in range(0, len(raw) - size + 1, size)], fps
+
+
+def clip_at(clips: list[dict], at: float) -> str | None:
+    for clip in clips:
+        if clip["start"] <= at < clip["end"]:
+            return clip["file"]
+    return None
+
+
+def check_flashes(found: list[dict], clips: list[dict], action: str) -> None:
+    if not found or action == "off":
+        return
+    rows = [f"{f['at']:.3f} s ({f['frames']} frame(s), change {f['jump']} then {f['back']})"
+            + (f" in {Path(c).name}" if (c := clip_at(clips, f["at"])) else "") for f in found]
+    message = "QA: the cut flashes: " + "; ".join(rows) + "; trim the clip's blank frame and rebuild"
+    if action == "error":
+        raise RuntimeError(message)
+    import warnings
+
+    warnings.warn(message, UserWarning, stacklevel=2)
+
+
 def editorial(edit: dict | None, highlights: dict | None, assets: dict | None = None) -> dict | None:
     if edit is None:
         return None
@@ -54,7 +130,8 @@ def editorial(edit: dict | None, highlights: dict | None, assets: dict | None = 
 
 
 def report(file: str | Path, *, edit: dict | None = None, highlights: dict | None = None,
-           assets: dict | None = None, text_files=(), peak_ceiling: float | None = None) -> Path:
+           assets: dict | None = None, text_files=(), peak_ceiling: float | None = None,
+           clips: list[dict] = (), flash_action: str = "error") -> Path:
     """Fail if any measurement fails or the MP4 changes. Write a sidecar and decoded first frame.
 
     The bounded opening sample covers at most 120 frames. It measures decoded repetition and
@@ -86,6 +163,12 @@ def report(file: str | Path, *, edit: dict | None = None, highlights: dict | Non
             ["ffmpeg", "-v", "error", "-i", str(file), "-map", "0:v:0", "-an", "-sn",
              "-frames:v", "120", "-fps_mode", "passthrough", "-f", "framemd5", "-"],
             check=True, capture_output=True, text=True, encoding="utf-8").stdout
+        if flash_action not in {"error", "warn", "off"}:
+            raise ValueError("QA: [qa] flashes is error, warn or off")
+        flashed = []
+        if flash_action != "off":
+            flashed = flashes(*scan_frames(file))
+            check_flashes(flashed, list(clips), flash_action)
         texts = []
         for path in text_files:
             path = Path(path)
@@ -96,7 +179,7 @@ def report(file: str | Path, *, edit: dict | None = None, highlights: dict | Non
                 "streams": probe["streams"], "loudness": levels,
                 "peak_ceiling": peak_ceiling,
                 "first_frame": {"file": image.name, "sha256": sha256(image), "video_sha256": signature},
-                "opening": opening_frames(decoded), "editorial": editorial(edit, highlights, assets), "texts": texts}
+                "opening": opening_frames(decoded), "flashes": flashed, "editorial": editorial(edit, highlights, assets), "texts": texts}
         if sha256(file) != signature:
             raise RuntimeError("QA: output changed during measurement; build again")
         pending.write_text(json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
