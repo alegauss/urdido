@@ -1,0 +1,7 @@
+{
+  "title": "A first video: from a declaration",
+  "segments": [
+    { "take": "intro", "shots": [ { "src": "pattern", "at": 0 } ] },
+    { "take": "outro", "shots": [ { "src": "pattern", "at": 6 } ] }
+  ]
+}

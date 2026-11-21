@@ -1,0 +1,21 @@
+# A first video: narration over footage, built with nothing bought or recorded.
+# make_media.py makes the takes and the footage; urdido build does the rest.
+
+[video]
+name = "first-video"
+languages = { en = "eng" }
+
+[source]
+kind = "explainer"
+shots = "shots.json"
+end = 2.0
+
+[source.closing.en]
+title = "Thanks for watching"
+
+[narration]
+script = "script.json"
+takes = "narration"
+
+[audio]
+peak = -1.0

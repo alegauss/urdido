@@ -1,0 +1,7 @@
+{
+  "voice": "example",
+  "model": "example",
+  "intro": { "en": "This is a first video, built from a declaration." },
+  "chapters": {},
+  "outro": { "en": "Change the script, the shots or the look, and build again." }
+}
