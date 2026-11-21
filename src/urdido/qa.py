@@ -105,17 +105,36 @@ def clip_at(clips: list[dict], at: float) -> str | None:
     return None
 
 
-def check_flashes(found: list[dict], clips: list[dict], action: str) -> None:
+#: UR45, calibrated on the published cuts (2026-11-21): a white page between dark frames
+#: jumps about 190; the jumps the published Scion and Docker cuts hold (a stock clip's
+#: own light leak, a jump inside a clip) measured 9.7 to 25.8 and went out fine. So a jump
+#: from `threshold` (6) is reported for a person to look at, and one from REFUSE is
+#: refused; `[qa] flash_refuse` and `[qa] flash_threshold` move either for a channel.
+REFUSE = 40.0
+
+
+def check_flashes(found: list[dict], clips: list[dict], action: str,
+                  refuse: float = REFUSE) -> None:
     if not found or action == "off":
         return
-    rows = [f"{f['at']:.3f} s ({f['frames']} frame(s), change {f['jump']} then {f['back']})"
-            + (f" in {Path(c).name}" if (c := clip_at(clips, f["at"])) else "") for f in found]
-    message = "QA: the cut flashes: " + "; ".join(rows) + "; trim the clip's blank frame and rebuild"
-    if action == "error":
-        raise RuntimeError(message)
     import warnings
 
-    warnings.warn(message, UserWarning, stacklevel=2)
+    def described(rows):
+        return "; ".join(
+            f"{f['at']:.3f} s ({f['frames']} frame(s), change {f['jump']} then {f['back']})"
+            + (f" in {Path(c).name}" if (c := clip_at(clips, f["at"])) else "") for f in rows)
+
+    strong = [f for f in found if f["jump"] >= refuse]
+    faint = [f for f in found if f["jump"] < refuse]
+    if faint:
+        warnings.warn("QA: look at these frames, which change for a frame or two and come "
+                      "back: " + described(faint), UserWarning, stacklevel=2)
+    if strong:
+        message = ("QA: the cut flashes: " + described(strong)
+                   + "; trim the clip's blank frame and rebuild")
+        if action == "error":
+            raise RuntimeError(message)
+        warnings.warn(message, UserWarning, stacklevel=2)
 
 
 def editorial(edit: dict | None, highlights: dict | None, assets: dict | None = None) -> dict | None:
@@ -131,7 +150,8 @@ def editorial(edit: dict | None, highlights: dict | None, assets: dict | None = 
 
 def report(file: str | Path, *, edit: dict | None = None, highlights: dict | None = None,
            assets: dict | None = None, text_files=(), peak_ceiling: float | None = None,
-           clips: list[dict] = (), flash_action: str = "error") -> Path:
+           clips: list[dict] = (), flash_action: str = "error",
+           flash_threshold: float = 6.0, flash_refuse: float = REFUSE) -> Path:
     """Fail if any measurement fails or the MP4 changes. Write a sidecar and decoded first frame.
 
     The bounded opening sample covers at most 120 frames. It measures decoded repetition and
@@ -167,8 +187,8 @@ def report(file: str | Path, *, edit: dict | None = None, highlights: dict | Non
             raise ValueError("QA: [qa] flashes is error, warn or off")
         flashed = []
         if flash_action != "off":
-            flashed = flashes(*scan_frames(file))
-            check_flashes(flashed, list(clips), flash_action)
+            flashed = flashes(*scan_frames(file), threshold=flash_threshold)
+            check_flashes(flashed, list(clips), flash_action, flash_refuse)
         texts = []
         for path in text_files:
             path = Path(path)

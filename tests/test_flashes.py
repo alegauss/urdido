@@ -41,6 +41,19 @@ def test_two_frames_that_come_back_are_a_flash_and_a_cut_is_not():
     assert flashes(fade, 30) == []
 
 
+def test_a_faint_flash_is_reported_and_a_strong_one_refused_ur45():
+    # The published Docker cut holds a stock clip's one-frame light leak (jump 25.8); a
+    # white page between dark frames jumps about 190.
+    leak = [{"at": 257.367, "frames": 1, "jump": 25.8, "back": 6.4}]
+    with pytest.warns(UserWarning, match="look at these frames"):
+        check_flashes(leak, [], "error")  # reported, not refused
+    white = [{"at": 40.667, "frames": 1, "jump": 190.0, "back": 3.0}]
+    with pytest.raises(RuntimeError, match="the cut flashes"):
+        check_flashes(white, [], "error")
+    with pytest.raises(RuntimeError):
+        check_flashes(leak, [], "error", refuse=20)  # a channel can be stricter
+
+
 def test_a_flash_is_refused_naming_its_second_and_clip():
     found = [{"at": 40.667, "frames": 1, "jump": 190.0, "back": 3.0}]
     clips = [{"file": "parts/chapter-2.webm", "start": 38.0, "end": 60.0}]

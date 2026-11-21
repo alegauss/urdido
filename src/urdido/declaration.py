@@ -148,7 +148,7 @@ SCHEMA = table(
             }
         ),
         "anchors": mapping(ANY),
-        "qa": table({"flashes": ANY}),
+        "qa": table({"flashes": ANY, "flash_threshold": ANY, "flash_refuse": ANY}),
         "publish": table({"declaration": ANY}),
         "resolve": table({"declaration": ANY}),
         "thumbnail": table(

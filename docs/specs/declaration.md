@@ -183,6 +183,8 @@ Any key, each a name of your own.
 How the final verification treats a flash.
 
 - `flashes`
+- `flash_threshold`
+- `flash_refuse`
 
 ## [publish]
 

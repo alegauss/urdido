@@ -30,8 +30,10 @@ made before it says it is done. Each check below names what refuses and what fix
   Shorts are held to the platform's controls where the provider runs.
 - **Loudness and peaks.** The mix is held to `[audio]`'s target and true-peak ceiling,
   read off the finished file.
-- **Flashes.** The final verification refuses a picture change that lasts one or two
-  frames and comes back, naming its second and the clip it came from.
+- **Flashes.** The final verification looks for a picture change that lasts one or two
+  frames and comes back. A strong one (a white page between dark frames) is refused,
+  naming its second and the clip; a faint one (a clip's own light leak) is reported for
+  you to look at. `[qa] flash_refuse` and `flash_threshold` move the two levels.
 - **Shorts.** A Short over a minute, a title over 60 characters, or the wrong number of
   hashtags is refused; one outside 20 to 55 seconds is advised.
 

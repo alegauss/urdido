@@ -60,6 +60,8 @@ class Finishing(Project):
                 ),
                 clips=clips,
                 flash_action=(self.decl.get("qa") or {}).get("flashes", "error"),
+                flash_threshold=(self.decl.get("qa") or {}).get("flash_threshold", 6.0),
+                flash_refuse=(self.decl.get("qa") or {}).get("flash_refuse", 40.0),
             ),
         )
         self.checked.append(file)

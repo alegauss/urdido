@@ -499,12 +499,18 @@ the word fields the layout draws as text. Without a declared title the build
 says the pair went out unchecked.
 
 The final verification scans every frame for a flash: frames are
-compared grey at 32x18, and a change of at least 6 (mean difference, 0 to
-255) that lasts one or two frames and then returns to within a third of the
-jump is refused, naming the second and, for a scenes cut, the clip it came
-from. A cut changes and stays changed, so it passes. `[qa] flashes = "warn"`
-reports instead of refusing, and `"off"` skips the scan; the findings are in
-the `.qa.json` sidecar under `flashes`.
+compared grey at 32x18, and a change that lasts one or two frames and then
+returns to within a third of the jump is a flash. One that jumps 40 or more
+(mean difference, 0 to 255; a white page between dark frames measures about
+190) is refused, naming the second and, for a scenes cut, the clip it came
+from. One from 6 to 40 is reported for a person to look at: the published
+Scion and Docker cuts hold a few (a stock clip's light leak, a jump inside a
+clip, 9.7 to 25.8) and went out fine, while the Shio promo, the WordPress
+episode and the Turing story hold none. `[qa] flash_refuse` and
+`[qa] flash_threshold` move the two levels for a channel. A cut changes and
+stays changed, so it passes. `[qa] flashes = "warn"` reports even the strong
+ones, and `"off"` skips the scan; the findings are in the `.qa.json` sidecar
+under `flashes`.
 
 The opening gate runs in Python (`urdido.opening`), so `urdido prepare`
 needs no node: a preamble in the intro, or a first proof later than 20 s at the

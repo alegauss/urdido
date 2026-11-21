@@ -337,26 +337,6 @@ from the provenance if PW720 records it there).
 **Done when** `retaken` moves no file and the UR7 tests pass against a voice fake that
 honours the retake list.
 
-### §UR45 The flash scan calibrated on real cuts
-
-UR14 put a flash scan in the final verification (`qa.flashes`): every frame is decoded
-grey at 32x18, and a change of at least 6 (mean absolute difference, 0 to 255) that
-lasts one or two frames and comes back within a third of the jump is refused. The
-threshold and the size were set on synthetic frames, not on a real cut.
-
-Two things are unknown. The second Shio promo flash (2026-11-17, 40.667 s) was a
-different picture of the same brightness, ffmpeg YDIF 7.6 at full size; averaged down to
-32x18 its difference may fall under 6, and then the scan lets it through. And no
-published video has been scanned yet: an animated card, a blinking cursor or a quick
-zoom might read as a flash, which would refuse a cut that is fine.
-
-What to do: run `qa.flashes` over the Shio promo's chapter-2 clip as it was before the
-fix and over each published Japode and Viglet cut, and set the size and threshold from
-what separates them; keep both in `[qa]` if one value does not fit every channel. Record
-the numbers next to the test that encodes the dashboard case.
-
-Done when the Shio promo's old chapter 2 is refused and every published cut passes.
-
 ### §UR48 One table, one Shorts cutter
 
 Two things read `[shorts]` in a video.toml. A scenes build's `--cut short:<c>` reads
