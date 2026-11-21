@@ -4,11 +4,10 @@
 
 - ⏳ **UR19** (deps: UR18 ✅, UR24) **A version cannot reach PyPI except by a hand-run upload with a token** — Releasing 0.1.0 still needs the trusted publishers registered on PyPI and TestPyPI, and a wheel that carries urdido build and its package data. → §UR19
 - ⏳ **UR20** (deps: UR16 ✅, UR17 ✅, UR35) **An agent working in this repo or driving urdido has no CLAUDE.md, skill or friction path** — Consumers still have no urdido skill on declaring and building a video, which waits for the code and its manual. → §UR20
-- 📋 **UR35** (deps: UR16 ✅, UR23) **Nobody outside this machine can learn what a declaration accepts or how to build a first video** — A package on PyPI is read by people who never saw marketing, and today the only manual is a 600-line README full of VM ids. → §UR35
+- 📋 **UR35** (deps: UR16 ✅, UR23 ✅) **Nobody outside this machine can learn what a declaration accepts or how to build a first video** — A package on PyPI is read by people who never saw marketing, and today the only manual is a 600-line README full of VM ids. → §UR35
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-- 📋 **UR23** (deps: UR21 ✅) **A misspelled or missing key in video.toml fails as a KeyError deep inside the build** — Only the illustrated path is checked before rendering, so a typo in any other table costs a partial build to find. → §UR23
 - 📋 **UR24** (deps: UR21 ✅) **Library code raises SystemExit and the CLI is an if-chain, so urdido can be neither embedded nor discovered** — A package is used from other Python code and by agents reading --help, and both see an exit or a usage line naming two of seven commands. → §UR24
 - 📋 **UR25** (deps: UR21 ✅, UR24) **Polyweave is called through three separate subprocess wrappers, and its polyweave.toml is read directly** — Each wrapper parses answers its own way and a change to polyweave's config breaks urdido silently. → §UR25
 - 📋 **UR26** (deps: UR25) **Word times come from a direct ElevenLabs Scribe call inside the package, with no provider seam** — polyweave PW703 is meant to supply word times, and a second transcriber should not mean editing every caller. → §UR26
@@ -18,10 +17,11 @@
 - 📋 **UR30** (deps: UR21 ✅) **The Python build shells out to node for the opening gate, and the JavaScript helpers have no install path** — A pip install brings no .mjs files, and eight project scripts and Turing's e2e specs import them by relative path. → §UR30
 - 📋 **UR31** (deps: UR21 ✅) **Ten test files read japode, shio and turing folders, so the suite cannot run outside marketing** — CI here has none of those folders, and a test that skips everywhere but one machine proves nothing. → §UR31
 - 📋 **UR32** (deps: UR21 ✅, UR22 ✅) **Every stage cache is keyed on absolute module and input paths, so moving the code invalidates every cache** — Each marketing video would rebuild from scratch on install, and caches would never be shared between two checkouts. → §UR32
-- 📋 **UR33** (deps: UR22 ✅, UR28, UR23) **build.py holds both pipelines, the mux, the mix and every root in one 600-line class** — Each new source kind or check lands in that class, and nobody can test one pipeline without loading the others. → §UR33
+- 📋 **UR33** (deps: UR22 ✅, UR28, UR23 ✅) **build.py holds both pipelines, the mux, the mix and every root in one 600-line class** — Each new source kind or check lands in that class, and nobody can test one pipeline without loading the others. → §UR33
 - 📋 **UR34** (deps: —) **Polyweave's open tasks PW712 to PW716 describe video composition that urdido now owns** — Two roadmaps planning the same preflight, preview, progress and claims will build them twice or wait on each other. → §UR34
 - 📋 **UR43** (deps: UR21 ✅) **The imported modules pass ruff only through a per-file baseline of ignored rules and unformatted files** — Each ignored B023 or B905 may hide a real bug, and new code in those files is checked against nothing. → §UR43
 - 📋 **UR46** (deps: UR22 ✅, UR37) **Four environment variables still fill undeclared roots, the last root names left in a module** — They were kept for one release so marketing's builds keep working; left longer, the shim becomes a second way to declare a root. → §UR46
+- 📋 **UR47** (deps: UR23 ✅) **Values in video.toml are untyped and the side files it names are not checked, so a typo inside them is still a KeyError** — urdido check refuses a misspelled table key, but storyboard.json or script.json still fail deep inside the build. → §UR47
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
@@ -40,6 +40,7 @@
 - 📋 **UR5** (deps: UR21 ✅, UR33) **A second cut of a video, to test a new opening, means copying the whole video folder and its declaration** — Retention tests need several openings of the same episode, and each copy duplicates 722 MB and drifts from the published cut on every later fix. → §UR5
 - 📋 **UR44** (deps: polyweave: PW720) **A retake moves the old take's files aside by hand because voice.lines cannot buy a current take again** — Moving files behind polyweave's back is a workaround that a crash mid-run can leave half done. → §UR44
 - 📋 **UR45** (deps: UR14 ✅) **The flash scan's threshold was set on synthetic frames, never on the Shio flash or a published cut** — At 32x18 a same-brightness flash may slip under the threshold, and a published cut may be refused for a blink that is fine. → §UR45
+- 📋 **UR48** (deps: UR2 ✅) **[shorts] is read by two cutters with different keys, so nothing says which cutter a key belongs to** — The scenes selection and urdido shorts share one table name, and a declaration can mix their keys unnoticed. → §UR48
 
 ## Done when — UR19
 

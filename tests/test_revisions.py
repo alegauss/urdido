@@ -49,7 +49,7 @@ def test_revision_refuses_unsafe_identifiers_vm40(tmp_path, value):
 def test_build_promotes_only_after_entire_build_succeeds_vm40(tmp_path, monkeypatch):
     declaration = tmp_path / "video.toml"
     declaration.write_text('[video]\nname="test"\nlanguages={en="eng"}\nrevision="v1"\n'
-                           '[source]\nkind="scenes"\n', encoding="utf-8")
+                           '[source]\nkind="scenes"\nlisting="scenes.json"\n', encoding="utf-8")
     monkeypatch.setenv("STORY_VIDEO_DIR", str(tmp_path / "video"))
 
     def render(self):
@@ -76,7 +76,7 @@ def test_build_promotes_only_after_entire_build_succeeds_vm40(tmp_path, monkeypa
 def test_plan_does_not_reserve_or_promote_revision_vm40(tmp_path, monkeypatch):
     declaration = tmp_path / "video.toml"
     declaration.write_text('[video]\nname="test"\nlanguages={en="eng"}\nrevision="v1"\n'
-                           '[source]\nkind="scenes"\n', encoding="utf-8")
+                           '[source]\nkind="scenes"\nlisting="scenes.json"\n', encoding="utf-8")
     monkeypatch.setenv("STORY_VIDEO_DIR", str(tmp_path / "video"))
     monkeypatch.setattr(build.Build, "scenes", lambda self: 0)
     assert build.main([str(declaration), "--language", "en", "--plan"]) == 0

@@ -50,21 +50,6 @@ lists every key the schema accepts.
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-### §UR23 A schema for the declaration
-
-Every module reads the declaration as `decl["x"]["y"]`; only `[video] frame`,
-`text_checks`, `brand_mark` and instance names are checked. Model the declaration as
-typed dataclasses per table (`video`, `source`, `narration`, `cards`, `music`, `audio`,
-`opening`, `cuts`, `captions`, `highlights`, `claims`, `description`, `thumbnail`,
-`instances`, ...) and the side files it names, with defaults in one place, unknown keys
-refused with a did-you-mean, and paths resolved through the roots.
-
-`urdido check <video.toml>` validates without building, and the schema exports a JSON
-Schema that editors and the reference docs read.
-
-**Done when** every marketing declaration passes `urdido check`, and a misspelled key is
-refused with its file, table and the nearest valid name.
-
 ### §UR24 Errors raised, commands declared
 
 `SystemExit` is raised deep in `build.py`, `preflight.py` and the assemblers;
@@ -268,6 +253,26 @@ declare their roots (UR37), delete `LEGACY_ROOTS` and its loop, and change the t
 that set STORY_VIDEO_DIR to declare `[output] folder` in their fixture instead.
 
 Done when no module names a root and no test sets one of the four variables.
+
+### §UR47 The side files and values checked
+
+UR23 gave video.toml a key schema (`urdido.declaration.SCHEMA`): every table and key the
+code reads, unknown keys refused with the nearest name, required keys and each source
+kind's needs checked by `urdido check` and before every build. The values are not typed
+(a `tempo` of "fast" passes), the defaults still live at each `.get(key, default)` in
+the modules, and the side files a declaration names are not checked at all: the
+narration script, the cards declaration, the storyboard, the highlights, the claims and
+the translation tables still fail as a KeyError when a key is misspelled inside them.
+
+What to build: give each table and each side file a dataclass with its types and its
+defaults, load the declaration once into them (the loader UR33 splits out of `Build`),
+and let `urdido check` follow every path the declaration names, through its roots, and
+check that file against its own model with the same did-you-mean refusal. The JSON
+Schema export then comes from the dataclasses rather than from the key table.
+
+Done when a misspelled key inside storyboard.json or script.json is refused by `urdido
+check` with its file and the nearest name, and no module reads a default that the model
+does not hold.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
@@ -490,3 +495,21 @@ what separates them; keep both in `[qa]` if one value does not fit every channel
 the numbers next to the test that encodes the dashboard case.
 
 Done when the Shio promo's old chapter 2 is refused and every published cut passes.
+
+### §UR48 One table, one Shorts cutter
+
+Two things read `[shorts]` in a video.toml. A scenes build's `--cut short:<c>` reads
+`[shorts] declaration`, a JSON file of chapter selections cut by `cuts/selection.py`
+(VM12). `urdido shorts` (UR2) reads `[shorts]` with `plan`, `picture`, `mix`, `look`,
+`[[shorts.cut]]` and the rest, for a video built outside the scenes pipeline. The key
+schema (UR23) accepts the union of both, so a declaration can mix them and nothing says
+which cutter a key belongs to; the Viglet Shio promo already uses the first and a Japode
+video moving onto urdido would use the second.
+
+What to build: decide whether the selection cutter's Shorts follow the UR2 rules (loop,
+punch-ins, word captions, loudness) and become one cutter, or keep two and give the
+newer one its own table name (`[shorts.feed]`, say) with the schema refusing a key of
+one inside the other. Either way, one table means one thing.
+
+Done when each key under `[shorts]` belongs to exactly one cutter and the schema says
+which.

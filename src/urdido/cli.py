@@ -17,6 +17,7 @@ from urdido import __version__
 #: Each command, and the module whose `main(argv)` runs it.
 COMMANDS = {
     "build": "urdido.build",
+    "check": "urdido.declaration",
     "thumbnail": "urdido.thumbnail",
     "shorts": "urdido.shorts",
     "record": "urdido.record",

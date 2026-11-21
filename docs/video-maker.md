@@ -23,6 +23,15 @@ undeclared one is refused by name. For one release STORY_VIDEO_DIR,
 STORY_RECORDINGS, TURING_WORDPRESS and SHIO_REPO still fill an undeclared
 root, with a notice.
 
+`urdido check <video.toml>` checks a declaration without building (UR23):
+a key no table takes is refused with the file, the table and the nearest
+valid name (`[narration]: unknown key tempoo; did you mean tempo?`), and so is
+a missing required key or a source without what its kind needs (`folder`,
+`recording` and `chapters` for a chaptered one, `listing` for scenes,
+`declaration` for illustrated). `urdido build` runs the same check before any
+work. `urdido check --schema` prints the JSON Schema, for an editor's
+completion and the reference docs.
+
 It grew out of the WordPress demo's 2,900-line assembly script, one module at a time, each step
 keeping that video's output the same, until the script was removed (VM17). Recording stays
 JavaScript; the assembly is the `videomaker` package. The plan was Block B of

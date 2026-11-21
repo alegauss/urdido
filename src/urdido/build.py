@@ -87,6 +87,11 @@ class Build:
         self.here = toml.parent.resolve()
         raw = toml.read_bytes()
         self.decl = tomllib.loads(raw.decode("utf-8-sig"))
+        from urdido.declaration import check as check_declaration
+
+        problems = check_declaration(self.decl, str(toml))
+        if problems:
+            raise SystemExit("urdido build: the declaration is refused:\n" + "\n".join(problems))
         self.input_hashes = {toml.resolve(): hashlib.sha256(raw).hexdigest()}
         self.args = args
         self.roots = roots_of(self.here, self.decl)

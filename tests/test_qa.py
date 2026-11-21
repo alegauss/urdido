@@ -87,8 +87,8 @@ def test_build_loads_illustrated_edit_report_vm66(tmp_path, monkeypatch):
 
     (tmp_path / "video.toml").write_text(
         '[video]\nname="test"\nlanguages={en="eng"}\n'
-        '[source]\ndeclaration="storyboard.json"\n'
-        '[narration]\nscript="script.json"\n', encoding="utf-8")
+        '[source]\nkind="illustrated"\ndeclaration="storyboard.json"\n'
+        '[narration]\nscript="script.json"\ntakes="narration"\n', encoding="utf-8")
     (tmp_path / "script.json").write_text('{}', encoding="utf-8")
     (tmp_path / "storyboard.json").write_text('{"media":{}}', encoding="utf-8")
     monkeypatch.setenv("STORY_VIDEO_DIR", str(tmp_path / "video"))
