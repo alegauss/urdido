@@ -28,6 +28,7 @@
 - ✅ **UR33** **build.py holds both pipelines, the mux, the mix and every root in one 600-line class** — Each source kind builds in its own pipeline module on shared finishing stages, build.py only dispatches, and a package adds a kind through urdido.sources (design recorded in `docs/video-maker.md`).
 - ✅ **UR43 (safe fixes)** **The imported modules pass ruff only through a per-file baseline of ignored rules and unformatted files** — The safe codes (I001, F401, UP035, UP037, UP017) are fixed across the imported files and gone from the baseline, 83 entries fewer.
 - ✅ **UR55** **The imported modules suppress B023 and B905, so a late-bound closure or a truncating zip goes unseen** — Every closure over a loop variable binds what it reads, every zip says strict=, and B023 and B905 are gone from the baseline; none was a live late-binding bug.
+- ✅ **UR47 (script and storyboard keys)** **Values in video.toml are untyped and the side files it names are not checked, so a typo inside them is still a KeyError** — urdido check and every build follow the declaration into its script and storyboard and refuse a misspelled key there, naming the file.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
