@@ -47,112 +47,10 @@ from urdido.narration import Takes
 from urdido.sources import RecordingRefused, chaptered_recording
 from urdido.timeline import from_plan, pieces as pieces_of, plan as plan_of
 
-TAB, NEWLINE = chr(9), chr(10)
+from urdido.project import LEGACY_ROOTS, NEWLINE, TAB, Project, roots_of  # noqa: F401
 
-#: The environment variables that filled a root before `[roots]` (UR22), kept for one release.
-LEGACY_ROOTS = {"video": "STORY_VIDEO_DIR", "recordings": "STORY_RECORDINGS",
-                "plugin": "TURING_WORDPRESS", "shio": "SHIO_REPO"}
-
-
-def roots_of(here: Path, decl: Mapping, env: Mapping[str, str] | None = None) -> dict[str, str]:
-    """The roots a declaration's `<name>` paths start at, all declared or inside its folder.
-
-    `[roots]` names each one, as a path relative to the declaration or as `$VAR` / `${VAR}`;
-    `[output] folder` is `<video>`. An undeclared legacy root is still read from its old
-    environment variable, with a notice; an undeclared one with no variable does not exist."""
-    env = os.environ if env is None else env
-    output = decl.get("output") or {}
-    roots = {"root": str(here), "video": str((here / output.get("folder", "video")).resolve()),
-             "recordings": str(here / "recordings")}
-    declared = dict(decl.get("roots") or {})
-    for name, value in declared.items():
-        if name in ("root", "video") or not isinstance(value, str) or not value:
-            raise DeclarationError(f"urdido build: [roots] {name} must be a path, and root and video are not declared there")
-        if value.startswith("$"):
-            variable = value.strip("${}")
-            if not env.get(variable):
-                raise DeclarationError(f"urdido build: [roots] {name} reads ${variable}, which is not set")
-            value = env[variable]
-        roots[name] = str((here / value).resolve())
-    for name, variable in LEGACY_ROOTS.items():
-        if name in declared or (name == "video" and "folder" in output) or not env.get(variable):
-            continue
-        roots[name] = str(Path(env[variable]).resolve())
-        print(f"urdido build: {variable} is deprecated; declare [roots] {name}"
-              + (" or [output] folder" if name == "video" else ""), file=sys.stderr)
-    return roots
-
-
-class Build:
-    def __init__(self, toml: Path, args: argparse.Namespace):
-        self.here = toml.parent.resolve()
-        raw = toml.read_bytes()
-        self.decl = tomllib.loads(raw.decode("utf-8-sig"))
-        from urdido.declaration import check as check_declaration
-
-        problems = check_declaration(self.decl, str(toml))
-        if problems:
-            raise DeclarationError("urdido build: the declaration is refused:\n" + "\n".join(problems))
-        self.input_hashes = {toml.resolve(): hashlib.sha256(raw).hexdigest()}
-        self.args = args
-        self.roots = roots_of(self.here, self.decl)
-        self.out = Path(self.roots["video"])
-        self.language = args.language
-        video = self.decl["video"]
-        self.name = video["name"]
-        if self.language not in video["languages"]:
-            raise DeclarationError(f"urdido build: {self.name} speaks {', '.join(video['languages'])}, not {self.language}")
-        self.revision = None
-        self.checked: list[str] = []
-        revision = getattr(args, "revision", None) or video.get("revision")
-        if revision and not (getattr(args, "plan", False) or getattr(args, "cards", False)):
-            from urdido.revisions import Revision
-
-            cut = args.cut + ("-vertical" if args.vertical else "")
-            if getattr(args, "preview", None):
-                cut = "preview-" + hashlib.sha256(json.dumps([args.preview, args.context_before, args.context_after,
-                                                            args.preview_occurrence]).encode()).hexdigest()[:12]
-            self.revision = Revision(self.out, self.name, self.language, cut, revision)
-            self.out = self.revision.folder
-        self.parts = self.out / (self.decl.get("output") or {}).get("parts", "parts")
-        self.parts.mkdir(parents=True, exist_ok=True)
-
-    # -- paths -----------------------------------------------------------------------------------
-
-    def path(self, declared: str) -> str:
-        for name, root in self.roots.items():
-            if declared.startswith(f"<{name}>"):
-                return os.path.normpath(declared.replace(f"<{name}>", root))
-        if declared.startswith("<") and ">" in declared:
-            name = declared[1:declared.index(">")]
-            raise DeclarationError(f"urdido build: {declared} starts at <{name}>, which the declaration does not "
-                             f"declare; add it under [roots]")
-        return os.path.normpath(str(self.here / declared))
-
-    def portable(self, text: str) -> str:
-        """Paths named by the folder they are under, as story-video.mjs's plan writes them."""
-        folders = sorted(((root, f"<{k}>") for k, root in self.roots.items()),
-                         key=lambda p: -len(p[0]))
-        for folder, name in folders:
-            text = text.replace(folder, name).replace(folder.replace("\\", "/"), name)
-        return text.replace("\\", "/")
-
-    def _portable_all(self, value: Any) -> Any:
-        if isinstance(value, str):
-            return self.portable(value)
-        if isinstance(value, dict):
-            return {k: self._portable_all(v) for k, v in value.items()}
-        if isinstance(value, list):
-            return [self._portable_all(v) for v in value]
-        return value
-
-    def write_plan(self, name: str, data: Mapping) -> Path:
-        from urdido.timeline import _rounded
-
-        file = self.parts / f"{name}.{self.language}.plan.json"
-        text = json.dumps(_rounded(self._portable_all(dict(data))), ensure_ascii=False, indent=TAB) + NEWLINE
-        file.write_text(text, encoding="utf-8", newline="")
-        return file
+class Build(Project):
+    """The pipelines, on the loaded declaration (`urdido.project`)."""
 
     def checked_output(self, file: str, *, illustrated: bool = False, clips=()) -> str:
         """VM39: no finished export is announced until its measured sidecar exists."""
@@ -207,27 +105,6 @@ class Build:
                 (self.out / f"{self.name}.{language}.{ext}").write_text(text, encoding="utf-8", newline="")
             out.append((track, str(self.out / f"{self.name}.{language}.srt")))
         return out
-
-    def load(self, declared: str):
-        file = Path(self.path(declared)).resolve()
-        raw = file.read_bytes()
-        if not file.is_relative_to(self.parts):
-            sha = hashlib.sha256(raw).hexdigest()
-            if file in self.input_hashes and self.input_hashes[file] != sha:
-                raise RecordingRefused(f"declaration changed during build: {file}")
-            self.input_hashes[file] = sha
-        return json.loads(raw.decode("utf-8-sig"))
-
-    def write_inputs(self) -> Path:
-        for file, sha in self.input_hashes.items():
-            if hashlib.sha256(file.read_bytes()).hexdigest() != sha:
-                raise RecordingRefused(f"declaration changed during build: {file}")
-        manifest = self.parts / f"{self.name}.{self.language}.inputs.json"
-        manifest.write_text(json.dumps({"declarations": [
-            {"file": str(file), "sha256": sha} for file, sha in self.input_hashes.items()]}, indent=2) + "\n", encoding="utf-8")
-        for file, sha in self.input_hashes.items():
-            print(f"input sha256 {sha} {file}")
-        return manifest
 
     # -- the chaptered recording ----------------------------------------------------------------
 
@@ -589,13 +466,6 @@ class Build:
             print(scene_sheet(Path(file), placed, script, self.language, self.out,
                               self.here / thumbnail.format(language=self.language)))
         return 0
-
-    def frame(self):
-        """The declared `[video] frame = [width, height]`, 1920x1080 by default (VM74)."""
-        size = (self.decl.get("video") or {}).get("frame", [1920, 1080])
-        if not (isinstance(size, list) and len(size) == 2 and all(isinstance(v, int) and v >= 16 and v % 2 == 0 for v in size)):
-            raise DeclarationError(f"urdido build: [video] frame must be [width, height] in even pixels, got {size!r}")
-        return html.Frame(*size)
 
     def beat_sounds(self, opening: float) -> list:
         """The illustrated beats that play their clip's own sound, where they sit on the timeline

@@ -358,7 +358,7 @@ def make(declaration: Path, language: str) -> Path:
     media_by_file = storyboard_media(here, video)
     sources = [provenance(here, role, decl[role], media_by_file) for role in roles]
     words = dict(decl["words"][language])
-    from urdido.build import roots_of
+    from urdido.project import roots_of
 
     output = video.get("output") or {}
     work = Path(roots_of(here, video)["video"]) / output.get("parts", "parts") / "thumbnail"
