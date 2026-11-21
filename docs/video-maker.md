@@ -418,8 +418,13 @@ unaffected images. Completed stages remain reusable after a later stage fails.
 `parts/cache.<language>.json` lists every hit and miss, including failed attempts;
 the build also prints their counts. Media hashes are shared across worker threads
 for the duration of one build. QA still measures the finished file on every run.
-Cache reuse currently stays within one output folder: a new immutable revision
-package starts with fresh caches. No speedup is assumed before measuring a cut.
+Cache keys survive a move (UR32): each input is named by its declared root or
+by its place in the urdido package and hashed by content, and paths in a
+stage's settings are written the same way, so a project copied to another
+checkout hits the stamps it carries, and an upgrade misses only the stages
+whose modules changed. A stamp from before this format rebuilds, and the
+build's cache line counts it. A new immutable revision package starts with
+fresh caches. No speedup is assumed before measuring a cut.
 
 Thumbnail layouts can use `videomaker.thumbnail.fit_title` to fit measured
 title lines to a declared subject-free box (VM54). Japode's layout keeps the

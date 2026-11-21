@@ -7,7 +7,6 @@
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-- 📋 **UR32** (deps: UR21 ✅, UR22 ✅) **Every stage cache is keyed on absolute module and input paths, so moving the code invalidates every cache** — Each marketing video would rebuild from scratch on install, and caches would never be shared between two checkouts. → §UR32
 - 📋 **UR33** (deps: UR22 ✅, UR28 ✅, UR23 ✅) **build.py holds both pipelines, the mux, the mix and every root in one 600-line class** — Each new source kind or check lands in that class, and nobody can test one pipeline without loading the others. → §UR33
 - 📋 **UR34** (deps: —) **Polyweave's open tasks PW712 to PW716 describe video composition that urdido now owns** — Two roadmaps planning the same preflight, preview, progress and claims will build them twice or wait on each other. → §UR34
 - 📋 **UR43** (deps: UR21 ✅) **The imported modules pass ruff only through a per-file baseline of ignored rules and unformatted files** — Each ignored B023 or B905 may hide a real bug, and new code in those files is checked against nothing. → §UR43

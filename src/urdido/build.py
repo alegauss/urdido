@@ -656,7 +656,8 @@ def main(argv: list[str] | None = None) -> int:
 
     DECLARED.set((build.decl.get("cards") or {}).get("channel"))
     with progress.configured(build.parts / f"progress.{build.language}.jsonl", mode=a.progress), \
-            cache.configured(build.parts / f"cache.{build.language}.json", enabled=kind == "illustrated" and not a.plan), \
+            cache.configured(build.parts / f"cache.{build.language}.json", enabled=kind == "illustrated" and not a.plan,
+                             roots=build.roots), \
             textcheck.configured(build.decl.get("text_checks", {}), build.language, enabled=kind == "illustrated"), \
             configured(build.decl.get("captions", {}).get("safe_area", {})):
         with progress.unit("assembly", f"{build.name}.{build.language}:{a.cut}"):

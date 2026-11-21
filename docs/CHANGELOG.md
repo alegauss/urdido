@@ -22,6 +22,7 @@
 - ✅ **UR30 (Python opening gate, npm package)** **The Python build shells out to node for the opening gate, and the JavaScript helpers have no install path** — urdido prepare runs the opening gate in Python with no node, and js/ is the npm package urdido-record, versioned with the Python package by the release.
 - ✅ **UR31** **Ten test files read japode, shio and turing folders, so the suite cannot run outside marketing** — Publish, card, cache, preview, motion and source tests run on fixtures; what still reads marketing checks its own videos and moves there with UR39.
 - ✅ **UR50** **Motion, sources, cache and preview tests read marketing's chapter timelines and Japode's fonts** — The chapter timelines live in tests/fixtures/recordings and the cache and preview builds draw generated fonts, so those four files run without marketing.
+- ✅ **UR32** **Every stage cache is keyed on absolute module and input paths, so moving the code invalidates every cache** — Cache keys name inputs by declared root or package place, hashed by content, so a moved project hits its stamps and an upgrade misses only changed code (design recorded in `docs/video-maker.md`).
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

@@ -66,19 +66,6 @@ once, in Python, with the JS reading the result.
 **Done when** `urdido prepare` runs without node, and marketing's scripts can import the
 helpers from the npm package.
 
-### §UR32 Cache keys that survive an install
-
-`cache.py:51-58` keys each stage on the absolute path of `cache.py` and of every input.
-Installing urdido instead of the in-repo package changes every key, and the tracked
-`*.cache.json` under `japode/*/video/parts/` all miss.
-
-Key the code by the package version plus a hash of the modules a stage runs, and inputs
-by content hash with paths relative to the declared roots. Keep a one-time reader for
-the old format that reports what it can no longer verify.
-
-**Done when** a build cached in one checkout hits its cache from another checkout of the
-same version, and an upgrade misses only the stages whose code changed.
-
 ### §UR33 One pipeline per source kind
 
 `Build` in `build.py` resolves roots, loads hash-pinned JSON, runs the chaptered
