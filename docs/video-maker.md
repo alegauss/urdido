@@ -394,6 +394,22 @@ a thumbnail of more than three words are advised. `[thumbnail.check]` takes
 the word fields the layout draws as text. Without a declared title the build
 says the pair went out unchecked.
 
+`urdido shorts <video.toml> --language <l> [n ...]` cuts YouTube Shorts from
+a built video's `plan.json`, its picture without titles and its mix, as
+`[shorts]` and its `[[shorts.cut]]` rows declare (UR2): the takes each Short
+covers, its two-line hook, its title and its description text. The channel's
+colours and fonts come from `[shorts.look]`; nothing about the look is
+assumed. Every Short loops with no end card (the pointer to the full video
+replaces the hook for its last 2.6 s), punches in at the middle of each shot
+longer than 3.6 s (a terminal stays whole), runs 1.1 times faster, burns in
+word-timed captions with numbers in the accent colour, and is normalised to
+-14 LUFS. `[shorts.rules]` moves those numbers. A title over 60 characters,
+fewer than 3 or more than 5 hashtags, or a Short over a minute is refused;
+`--check` runs those checks without encoding. With the `polyweave` extra the
+burned captions are held to `video.safe_area` before encoding. Each Short
+gets a `.txt` beside it with its title, description, link, credits for the
+sources its shots use, the declared `[shorts.notes]` and the hashtags.
+
 Illustrated builds produce a description of at most 5,000 UTF-16 units and a
 full `.credits.json` sidecar (VM52). The first paragraph comes from the
 storyboard's `description`, or `[description] summary` in `video.toml`.

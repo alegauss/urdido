@@ -20,6 +20,7 @@ extras, and code that needs a missing one stops with the `pip install` that fixe
 | `cards`     | playwright, fonttools  | title cards and thumbnails   |
 | `narration` | requests               | buying narration takes       |
 | `polyweave` | polyweave-gamekit      | the polyweave operations     |
+| `shorts`    | pillow                 | `urdido shorts` backgrounds  |
 | `test`      | pytest, pillow, ruff   | the suite and the lint       |
 
 DaVinci Resolve and Docker are programs rather than Python packages, so the commands

@@ -18,6 +18,7 @@ from urdido import __version__
 COMMANDS = {
     "build": "urdido.build",
     "thumbnail": "urdido.thumbnail",
+    "shorts": "urdido.shorts",
     "claims": "urdido.claims",
     "prepare": "urdido.prepare",
     "library": "urdido.library",

@@ -30,6 +30,8 @@ dependencies = ["opentimelineio>=0.17"]
 cards = ["playwright>=1.40", "fonttools>=4"]
 narration = ["requests>=2.32"]
 polyweave = ["polyweave-gamekit"]
+# A Short's background is drawn with Pillow.
+shorts = ["pillow>=10"]
 test = ["pytest>=8", "pillow>=10", "ruff>=0.6"]
 
 [project.scripts]

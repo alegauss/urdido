@@ -13,6 +13,7 @@ EXTRAS: dict[str, tuple[str, ...]] = {
     "cards": ("playwright", "fontTools"),
     "narration": ("requests",),
     "polyweave": ("polyweave",),
+    "shorts": ("PIL",),
 }
 
 
