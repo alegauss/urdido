@@ -39,6 +39,8 @@
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
+- ✅ **UR36** **Marketing installs the framework from its own folder with pip -e, with no version pinned** — Marketing installs urdido from requirements.txt, editable from the sibling checkout until the PyPI pin.
+
 ## Block D — Inherited from video-maker (marketing Block B)
 
 - ✅ **UR6** **A stock clip already rejected for contradicting the narration can come back into a cut without any check refusing it** — Storyboard media can carry rejected with a reason, whole or by range, and preflight and build refuse any beat that meets it (design recorded in `docs/video-maker.md`).

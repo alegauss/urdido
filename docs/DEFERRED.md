@@ -12,9 +12,6 @@
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
-- ⏸ **UR36** (deps: UR21 ✅) **Marketing installs the framework from its own folder with pip -e, with no version pinned** — set aside (Needs edits in marketing's repo.): Replacing the folder needs an install that does not point into it, and a pin says which urdido a video was built with. → §UR36
-- ⏸ **UR40** (deps: UR20 ✅) **Marketing's video-maker gate hook, friction skill and CLAUDE.md rules point at a folder and a Block B that will be gone** — set aside (Needs marketing repo edits.): The rule that every friction becomes a framework task stops working the day the folder leaves, unless it points here. → §UR40
-
 ## Block D — Inherited from video-maker (marketing Block B)
 
 - ⏸ **UR15** (deps: marketing VM3) **The recording driver and the pointer exist in three copies, and the copies already differ** — set aside (Needs the demo stacks up and a commit in Turing.): The story, the walkthrough and Viglet Shio's scenes each carry their own pointer. → §UR15

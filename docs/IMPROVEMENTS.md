@@ -107,17 +107,6 @@ docs/specs/declaration.md names each key's default.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
-### §UR36 Marketing on an installed urdido
-
-Marketing gets a `requirements.txt` (or a small `pyproject.toml`) that pins urdido:
-editable from `D:\Git\alegauss\urdido` while the extraction is in flight, then the PyPI
-version once UR19 releases. The skill and README install lines (`pip install -e
-"video-maker[test,cards,narration]"`) change with it, and `PYTHON` in the bin scripts
-keeps naming the interpreter that has it.
-
-**Done when** a fresh virtualenv in marketing gets urdido from the pin and `urdido
---version` answers there.
-
 ### §UR37 Every call switched to urdido
 
 The callers: `package.json` in turing/wordpress and shio/promo (`story:video`,
