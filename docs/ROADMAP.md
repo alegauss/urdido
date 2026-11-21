@@ -4,7 +4,6 @@
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-- 🛠 **UR43** (deps: UR21 ✅) **The imported modules pass ruff only through a per-file baseline of ignored rules and unformatted files** — The E501 entries and the 87 format exclusions still need paying down module by module, ideally with the change that next touches each module. → §UR43
 - 📋 **UR46** (deps: UR22 ✅, UR37) **Four environment variables still fill undeclared roots, the last root names left in a module** — They were kept for one release so marketing's builds keep working; left longer, the shim becomes a second way to declare a root. → §UR46
 - 📋 **UR47** (deps: UR23 ✅) **Values in video.toml are untyped and the side files it names are not checked, so a typo inside them is still a KeyError** — urdido check refuses a misspelled table key, but storyboard.json or script.json still fail deep inside the build. → §UR47
 - 📋 **UR49** (deps: UR24 ✅) **Building a video from Python means filling an argparse Namespace and importing build internals** — The package exports only its errors, so an embedding program reaches into Build and the modules' underscored names. → §UR49
@@ -23,7 +22,7 @@
 - 🛠 **UR4** (deps: UR2 ✅, UR33 ✅, UR36 ⏸, UR53) **The Japode explainer videos are built by scripts copied into each video, outside video-maker** — The Japode videos declare their styles, closing, mark and credits, build with urdido, drop their bin scripts and reproduce their published cuts. → §UR4
 - ⏳ **UR5** (deps: UR21 ✅, marketing: VM32) **A second cut of a video, to test a new opening, means copying the whole video folder and its declaration** — The review records which variant was uploaded and which retention report it is compared against, once marketing's VM32 review exists. → §UR5
 - 📋 **UR44** (deps: polyweave: PW720) **A retake moves the old take's files aside by hand because voice.lines cannot buy a current take again** — Moving files behind polyweave's back is a workaround that a crash mid-run can leave half done. → §UR44
-- 📋 **UR45** (deps: UR14 ✅) **The flash scan's threshold was set on synthetic frames, never on the Shio flash or a published cut** — At 32x18 a same-brightness flash may slip under the threshold, and a published cut may be refused for a blink that is fine. → §UR45
+- 🛠 **UR45** (deps: UR14 ✅) **The flash scan's threshold was set on synthetic frames, never on the Shio flash or a published cut** — At 32x18 a same-brightness flash may slip under the threshold, and a published cut may be refused for a blink that is fine. → §UR45
 - 📋 **UR48** (deps: UR2 ✅) **[shorts] is read by two cutters with different keys, so nothing says which cutter a key belongs to** — The scenes selection and urdido shorts share one table name, and a declaration can mix their keys unnoticed. → §UR48
 - 📋 **UR53** (deps: UR51 ✅) **An explainer's page film and terminal session are recorded by scripts copied into each video** — The Scion and Docker videos film a highlighted web page and a real shell session with their own bin scripts. → §UR53
 
