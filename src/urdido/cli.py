@@ -19,6 +19,7 @@ COMMANDS = {
     "build": "urdido.build",
     "thumbnail": "urdido.thumbnail",
     "shorts": "urdido.shorts",
+    "record": "urdido.record",
     "claims": "urdido.claims",
     "prepare": "urdido.prepare",
     "library": "urdido.library",

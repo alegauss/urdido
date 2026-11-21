@@ -404,6 +404,17 @@ a thumbnail of more than three words are advised. `[thumbnail.check]` takes
 the word fields the layout draws as text. Without a declared title the build
 says the pair went out unchecked.
 
+`urdido record <video.toml>` records a scene video with one command (UR10).
+Each `[[record.step]]` is a `name`, a `command` (a list runs as is, a string in
+a shell) and the paths it `makes`; `always = true` marks a step that runs last
+even after a failure, such as taking the instance down. The run stops at the
+first failing step. Everything the steps make is moved to
+`.urdido/record/previous/` before the first step and put back if the run
+fails, so a failed scene never overwrites the last complete recording; what
+the finished steps made waits in `.urdido/record/pending/`, and
+`--from <step>` resumes there. `--list` shows the steps and what a failed run
+left.
+
 `urdido shorts <video.toml> --language <l> [n ...]` cuts YouTube Shorts from
 a built video's `plan.json`, its picture without titles and its mix, as
 `[shorts]` and its `[[shorts.cut]]` rows declare (UR2): the takes each Short

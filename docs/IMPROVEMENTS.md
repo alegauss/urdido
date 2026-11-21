@@ -434,23 +434,6 @@ Sequenced after UR33: the overlay must resolve every relative path through the b
 about 25 call sites read `build.here` directly; UR33's declaration loader is the one
 place it belongs.
 
-### §UR10 One command records a scene video (was marketing VM81)
-
-Recording the Viglet Shio promo is six commands from its README, in an order that
-matters: the first scenes on a fresh instance, the agent's session, the terminal
-replays, the later scenes on the same instance with --reuse, the cold open, then the
-instance down. On 2026-11-17 they were chained by hand with `&&` behind `| tail`, so
-when the chapter-2 scene timed out on a new image the agent still ran, on an instance
-with no Quilhara, and wrote a useless session over the good one. The previous recordings
-had to be copied aside by hand first, because a re-recording overwrites them.
-
-`videomaker record` should run the steps declared in video.toml (each a command and the
-scenes it makes), stop at the first failure, keep the last complete recording until the
-new one is complete, and say which step to resume from.
-
-**Done when** the Viglet Shio promo is recorded with one command, and a failing scene
-leaves the previous recording intact.
-
 ### §UR11 A session checked against its chapters (was marketing VM82)
 
 The Viglet Shio promo's chapters 3 to 6 replay a real Claude Code session, and the
