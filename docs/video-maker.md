@@ -13,6 +13,16 @@ A video is a declaration (`turing/wordpress/video.toml`, `developer.toml`,
     python -m videomaker build turing/wordpress/video.toml --language pt-BR --cut chapter:2 [--vertical]
     python -m videomaker build shio/promo/video.toml --language pt-BR [--cut short:c1]
 
+A path in a declaration is relative to its folder or starts at a root it
+declares (UR22): `[roots]` names each one as a path relative to the
+declaration or as `$VAR`, and `[output] folder` (default `video`) and
+`[output] parts` (default `parts`, inside it) say where the build writes.
+`<root>`, `<video>` and `<recordings>` exist without declaring them; any other
+root, such as `<plugin>` or `<shio>`, must be declared, and a path at an
+undeclared one is refused by name. For one release STORY_VIDEO_DIR,
+STORY_RECORDINGS, TURING_WORDPRESS and SHIO_REPO still fill an undeclared
+root, with a notice.
+
 It grew out of the WordPress demo's 2,900-line assembly script, one module at a time, each step
 keeping that video's output the same, until the script was removed (VM17). Recording stays
 JavaScript; the assembly is the `videomaker` package. The plan was Block B of

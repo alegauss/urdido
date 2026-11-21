@@ -71,14 +71,14 @@ def illustrated(build):
     if cards is not None:
         def font_files():
             spec = cards["theme"]["fonts"]
-            folder = Path(resolve(spec["dir"], {"root": str(build.here), "shio": build.roots["shio"]}))
+            folder = Path(resolve(spec["dir"], build.roots))
             return [folder / name for name in [*spec["display"]["files"].values(), spec["text"]["file"]]]
         fonts = check(build.path(build.decl["cards"]["declaration"]), "theme.fonts", font_files) or []
         for file in fonts:
             check(file, "theme.fonts", lambda file=file: file.read_bytes())
         if fonts and all(file.is_file() for file in fonts):
             theme = check(build.path(build.decl["cards"]["declaration"]), "theme",
-                          lambda: Theme.load(cards["theme"], {"root": str(build.here), "shio": build.roots["shio"]}))
+                          lambda: Theme.load(cards["theme"], build.roots))
     if highlight_spec:
         folder = Path(build.path(highlight_spec.get("fonts", "")))
         if not folder.is_dir() or not any(p.suffix.lower() in {".ttf", ".otf", ".woff", ".woff2"}

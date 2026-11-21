@@ -11,6 +11,7 @@
 ## Block B — The engine extracted (videomaker without marketing)
 
 - ✅ **UR21** **urdido holds none of the videomaker code, and marketing's history of each module would be lost by a copy** — video-maker's 75 commits merged into src/urdido, tests and js under the urdido name; the suite passes here and skips by name without marketing (design recorded in `tests/marketing.py`).
+- ✅ **UR22** **The build defaults its roots to sibling Turing and Shio checkouts and writes to a fixed video/ folder** — A declaration names its roots in [roots] and its output in [output]; no module holds a sibling path, and a path at an undeclared root is refused (design recorded in `docs/video-maker.md`).
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

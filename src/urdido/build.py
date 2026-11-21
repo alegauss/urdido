@@ -9,8 +9,19 @@
 
 The declaration names the video's sources (one chaptered recording, or scene clips), its
 narration, its cards' theme and words, its music, its cuts and where it publishes. Paths in it are
-relative to its folder or start at a root: <plugin> (TURING_WORDPRESS), <recordings>
-(STORY_RECORDINGS), <shio> (SHIO_REPO). The build writes into the folder's video/ (STORY_VIDEO_DIR).
+relative to its folder or start at a root it declares (UR22):
+
+    [roots]
+    plugin = "../../../turing/latest/wordpress"   # relative to the declaration
+    shio = "$SHIO_REPO"                            # or an environment variable
+
+    [output]
+    folder = "video"                               # the default; `parts` defaults to "parts" in it
+
+`<root>` is the declaration's folder, `<video>` the output folder and `<recordings>` the
+folder's recordings/ unless declared; no other root exists unless declared. STORY_VIDEO_DIR,
+STORY_RECORDINGS, TURING_WORDPRESS and SHIO_REPO still fill an undeclared root for one release,
+with a notice.
 """
 
 from __future__ import annotations
@@ -37,6 +48,39 @@ from urdido.timeline import from_plan, pieces as pieces_of, plan as plan_of
 
 TAB, NEWLINE = chr(9), chr(10)
 
+#: The environment variables that filled a root before `[roots]` (UR22), kept for one release.
+LEGACY_ROOTS = {"video": "STORY_VIDEO_DIR", "recordings": "STORY_RECORDINGS",
+                "plugin": "TURING_WORDPRESS", "shio": "SHIO_REPO"}
+
+
+def roots_of(here: Path, decl: Mapping, env: Mapping[str, str] | None = None) -> dict[str, str]:
+    """The roots a declaration's `<name>` paths start at, all declared or inside its folder.
+
+    `[roots]` names each one, as a path relative to the declaration or as `$VAR` / `${VAR}`;
+    `[output] folder` is `<video>`. An undeclared legacy root is still read from its old
+    environment variable, with a notice; an undeclared one with no variable does not exist."""
+    env = os.environ if env is None else env
+    output = decl.get("output") or {}
+    roots = {"root": str(here), "video": str((here / output.get("folder", "video")).resolve()),
+             "recordings": str(here / "recordings")}
+    declared = dict(decl.get("roots") or {})
+    for name, value in declared.items():
+        if name in ("root", "video") or not isinstance(value, str) or not value:
+            raise SystemExit(f"urdido build: [roots] {name} must be a path, and root and video are not declared there")
+        if value.startswith("$"):
+            variable = value.strip("${}")
+            if not env.get(variable):
+                raise SystemExit(f"urdido build: [roots] {name} reads ${variable}, which is not set")
+            value = env[variable]
+        roots[name] = str((here / value).resolve())
+    for name, variable in LEGACY_ROOTS.items():
+        if name in declared or (name == "video" and "folder" in output) or not env.get(variable):
+            continue
+        roots[name] = str(Path(env[variable]).resolve())
+        print(f"urdido build: {variable} is deprecated; declare [roots] {name}"
+              + (" or [output] folder" if name == "video" else ""), file=sys.stderr)
+    return roots
+
 
 class Build:
     def __init__(self, toml: Path, args: argparse.Namespace):
@@ -45,16 +89,7 @@ class Build:
         self.decl = tomllib.loads(raw.decode("utf-8-sig"))
         self.input_hashes = {toml.resolve(): hashlib.sha256(raw).hexdigest()}
         self.args = args
-        env = os.environ.get
-        self.roots = {
-            "video": str(Path(env("STORY_VIDEO_DIR")).resolve()) if env("STORY_VIDEO_DIR") else str(self.here / "video"),
-            "recordings": str(Path(env("STORY_RECORDINGS")).resolve()) if env("STORY_RECORDINGS") else str(self.here / "recordings"),
-            "plugin": str(Path(env("TURING_WORDPRESS")).resolve()) if env("TURING_WORDPRESS")
-            else str((self.here / ".." / ".." / ".." / "turing" / "latest" / "wordpress").resolve()),
-            "root": str(self.here),
-            "shio": str(Path(env("SHIO_REPO")).resolve()) if env("SHIO_REPO")
-            else str((self.here / ".." / ".." / ".." / "shio" / "latest").resolve()),
-        }
+        self.roots = roots_of(self.here, self.decl)
         self.out = Path(self.roots["video"])
         self.language = args.language
         video = self.decl["video"]
@@ -73,7 +108,7 @@ class Build:
                                                             args.preview_occurrence]).encode()).hexdigest()[:12]
             self.revision = Revision(self.out, self.name, self.language, cut, revision)
             self.out = self.revision.folder
-        self.parts = self.out / "parts"
+        self.parts = self.out / (self.decl.get("output") or {}).get("parts", "parts")
         self.parts.mkdir(parents=True, exist_ok=True)
 
     # -- paths -----------------------------------------------------------------------------------
@@ -82,11 +117,15 @@ class Build:
         for name, root in self.roots.items():
             if declared.startswith(f"<{name}>"):
                 return os.path.normpath(declared.replace(f"<{name}>", root))
+        if declared.startswith("<") and ">" in declared:
+            name = declared[1:declared.index(">")]
+            raise SystemExit(f"urdido build: {declared} starts at <{name}>, which the declaration does not "
+                             f"declare; add it under [roots]")
         return os.path.normpath(str(self.here / declared))
 
     def portable(self, text: str) -> str:
         """Paths named by the folder they are under, as story-video.mjs's plan writes them."""
-        folders = sorted(((self.roots[k], f"<{k}>") for k in ("video", "recordings", "plugin", "root")),
+        folders = sorted(((root, f"<{k}>") for k, root in self.roots.items()),
                          key=lambda p: -len(p[0]))
         for folder, name in folders:
             text = text.replace(folder, name).replace(folder.replace("\\", "/"), name)
@@ -206,7 +245,7 @@ class Build:
         script = self.load(self.decl["narration"]["script"])
         takes = Takes(script, self.path(self.decl["narration"]["takes"]), self.decl["narration"].get("tempo", 1.0))
         cards = self.load(self.decl["cards"]["declaration"])
-        theme = html.Theme.load(cards["theme"], {"turing": self.roots["plugin"], "shio": self.roots["shio"]})
+        theme = html.Theme.load(cards["theme"], self.roots)
         words = cards["words"][self.decl["cards"]["words"]]
         words = words.get(self.language, words.get("en"))
         chapters = [cap.Chapter(str(c.n), c.title) for c in recording.chapters]
@@ -357,8 +396,7 @@ class Build:
             written.append(file)
         if "publish" in self.decl:
             declared = self.load(self.decl["publish"]["declaration"]).get("stills")
-            publish_stills(declared, written, self.name, self.language,
-                           {"turing": str(Path(self.roots["plugin"]).parent)})
+            publish_stills(declared, written, self.name, self.language, self.roots)
 
     def project(self, plan_file: Path, webm: str) -> str:
         """The Resolve project: the timeline handed over, read from the build's own plan (VM14)."""
@@ -369,7 +407,7 @@ class Build:
         return export_project(
             from_plan(json.loads(plan_file.read_text(encoding="utf-8"))), str(self.out / f"{name}.project"), name,
             recording=self.portable(webm), captions=str(self.out / f"{self.name}.{self.language}.srt"),
-            resolve=resolve, roots={k: self.roots[k] for k in ("video", "recordings", "plugin", "root")},
+            resolve=resolve, roots=dict(self.roots),
             encoder=os.environ.get("STORY_ENCODER") or media.detect_encoder(),
         )
 
@@ -403,7 +441,7 @@ class Build:
         else:
             script = self.load(self.decl["narration"]["script"])
             cards = self.load(self.decl["cards"]["declaration"])
-        theme = html.Theme.load(cards["theme"], {"shio": self.roots["shio"], "root": str(self.here)})
+        theme = html.Theme.load(cards["theme"], self.roots)
         takes = Takes(script, self.path(self.decl["narration"]["takes"]), self.decl["narration"].get("tempo", 1.0))
         encoder = os.environ.get("STORY_ENCODER") or ("x264" if self.args.cards or self.args.plan else media.detect_encoder())
         if illustrated:

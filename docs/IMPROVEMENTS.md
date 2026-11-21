@@ -50,23 +50,6 @@ lists every key the schema accepts.
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-### §UR22 Roots and output declared, not assumed
-
-`build.py:49-57` fixes the roots `video`, `recordings`, `plugin`, `root` and `shio`,
-defaults `<plugin>` to `../../../turing/latest/wordpress` and `<shio>` to
-`../../../shio/latest`, and names them again at `:89`, `:208`, `:360`, `:371` and
-`:405`. `thumbnail.py:91` writes to `video/parts/thumbnail` ignoring `STORY_VIDEO_DIR`.
-
-A declaration names its roots in a `[roots]` table, each a path relative to the
-declaration or an environment variable it reads; the code knows no root by name and has
-no default outside the project. The output folder and the work folder are declared, with
-`video/` and `video/parts/` as defaults. `STORY_VIDEO_DIR`, `STORY_RECORDINGS`,
-`TURING_WORDPRESS` and `SHIO_REPO` keep working for one release with a deprecation
-notice.
-
-**Done when** no module contains a root name or a sibling path, and the marketing
-declarations build with `[roots]`.
-
 ### §UR23 A schema for the declaration
 
 Every module reads the declaration as `decl["x"]["y"]`; only `[video] frame`,
@@ -270,6 +253,21 @@ suppressing. A file leaves both lists once it is clean, and nothing is ever adde
 
 **Done when** both lists in `pyproject.toml` are gone and `ruff check` and `ruff format
 --check` pass on the whole tree.
+
+### §UR46 The legacy root variables removed
+
+UR22 made every root a declaration's own: `[roots]` names each one, `[output] folder` is
+`<video>`, and `build.roots_of` knows no sibling path. For one release, `LEGACY_ROOTS`
+in `build.py` still lets STORY_VIDEO_DIR, STORY_RECORDINGS, TURING_WORDPRESS and
+SHIO_REPO fill an undeclared root, printing a notice each time. That table is the last
+place a root name lives in a module, and the tests still set STORY_VIDEO_DIR to move a
+build's output into a temporary folder.
+
+After the first release that carries `[roots]`, and once marketing's declarations
+declare their roots (UR37), delete `LEGACY_ROOTS` and its loop, and change the tests
+that set STORY_VIDEO_DIR to declare `[output] folder` in their fixture instead.
+
+Done when no module names a root and no test sets one of the four variables.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
