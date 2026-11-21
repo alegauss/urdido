@@ -26,6 +26,7 @@
 - ✅ **UR50** **Motion, sources, cache and preview tests read marketing's chapter timelines and Japode's fonts** — The chapter timelines live in tests/fixtures/recordings and the cache and preview builds draw generated fonts, so those four files run without marketing.
 - ✅ **UR32** **Every stage cache is keyed on absolute module and input paths, so moving the code invalidates every cache** — Cache keys name inputs by declared root or package place, hashed by content, so a moved project hits its stamps and an upgrade misses only changed code (design recorded in `docs/video-maker.md`).
 - ✅ **UR33** **build.py holds both pipelines, the mux, the mix and every root in one 600-line class** — Each source kind builds in its own pipeline module on shared finishing stages, build.py only dispatches, and a package adds a kind through urdido.sources (design recorded in `docs/video-maker.md`).
+- ✅ **UR43 (safe fixes)** **The imported modules pass ruff only through a per-file baseline of ignored rules and unformatted files** — The safe codes (I001, F401, UP035, UP037, UP017) are fixed across the imported files and gone from the baseline, 83 entries fewer.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

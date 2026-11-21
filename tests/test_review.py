@@ -78,6 +78,7 @@ def test_sheet_extracts_source_midpoint_draws_card_and_escapes_labels_vm41(tmp_p
 
 def test_picture_preview_does_not_seek_past_single_image_vm41(tmp_path, monkeypatch):
     import shutil
+
     from PIL import Image
 
     if not shutil.which("ffmpeg"):

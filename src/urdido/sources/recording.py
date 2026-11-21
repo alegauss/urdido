@@ -11,10 +11,18 @@ from __future__ import annotations
 import json
 import os
 import re
-from typing import Iterable, Mapping
+from collections.abc import Iterable, Mapping
 
 from urdido.sources.model import (
-    Box, Chapter, Clip, Focus, Line, Marks, Recording, RecordingRefused, Span,
+    Box,
+    Chapter,
+    Clip,
+    Focus,
+    Line,
+    Marks,
+    Recording,
+    RecordingRefused,
+    Span,
 )
 
 _NUMBERED = re.compile(r"^(\d+)\.\s*(.*)$", re.DOTALL)

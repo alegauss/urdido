@@ -6,11 +6,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from urdido import prepare, keywords
+from test_preflight import cut  # noqa: F401  (the preflight fixture)
+from urdido import keywords, prepare
 from urdido.cache import file_hash
 from urdido.narration import Takes
 from urdido.sources.model import RecordingRefused
-from test_preflight import cut
 
 
 @pytest.fixture
@@ -164,6 +164,7 @@ def test_pronunciation_keys_are_literal_and_changed_bytes_are_not_current(cut):
 
 def test_current_bom_transcript_is_reused_without_network(tmp_path, monkeypatch):
     import requests
+
     from urdido.narration_words import transcribe
 
     audio = tmp_path / "take.mp3"
@@ -188,6 +189,7 @@ def test_voice_project_remaining_is_respected_even_with_a_larger_command_ceiling
 
 def test_transcription_uploads_hash_bound_bytes_and_rejects_concurrent_audio_changes(tmp_path, monkeypatch):
     import requests
+
     from urdido.narration_words import transcribe
 
     audio = tmp_path / "take.mp3"

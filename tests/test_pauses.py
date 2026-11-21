@@ -1,13 +1,12 @@
 """VM62: continuous interaction, internal freezes and explicit cursor policy."""
-import json
 import subprocess
 
 import pytest
 
+from test_preflight import cut  # noqa: F401  (the preflight fixture)
 from urdido import cache, pauses
 from urdido.sources.illustrated import beat_frames
 from urdido.sources.model import RecordingRefused
-from test_preflight import cut
 
 
 def test_active_drag_longer_than_card_cap_is_not_a_pause():

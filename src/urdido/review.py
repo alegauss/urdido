@@ -11,8 +11,8 @@ from pathlib import Path
 from urdido import captions, media
 from urdido.cards.html import Frame
 from urdido.cards.render import render
-from urdido.sources.model import RecordingRefused
 from urdido.keywords import word_record
+from urdido.sources.model import RecordingRefused
 
 
 def words(placed: list[dict]) -> list[dict]:

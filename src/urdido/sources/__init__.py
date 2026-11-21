@@ -6,7 +6,17 @@ recording with chapter marks (`chaptered_recording`, the WordPress story's `chap
 one clip per narration take (Viglet Shio's `cenas.json`, VM10).
 """
 
-from urdido.sources.model import Box, Chapter, Clip, Focus, Line, Marks, Recording, RecordingRefused, Span
+from urdido.sources.model import (
+    Box,
+    Chapter,
+    Clip,
+    Focus,
+    Line,
+    Marks,
+    Recording,
+    RecordingRefused,
+    Span,
+)
 from urdido.sources.recording import chaptered_recording
 
 __all__ = [

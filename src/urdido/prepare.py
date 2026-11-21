@@ -9,7 +9,7 @@ import math
 import os
 import re
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from difflib import SequenceMatcher
 from pathlib import Path
 from types import SimpleNamespace
@@ -270,7 +270,7 @@ def prepare(args):
         report["selected_takes_ready"] = all(row["voice_current"] and row["transcript_current"] for row in report["takes"]) and not report["needs_review"]
         if report["status"] == "prepared" and not report["selected_takes_ready"]:
             report["status"] = "needs_review" if report["needs_review"] else "partial"
-        report["at"] = datetime.now(timezone.utc).isoformat()
+        report["at"] = datetime.now(UTC).isoformat()
         text = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
         attempt = work / f"attempt-{uuid.uuid4().hex}.json"
         attempt.write_text(text, encoding="utf-8")
@@ -319,7 +319,7 @@ def retaken(args):
     takes = Takes(script, build.path(build.decl["narration"]["takes"]))
     if set(names) - set(takes.lines):
         raise ValueError("retake known narration takes")
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     moved: dict[str, list[tuple[Path, Path]]] = {}
     for name in names:
         audio = Path(takes.take_file(args.language, name))

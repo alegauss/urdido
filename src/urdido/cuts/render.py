@@ -11,8 +11,8 @@ import json
 import math
 import os
 import subprocess
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Callable, Mapping, Sequence
 
 import opentimelineio as otio
 
@@ -22,7 +22,8 @@ from urdido.assemble.clip import ClipVideo
 from urdido.assemble.video import FullVideo
 from urdido.audio import mix
 from urdido.jsnum import fixed
-from urdido.timeline import KEY, Builder, pieces as pieces_of, plan
+from urdido.timeline import KEY, Builder, plan
+from urdido.timeline import pieces as pieces_of
 
 TAB, NEWLINE = chr(9), chr(10)
 
@@ -50,8 +51,8 @@ class Renderer:
     teaser_seconds: float = 3
     # Where the build keeps what it decided (VM17): `write_plan(name, plan)` for the teaser's plan,
     # `portable(text)` for the paths a mix graph names.
-    write_plan: "Callable[[str, dict], None] | None" = None
-    portable: "Callable[[str], str] | None" = None
+    write_plan: Callable[[str, dict], None] | None = None
+    portable: Callable[[str], str] | None = None
 
     @property
     def m(self):

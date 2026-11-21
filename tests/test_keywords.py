@@ -3,9 +3,7 @@ import json
 
 import pytest
 
-from urdido.keywords import cues
-from urdido.keywords import write_ass
-from urdido.keywords import anchor
+from urdido.keywords import anchor, cues, write_ass
 from urdido.sources.model import RecordingRefused
 
 

@@ -14,6 +14,8 @@ from pathlib import Path
 
 import pytest
 
+from golden_plans import main_plan
+from marketing import GOLDEN, MARKETING
 from urdido import captions, media
 from urdido.assemble.clip import ClipVideo
 from urdido.audio import mix
@@ -21,8 +23,6 @@ from urdido.cards import html
 from urdido.narration import Takes
 from urdido.sources import chaptered_recording
 from urdido.timeline import plan
-from golden_plans import main_plan
-from marketing import GOLDEN, MARKETING
 
 WORDPRESS = MARKETING / "turing" / "wordpress"
 NARRATION = WORDPRESS / "demo" / "narration"

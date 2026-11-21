@@ -13,7 +13,8 @@ seconds at 30 fps; `plan()` rounds them to the millisecond as `writePlan` does.
 
 from __future__ import annotations
 
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import opentimelineio as otio
 

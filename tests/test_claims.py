@@ -5,10 +5,9 @@ from datetime import date, timedelta
 
 import pytest
 
+from test_preflight import cut  # noqa: F401  (the preflight fixture)
 from urdido import cache, claims
 from urdido.narration import Takes
-from urdido.sources.model import RecordingRefused
-from test_preflight import cut
 
 
 @pytest.fixture

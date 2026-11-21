@@ -11,11 +11,11 @@ from pathlib import Path
 
 import pytest
 
-from urdido import captions
-from urdido.cards import html
 from fonts import card_theme
 from golden_plans import main_plan
 from marketing import GOLDEN, MARKETING, needs_marketing
+from urdido import captions
+from urdido.cards import html
 
 WORDPRESS = MARKETING / "turing" / "wordpress"
 NARRATION = WORDPRESS / "demo" / "narration"

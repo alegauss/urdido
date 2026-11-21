@@ -12,8 +12,7 @@ import math
 from collections import Counter
 from pathlib import Path
 
-from urdido import media
-from urdido import cache
+from urdido import cache, media
 from urdido.cards.html import Frame, Theme
 from urdido.cards.render import render as draw
 from urdido.narration import Takes
@@ -241,8 +240,8 @@ footer span{{font:21px Text;color:#9bbba7;max-width:1460px}}footer b{{margin-lef
 def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: str,
            parts: str, *, render: bool, encoder: str, beat_keys: set[str] | None = None,
            cards_only: bool = False, frame: Frame | None = None) -> list[Scene]:
-    from urdido.library import check_rejected, check_range, resolve
     from urdido.keywords import aliases as declared_aliases
+    from urdido.library import check_range, check_rejected, resolve
 
     document = resolve(document, folder)
     rows = validate(document, takes, language)

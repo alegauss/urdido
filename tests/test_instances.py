@@ -1,6 +1,5 @@
 """VM44: ownership, explicit reset and recording provenance for product fixtures."""
 import json
-from pathlib import Path
 from types import SimpleNamespace
 
 import pytest

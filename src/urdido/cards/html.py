@@ -12,8 +12,8 @@ from __future__ import annotations
 import base64
 import math
 import os
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Mapping, Sequence
 from urllib.parse import quote
 
 from urdido.captions import Chapter, chapter_title
@@ -67,7 +67,7 @@ class Theme:
     fonts: Mapping[str, str]  # display-600, display-700, text: their data URLs
 
     @classmethod
-    def load(cls, data: Mapping, roots: Mapping[str, str], font=font_url) -> "Theme":
+    def load(cls, data: Mapping, roots: Mapping[str, str], font=font_url) -> Theme:
         fonts = data["fonts"]
         folder = resolve(fonts["dir"], roots)
         urls = {f"display-{w}": font(os.path.join(folder, f)) for w, f in fonts["display"]["files"].items()}

@@ -1,13 +1,13 @@
 """VM59: overlapping intervals and declared activity budgets, independently of filenames."""
-from types import SimpleNamespace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
-from urdido.repetition import inspect, enforce
+from test_preflight import cut  # noqa: F401  (the preflight fixture)
+from urdido.repetition import enforce, inspect
 from urdido.sources.illustrated import validate
 from urdido.sources.model import RecordingRefused
-from test_preflight import cut
 
 
 def story(tmp_path, shots):

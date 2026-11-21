@@ -132,8 +132,7 @@ def position(mark: Mark, height: int) -> tuple[str, str]:
 
 def overlay(joined: str, mark: Mark, parts: Path, encoder: str, height: int) -> str:
     """Lay the mark over the joined video for its whole length."""
-    from urdido import cache
-    from urdido import media
+    from urdido import cache, media
 
     picture = render(mark, parts, height)
     x, y = position(mark, height)

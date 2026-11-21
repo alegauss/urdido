@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from marketing import GOLDEN, needs_marketing
 
 PLANS = sorted((GOLDEN / "expected").glob("*/*.plan.json"))

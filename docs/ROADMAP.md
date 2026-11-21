@@ -4,7 +4,7 @@
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-- 🛠 **UR43** (deps: UR21 ✅) **The imported modules pass ruff only through a per-file baseline of ignored rules and unformatted files** — Each ignored B023 or B905 may hide a real bug, and new code in those files is checked against nothing. → §UR43
+- ⏳ **UR43** (deps: UR21 ✅) **The imported modules pass ruff only through a per-file baseline of ignored rules and unformatted files** — B023 and B905 still need reading file by file, and the E501 entries and the format exclusions still need paying down module by module. → §UR43
 - 📋 **UR46** (deps: UR22 ✅, UR37) **Four environment variables still fill undeclared roots, the last root names left in a module** — They were kept for one release so marketing's builds keep working; left longer, the shim becomes a second way to declare a root. → §UR46
 - 📋 **UR47** (deps: UR23 ✅) **Values in video.toml are untyped and the side files it names are not checked, so a typo inside them is still a KeyError** — urdido check refuses a misspelled table key, but storyboard.json or script.json still fail deep inside the build. → §UR47
 - 📋 **UR49** (deps: UR24 ✅) **Building a video from Python means filling an argparse Namespace and importing build internals** — The package exports only its errors, so an embedding program reaches into Build and the modules' underscored names. → §UR49
@@ -56,5 +56,10 @@
 - **The Japode videos build with urdido and drop their bin scripts** japode/scion and
   japode/docker each build from a video.toml with urdido build, their bin/build.py and
   short.py are gone, and the published cuts come out the same.
+
+## Done when — UR43
+
+- **No baseline is left in pyproject.toml** pyproject.toml has neither per-file ignores
+  nor format exclusions, and ruff check and ruff format --check pass on the whole tree.
 
 ## Non-goals

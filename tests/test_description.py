@@ -5,8 +5,14 @@ from pathlib import Path
 
 import pytest
 
-from urdido.publish.description import format_description, illustrated, short_url, units, write
 from marketing import MARKETING, needs_marketing
+from urdido.publish.description import (
+    format_description,
+    illustrated,
+    short_url,
+    units,
+    write,
+)
 
 ROOT = MARKETING
 

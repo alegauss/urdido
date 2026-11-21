@@ -2,7 +2,6 @@
 import json
 import shutil
 import subprocess
-from pathlib import Path
 
 import pytest
 
@@ -83,6 +82,7 @@ def test_changed_output_is_refused_vm39(movie, monkeypatch):
 
 def test_build_loads_illustrated_edit_report_vm66(tmp_path, monkeypatch):
     from types import SimpleNamespace
+
     from urdido.build import Build
 
     (tmp_path / "video.toml").write_text(

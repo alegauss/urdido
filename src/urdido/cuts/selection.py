@@ -15,8 +15,8 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
-from typing import Sequence
 
 import opentimelineio as otio
 
@@ -26,7 +26,8 @@ from urdido.assemble.scenes import ScenesVideo
 from urdido.audio import mix
 from urdido.cards.html import Frame
 from urdido.cuts.render import VERTICAL_CAPTION_STYLE
-from urdido.timeline import KEY, pieces as pieces_of, plan
+from urdido.timeline import KEY, plan
+from urdido.timeline import pieces as pieces_of
 
 VERTICAL = Frame(1080, 1920)
 # The breaths a selection over its limit is allowed down to.

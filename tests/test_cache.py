@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from urdido import cache, media
 from fonts import TEXT, card_theme
+from urdido import cache, media
 
 
 def test_partial_failure_retains_only_completed_stages_and_checks_output_bytes(tmp_path):

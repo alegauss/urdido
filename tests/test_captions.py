@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from urdido import captions as c
 from golden_plans import main_plan
 from marketing import GOLDEN, MARKETING, needs_marketing
+from urdido import captions as c
 
 NARRATION = MARKETING / "turing" / "wordpress" / "demo" / "narration"
 

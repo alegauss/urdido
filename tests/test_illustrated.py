@@ -3,11 +3,13 @@ from types import SimpleNamespace
 
 import pytest
 
-from urdido.sources.illustrated import validate
-from urdido.sources.illustrated import beat_frames
-from urdido.sources.illustrated import description
-from urdido.sources.illustrated import anchored_frames
-from urdido.sources.illustrated import brand_mark
+from urdido.sources.illustrated import (
+    anchored_frames,
+    beat_frames,
+    brand_mark,
+    description,
+    validate,
+)
 from urdido.sources.model import RecordingRefused
 
 
@@ -164,6 +166,7 @@ def test_hidden_mark_is_removed_from_both_overlay_layers_vm45():
 def test_brand_corners_in_actual_browser_layout_vm45():
     """PW700: HTML stills and DOM bounds currently use the existing browser renderer."""
     import os
+
     from urdido.cards.html import Frame
     from urdido.sources.illustrated import page
 

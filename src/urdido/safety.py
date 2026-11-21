@@ -9,8 +9,8 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from pathlib import Path
 
-from urdido.sources.model import RecordingRefused
 from urdido.keywords import HIGHLIGHT_FONT_SIZE, HIGHLIGHT_OUTLINE
+from urdido.sources.model import RecordingRefused
 
 
 @dataclass(frozen=True)

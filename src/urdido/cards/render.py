@@ -6,14 +6,13 @@ from __future__ import annotations
 
 import os
 import re
+from collections.abc import Mapping
 from contextvars import ContextVar
 from dataclasses import asdict
 from importlib.metadata import version
 from pathlib import Path
-from typing import Mapping
 
 from urdido.cards.html import Frame
-
 
 EDGE = "Microsoft/Edge/Application/msedge.exe"
 #: The declaration's `[cards] channel`, set around a build (see `urdido.build.main`).
@@ -32,10 +31,8 @@ def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | 
     to `out_dir`; returns the files in the order written. `channel` names a browser other
     than Playwright's bundled Chromium (`msedge`, `chrome`); none is the default."""
     from playwright.sync_api import sync_playwright
-    from urdido import safety
-    from urdido import cache
-    from urdido import textcheck
-    from urdido import progress
+
+    from urdido import cache, progress, safety, textcheck
 
     os.makedirs(out_dir, exist_ok=True)
     written: list[str] = []

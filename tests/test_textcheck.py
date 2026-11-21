@@ -5,11 +5,11 @@ from pathlib import Path
 
 import pytest
 
+from test_preflight import cut  # noqa: F401  (the preflight fixture)
 from urdido import cache, textcheck
 from urdido.cards.html import Frame, Theme
 from urdido.cards.render import render
 from urdido.sources.model import RecordingRefused
-from test_preflight import cut
 
 
 def test_bad_accents_are_reported_but_questions_and_url_query_strings_stay_valid():

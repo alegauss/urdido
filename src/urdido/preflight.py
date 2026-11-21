@@ -1,8 +1,8 @@
 """VM56 / PW712: read-only validation of an illustrated cut before any render."""
 from __future__ import annotations
 
-import math
 import json
+import math
 import subprocess
 from pathlib import Path
 from types import SimpleNamespace
@@ -10,7 +10,13 @@ from types import SimpleNamespace
 from urdido import captions, keywords, media
 from urdido.cards.html import Frame, Theme, resolve
 from urdido.narration import Takes
-from urdido.sources.illustrated import anchored_frames, paced, page, scene_frames, validate
+from urdido.sources.illustrated import (
+    anchored_frames,
+    paced,
+    page,
+    scene_frames,
+    validate,
+)
 from urdido.sources.model import RecordingRefused
 
 
@@ -50,7 +56,7 @@ def illustrated(build):
     cards = load(build.decl.get("cards", {}).get("declaration"), "cards.declaration")
     document = load(build.decl.get("source", {}).get("declaration"), "source.declaration")
     if document is not None:
-        from urdido.library import check_rejected, check_range, resolve_asset
+        from urdido.library import check_range, check_rejected, resolve_asset
 
         for key, asset in document.get("media", {}).items():
             if "library" in asset:
@@ -239,8 +245,9 @@ def illustrated(build):
                 if str(exc) not in beat_errors:
                     issue(source_file, "scenes", exc)
         if not findings and highlights is not None:
-            from urdido.labels import check as labels
             import warnings
+
+            from urdido.labels import check as labels
 
             timed = check(build.path(highlight_spec["declaration"]), "lines",
                           lambda: keywords.cues(placed, highlights["lines"], aliases=aliases))
@@ -250,14 +257,15 @@ def illustrated(build):
                 with warnings.catch_warnings(record=True):
                     check(source_file, "labels", lambda: labels(document, {"beats": audit}, timed, opening or 0))
         if not findings:
-            from urdido.repetition import inspect, enforce
+            from urdido.repetition import enforce, inspect
 
             report = check(source_file, "repetition", lambda: inspect(document, {"beats": audit}, build.here, opening or 0))
             if report is not None:
                 build.repetition_report = report
                 check(source_file, "repetition", lambda: enforce(report))
         if not findings:
-            from urdido.pauses import inspect as inspect_pauses, enforce as enforce_pauses
+            from urdido.pauses import enforce as enforce_pauses
+            from urdido.pauses import inspect as inspect_pauses
 
             report = check(source_file, "pauses", lambda: inspect_pauses(document, {"beats": audit}, build.here, opening or 0))
             if report is not None:
@@ -265,7 +273,8 @@ def illustrated(build):
                 check(source_file, "pauses", lambda: enforce_pauses(report))
     if document is not None and script is not None:
         if build.decl.get("claims") and takes:
-            from urdido.claims import inspect as inspect_claims, enforce as enforce_claims
+            from urdido.claims import enforce as enforce_claims
+            from urdido.claims import inspect as inspect_claims
 
             claim_data = load(build.decl["claims"].get("declaration"), "claims.declaration")
             if claim_data is not None:

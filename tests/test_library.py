@@ -8,10 +8,10 @@ from types import SimpleNamespace
 
 import pytest
 
+from test_preflight import cut  # noqa: F401  (the preflight fixture)
 from urdido import library
 from urdido.cache import file_hash
 from urdido.sources.model import RecordingRefused
-from test_preflight import cut
 
 
 @pytest.fixture
@@ -96,9 +96,9 @@ def test_atomic_updates_refuse_stale_edits_clean_locks_and_reset_changed_rights(
 
 
 def test_library_binding_is_validated_before_render_and_catalogue_hash_is_recorded(candidate, cut, monkeypatch):
+    from urdido import media
     from urdido.build import Build
     from urdido.preflight import illustrated
-    from urdido import media
 
     monkeypatch.setattr(media, "seconds", lambda file: 4.0 if Path(file) == candidate.file else 3.0)
     approve(candidate, start=.1, end=4)

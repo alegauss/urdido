@@ -15,8 +15,8 @@ import math
 import os
 import re
 import subprocess
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
-from typing import Mapping, Sequence
 
 from urdido import media
 

@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import math
 import re
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Iterable, Mapping, Sequence
 
 # A caption's lines: at most two of about this many characters, so a cue reads at a glance.
 # Narrower on a vertical cut, whose frame is a little over half as wide.
@@ -58,7 +58,7 @@ class Chapter:
     name: str
 
     @classmethod
-    def parse(cls, title: str) -> "Chapter":
+    def parse(cls, title: str) -> Chapter:
         found = _NUMBERED.match(title)
         if not found:
             raise ValueError(f"a chapter title starts with its number: {title!r}")

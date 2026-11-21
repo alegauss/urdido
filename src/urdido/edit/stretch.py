@@ -3,8 +3,8 @@ a story marked cut out, and where a moment lands once they are."""
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 from urdido.sources.model import Chapter
 

@@ -13,6 +13,17 @@ from pathlib import Path
 
 import pytest
 
+from golden_plans import main_plan
+from test_assemble_clip import (
+    GOLDEN,
+    NARRATION,
+    TURING,
+    WORDPRESS,
+    _ready,
+    load,
+    portable,
+    synthetic_recording,
+)
 from urdido import captions
 from urdido.assemble.video import FullVideo, Intro
 from urdido.audio import mix
@@ -20,9 +31,6 @@ from urdido.cards import html
 from urdido.narration import Takes
 from urdido.sources import chaptered_recording
 from urdido.timeline import plan
-
-from test_assemble_clip import GOLDEN, NARRATION, TURING, WORDPRESS, _ready, load, portable, synthetic_recording
-from golden_plans import main_plan
 
 VARIANTS = {
     # variant: (fixture, story, language, recording folder, webm, script, takes folder, chapters)

@@ -10,8 +10,8 @@ it fits. Every length is read from its encode, as the JS reads it.
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Mapping, Sequence
 
 from urdido import media as mediamod
 from urdido.audio import mix

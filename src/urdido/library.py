@@ -10,7 +10,7 @@ import os
 import re
 import subprocess
 import tempfile
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from fractions import Fraction
 from pathlib import Path
 
@@ -49,7 +49,7 @@ def imported(file, metadata, catalogue):
     source = {key: metadata.get(key) for key in ("url", "title", "author", "license", "license_url")}
     result = {**source, "file": os.path.relpath(file, Path(catalogue).resolve().parent).replace("\\", "/"),
               "sha256": file_hash(file), "measurements": probe(file),
-              "retrieved_at": metadata.get("retrieved_at"), "imported_at": datetime.now(timezone.utc).isoformat(),
+              "retrieved_at": metadata.get("retrieved_at"), "imported_at": datetime.now(UTC).isoformat(),
               "rights": {"status": "unknown"}, "ranges": [], "imported_metadata": metadata}
     result["kind"] = "video" if result["measurements"]["duration"] is not None else "picture"
     result.update({key: metadata[key] for key in ("source_id", "source_offset") if key in metadata})
@@ -129,7 +129,7 @@ def update(file, expected, action):
         action(data)
         for candidate in data["candidates"].values():
             validate(candidate)
-        data.setdefault("history", []).append({"previous_sha256": actual, "at": datetime.now(timezone.utc).isoformat()})
+        data.setdefault("history", []).append({"previous_sha256": actual, "at": datetime.now(UTC).isoformat()})
         fd, path = tempfile.mkstemp(prefix=file.name + ".", suffix=".tmp", dir=file.parent)
         pending = Path(path)
         with os.fdopen(fd, "w", encoding="utf-8", newline="") as stream:

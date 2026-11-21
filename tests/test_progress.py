@@ -6,8 +6,8 @@ import time
 
 import pytest
 
+from test_preflight import cut  # noqa: F401  (the preflight fixture)
 from urdido import cache, media, progress
-from test_preflight import cut
 
 
 def rows(file):

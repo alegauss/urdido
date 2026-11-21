@@ -1,8 +1,7 @@
 """A thumbnail's pictures are crops of the video's own sources, declared by box (VM51)."""
 import pytest
 
-from urdido.thumbnail import crop_filter
-from urdido.thumbnail import fit_title
+from urdido.thumbnail import crop_filter, fit_title
 
 
 def test_a_box_of_fractions_becomes_an_ffmpeg_crop():

@@ -7,10 +7,10 @@ from pathlib import Path
 
 import pytest
 
+from fonts import TEXT, card_theme
 from urdido import cache, captions, media
 from urdido.preview import clip_cues, select
 from urdido.sources.model import RecordingRefused
-from fonts import TEXT, card_theme
 
 
 def test_take_beat_context_and_intervals_snap_to_production_frames():

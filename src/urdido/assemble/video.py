@@ -10,11 +10,10 @@ join a card to what is beside it. Every length is read from its encode.
 
 from __future__ import annotations
 
-import os
 import re
 import subprocess
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Sequence
 
 from urdido import media as mediamod
 from urdido.assemble.clip import ClipVideo

@@ -1,7 +1,6 @@
 """The Resolve project is the timeline handed over, with its own media (VM14)."""
 
 import shutil
-from pathlib import Path
 
 import opentimelineio as otio
 import pytest

@@ -1,14 +1,13 @@
 """VM56: all independent declaration failures precede every render subprocess."""
 import json
-from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
+from fonts import synthetic_font
 from urdido import cache, media
 from urdido.build import Build, main
 from urdido.preflight import PreflightRefused, illustrated
-from fonts import synthetic_font
 
 
 @pytest.fixture

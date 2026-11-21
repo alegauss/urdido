@@ -13,9 +13,9 @@ from pathlib import Path
 import opentimelineio as otio
 import pytest
 
-from urdido import timeline as tl
 from golden_plans import main_plans
 from marketing import GOLDEN, needs_marketing
+from urdido import timeline as tl
 
 GOLDEN = GOLDEN / "expected"
 PLANS = main_plans(GOLDEN)

@@ -16,10 +16,11 @@ import re
 import subprocess
 import sys
 import time
+from collections.abc import Callable, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from contextvars import copy_context
 from dataclasses import dataclass, field
-from typing import Callable, Literal, Sequence, TypeVar
+from typing import Literal, TypeVar
 
 Encoder = Literal["nvenc", "x264"]
 T = TypeVar("T")

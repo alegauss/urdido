@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 
+from marketing import MARKETING, needs_marketing
 from urdido import media
 from urdido.assemble.scenes import ScenesVideo
 from urdido.cards import html
@@ -19,7 +20,6 @@ from urdido.edit.pacing import fit_to_line
 from urdido.narration import Takes
 from urdido.sources import RecordingRefused
 from urdido.sources.scenes import scene_clips
-from marketing import MARKETING, needs_marketing
 
 PROMO = MARKETING / "shio" / "promo"
 CENAS = PROMO / "recordings" / "pt" / "cenas.json"

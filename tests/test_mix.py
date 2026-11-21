@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from urdido.audio import mix as m
 from golden_plans import main_plan, main_plans
 from marketing import GOLDEN, MARKETING
+from urdido.audio import mix as m
 
 GOLDEN = GOLDEN / "expected"
 WORDPRESS = MARKETING / "turing" / "wordpress"

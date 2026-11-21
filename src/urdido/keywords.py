@@ -242,8 +242,7 @@ def burned_cues(placed: list[dict], size: int) -> list:
 def overlay(joined: str, placed: list[dict], declaration: dict, parts: Path, fonts: str, encoder: str,
             *, window: tuple[float, float] | None = None, origin: float = 0, aliases=None,
             frame=None, burn: dict | None = None) -> str:
-    from urdido import media
-    from urdido import cache
+    from urdido import cache, media
 
     timed = cues(placed, declaration["lines"], aliases=aliases)
     burned = burned_cues(placed, int(burn.get("words", 3))) if burn else None

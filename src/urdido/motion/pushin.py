@@ -8,9 +8,9 @@ zoompan and the Resolve project's transform keyframes are both drawn from them.
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Sequence
 
 from urdido.sources.model import Chapter
 

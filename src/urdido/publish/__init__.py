@@ -12,7 +12,7 @@ import json
 import os
 import re
 import shutil
-from typing import Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 _TAGS = re.compile(r"\[[^\]]*\]")
 _SPACE = re.compile(r"\s+")

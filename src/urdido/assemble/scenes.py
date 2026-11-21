@@ -11,16 +11,16 @@ from __future__ import annotations
 import os
 import re
 import shutil
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Mapping, Sequence
 
 from urdido import media as mediamod
+from urdido.assemble.video import Intro
 from urdido.cards import html as cardhtml
 from urdido.edit.pacing import Fit, fit_to_line, warp, warp_setpts
 from urdido.jsnum import fixed
 from urdido.narration import Take, Takes
 from urdido.sources.scenes import Scene
-from urdido.assemble.video import Intro
 from urdido.timeline import Builder
 
 _CHAPTER = re.compile(r"^chapter-(\d+)$")
@@ -44,7 +44,7 @@ class ScenesVideo:
     card_seconds: float = 2.5
     # The opening animation and where its usable part starts: played before the first scene with
     # its own sound, the bed starting after it (as the WordPress demo's opening does).
-    intro: "Intro | None" = None
+    intro: Intro | None = None
     placed: list = field(default_factory=list)  # (scene, kind, start, length, takes)
     # VM87: per scene, the moments pinned to words (`[{mark, take, word}]`, video.toml's [anchors])
     anchors: Mapping = field(default_factory=dict)

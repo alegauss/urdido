@@ -27,30 +27,15 @@ with a notice.
 from __future__ import annotations
 
 import argparse
-import hashlib
-import json
-import os
-import subprocess
-import sys
-import tomllib
 from pathlib import Path
-from typing import Any, Mapping
 
-from urdido import captions as cap
-from urdido import media
 from urdido import cache
-from urdido.audio import mix
-from urdido.cards import html
-from urdido.errors import DeclarationError, Refused
-from urdido.jsnum import fixed
-from urdido.narration import Takes
-from urdido.sources import RecordingRefused, chaptered_recording
-from urdido.timeline import from_plan, pieces as pieces_of, plan as plan_of
-
+from urdido.errors import Refused
 from urdido.pipelines.chaptered import Chaptered
 from urdido.pipelines.explainer import Explainer
 from urdido.pipelines.scenes import Scenes
 from urdido.project import LEGACY_ROOTS, NEWLINE, TAB, Project, roots_of  # noqa: F401
+
 
 class Build(Scenes, Chaptered, Explainer):
     """The pipelines, on the loaded declaration (`urdido.project`)."""
@@ -93,10 +78,9 @@ def main(argv: list[str] | None = None) -> int:
     kind = build.decl["source"]["kind"]
     if a.preview and kind != "illustrated":
         raise Refused("--preview requires an illustrated source")
-    from urdido.safety import configured
-    from urdido import textcheck
-    from urdido import progress
+    from urdido import progress, textcheck
     from urdido.cards.render import DECLARED
+    from urdido.safety import configured
 
     DECLARED.set((build.decl.get("cards") or {}).get("channel"))
     with progress.configured(build.parts / f"progress.{build.language}.jsonl", mode=a.progress), \
