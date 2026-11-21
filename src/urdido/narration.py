@@ -89,7 +89,7 @@ class Takes:
         """What the voice says: each word of `pronounce` spelled as it sounds."""
         said = text
         for word, sound in (self.script.get("pronounce", {}).get(language) or {}).items():
-            said = re.sub(rf"\b{re.escape(word)}\b", lambda _: sound, said)
+            said = re.sub(rf"\b{re.escape(word)}\b", lambda _, sound=sound: sound, said)
         return said
 
     def source_file(self, language: str, name: str) -> str:

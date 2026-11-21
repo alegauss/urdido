@@ -88,7 +88,7 @@ def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | 
                 if not name.startswith("card-hills-") and name != "card-backdrop":
                     outputs.append(os.path.join(out_dir, f"{name}-text.png"))
 
-                def raster():
+                def raster(content=content, name=name, file=file, outputs=outputs):
                     nonlocal browser, page
                     if browser is None:
                         browser = p.chromium.launch(channel=channel or None)

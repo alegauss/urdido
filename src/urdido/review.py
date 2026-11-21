@@ -34,7 +34,7 @@ def rows(document: dict, edit: dict, placed: list[dict], highlights: list[dict],
         beat = beats[shot["beat"]]
         start, end = shot["at"] + opening, shot["at"] + opening + shot["seconds"]
         asset = document.get("media", {}).get(beat.get("asset"), {})
-        overlap = lambda at, until: at < end and until > start
+        overlap = lambda at, until, start=start, end=end: at < end and until > start
         result.append({"beat": shot["beat"], "start": start, "end": end,
                        "source": asset.get("file"), "source_start": beat.get("at", 0),
                        "source_end": beat.get("at", 0) + shot["seconds"],

@@ -173,7 +173,7 @@ def sentence_ends(spoken: Sequence[str], words: Sequence[Mapping], length: float
         # The transcript may punctuate differently ("bloco," where the script ends a sentence).
         own_word = [i for i in window if _bare(words[i]["text"]) == own]
         matching = [i for i in own_word if i in closing]
-        near = lambda i: abs(words[i]["end"] - guess)  # noqa: E731
+        near = lambda i, guess=guess: abs(words[i]["end"] - guess)  # noqa: E731
         chosen = min(matching or own_word or closing or list(pool), key=near)
         ends.append(chosen)
         last = chosen
@@ -195,7 +195,7 @@ def translated_cues(placed: Mapping, words: Sequence[Mapping], translation: Sequ
     ends = sentence_ends(spoken, words, placed["length"])
     starts = [0] + [e + 1 for e in ends[:-1]]
     cues = []
-    for n, (first, text) in enumerate(zip(starts, translation)):
+    for n, (first, text) in enumerate(zip(starts, translation, strict=False)):
         start_t = placed["at"] + words[first]["start"]
         end_t = placed["at"] + (words[starts[n + 1]]["start"] if n + 1 < len(starts)
                                 else max(words[-1]["end"], min(placed["length"], words[-1]["end"] + 1.5)))
@@ -224,7 +224,7 @@ def burned_cues(placed: Mapping, words: Sequence[Mapping], size: int = 3) -> lis
     ends = sentence_ends(spoken, words, placed["length"])
     starts = [0] + [e + 1 for e in ends[:-1]]
     cues = []
-    for n, (first, last, sentence) in enumerate(zip(starts, ends, spoken)):
+    for n, (first, last, sentence) in enumerate(zip(starts, ends, spoken, strict=False)):
         start_t = placed["at"] + words[first]["start"]
         end_t = placed["at"] + (words[starts[n + 1]]["start"] if n + 1 < len(starts) else words[last]["end"] + 0.3)
         tokens = sentence.split()

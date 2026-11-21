@@ -61,7 +61,7 @@ def illustrated(build):
         for key, asset in document.get("media", {}).items():
             if "library" in asset:
                 resolved = check(build.path(build.decl["source"]["declaration"]), f"media.{key}.library",
-                                 lambda: resolve_asset(asset, build.here, build.load))
+                                 lambda asset=asset: resolve_asset(asset, build.here, build.load))
                 if resolved is not None:
                     document["media"][key] = resolved
         for beats in document.get("scenes", {}).values():
@@ -132,7 +132,7 @@ def illustrated(build):
                     issue(build.path(spec["file"]), language, "missing take translation", name)
                 elif transcript is not None:
                     check(build.path(spec["file"]), language,
-                          lambda table=table, name=name, take=take: captions.translated_cues(
+                          lambda table=table, name=name, take=take, transcript=transcript: captions.translated_cues(
                               {"at": 0, "length": take.length, "text": take.text}, transcript, table[name]), name)
             if highlights is not None:
                 wanted = highlights.get("lines", {}).get(name, [])
@@ -143,7 +143,7 @@ def illustrated(build):
                         if not isinstance(duration, (int, float)) or not math.isfinite(duration) or duration <= 0:
                             issue(build.path(highlight_spec["declaration"]), f"lines.{name}.{i}.duration",
                                   "highlight duration must be finite and positive", name)
-                        def match():
+                        def match(transcript=transcript, item=item, cursor=cursor):
                             return keywords.matches(transcript, item.get("hear", item["show"]), cursor, aliases=aliases)
                         candidates = check(build.path(highlight_spec["declaration"]), f"lines.{name}.{i}.hear", match, name)
                         if candidates:
@@ -183,11 +183,11 @@ def illustrated(build):
                     issue(source_file, f"scenes.{name}.{i}", exc, name, key)
                 if theme is not None:
                     check(source_file, f"scenes.{name}.{i}.page",
-                          lambda: page(beat, document, theme, build.frame() if hasattr(build, "frame") else Frame(1920, 1080),
-                                       "preflight", i + 1), name, key)
+                          lambda beat=beat, i=i: page(beat, document, theme, build.frame() if hasattr(build, "frame") else Frame(1920, 1080),
+                                                      "preflight", i + 1), name, key)
                 if "from_word" in beat and name in words:
                     check(source_file, f"scenes.{name}.{i}.from_word",
-                          lambda: keywords.anchor(Path(voices[name].file), beat["from_word"], aliases=aliases), name, key)
+                          lambda name=name, beat=beat: keywords.anchor(Path(voices[name].file), beat["from_word"], aliases=aliases), name, key)
                 asset = document.get("media", {}).get(beat.get("asset"))
                 if asset is not None:
                     if not asset.get("file"):
@@ -202,34 +202,34 @@ def illustrated(build):
                 continue
             take = voices[name]
             lengths = check(source_file, f"scenes.{name}.timing",
-                            lambda: anchored_frames(paced(beats, getattr(takes, "tempo", 1.0)),
+                            lambda beats=beats, name=name, take=take: anchored_frames(paced(beats, getattr(takes, "tempo", 1.0)),
                                                     scene_frames(document, name, take.length), take.file,
                                                     document.get("max_static_seconds"), aliases=aliases), name)
             if lengths:
                 placed.append({"file": take.file, "at": (opening or 0) + clock / 30 + 0.4,
                                "length": take.length, "text": take.text})
-                for i, (beat, frames) in enumerate(zip(beats, lengths)):
+                for i, (beat, frames) in enumerate(zip(beats, lengths, strict=True)):
                     audit.append({"beat": f"{name}-{i}", "at": clock / 30, "seconds": frames / 30})
                     clock += frames
                     asset = document.get("media", {}).get(beat.get("asset"))
                     if not asset or not asset.get("file"):
                         continue
-                    check(source_file, f"scenes.{name}.{i}.range", lambda: check_range(beat, asset, frames), name,
+                    check(source_file, f"scenes.{name}.{i}.range", lambda beat=beat, asset=asset, frames=frames: check_range(beat, asset, frames), name,
                           beat.get("id", f"{name}-{i}"))
-                    check(source_file, f"media.{beat['asset']}.rejected", lambda: check_rejected(beat, asset, frames),
+                    check(source_file, f"media.{beat['asset']}.rejected", lambda beat=beat, asset=asset, frames=frames: check_rejected(beat, asset, frames),
                           name, beat.get("id", f"{name}-{i}"))
                     file = build.here / asset["file"]
                     key = beat.get("id", f"{name}-{i}")
                     if file.is_file() and beat.get("layout") == "footage":
                         if file not in durations:
-                            durations[file] = check(file, "duration", lambda: media.seconds(str(file)), name, key)
+                            durations[file] = check(file, "duration", lambda file=file: media.seconds(str(file)), name, key)
                         at = beat.get("at", 0)
                         if not isinstance(at, (int, float)) or not math.isfinite(at) or at < 0:
                             issue(source_file, f"scenes.{name}.{i}.at", "source start must be finite and nonnegative", name, key)
                         elif durations[file] is not None and at + frames / 30 > durations[file] + 0.02:
                             issue(source_file, f"scenes.{name}.{i}.at", "footage is shorter than the requested beat", name, key)
                     elif file.is_file() and beat.get("layout") == "picture" and file not in pictures:
-                        def picture():
+                        def picture(file=file):
                             probe = json.loads(subprocess.run(
                                 ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height",
                                  "-of", "json", str(file)], capture_output=True, check=True).stdout)

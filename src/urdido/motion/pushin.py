@@ -86,11 +86,11 @@ def push_at(ws: Sequence[Window], t: float, frame: Frame) -> tuple[float, float,
     """The zoom at a moment, and the point of the page at the frame's centre, clamped so the
     frame never leaves the page."""
     weights = [_weight(w, t) for w in ws]
-    zoom = 1 + sum((w.zoom - 1) * k for w, k in zip(ws, weights))
+    zoom = 1 + sum((w.zoom - 1) * k for w, k in zip(ws, weights, strict=True))
 
     def shown(axis: str, extent: float) -> float:
         half = extent / 2
-        centre = half + sum((getattr(w, axis) - half) * k for w, k in zip(ws, weights))
+        centre = half + sum((getattr(w, axis) - half) * k for w, k in zip(ws, weights, strict=True))
         visible = extent / zoom / 2
         return min(extent - visible, max(visible, centre))
 

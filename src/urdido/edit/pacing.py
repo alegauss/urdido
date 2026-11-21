@@ -39,7 +39,7 @@ def warp(clip: float, need: float, pins: list[tuple[float, float, str]]) -> list
             raise ValueError(f"anchor {name}: its word comes before the previous anchor's ({on:.2f} s)")
         points.append((at, on))
     points.append((clip, need))
-    for (c0, o0), (c1, o1) in zip(points, points[1:]):
+    for (c0, o0), (c1, o1) in zip(points, points[1:], strict=False):
         speed = (c1 - c0) / (o1 - o0)
         if not 0.25 <= speed <= 6:
             raise ValueError(f"the piece from clip {c0:.2f} s to {c1:.2f} s would play at {speed:.2f}x "

@@ -109,7 +109,7 @@ def inspect(document, edit, folder, opening=0):
 
     for key, uses in grouped.items():
         aliases = sorted(alias for alias in identity if find(alias) == key)
-        def limit(field):
+        def limit(field, aliases=aliases):
             specific = {source_rules[a][field] for a in aliases if field in source_rules.get(a, {})}
             if len(specific) > 1:
                 raise ValueError(f"aliases {aliases} have conflicting repetition.{field} limits")

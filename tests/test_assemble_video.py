@@ -117,7 +117,7 @@ def test_full_video_plan_equals_the_golden(variant, tmp_path):
     )
     for key in golden:
         if key == "pieces":
-            for n, (a, b) in enumerate(zip(built[key], golden[key])):
+            for n, (a, b) in enumerate(zip(built[key], golden[key], strict=True)):
                 assert a == b, f"piece {n}"
         assert built[key] == golden[key], key
     assert list(built) == list(golden)

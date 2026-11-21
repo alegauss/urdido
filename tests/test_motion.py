@@ -44,7 +44,7 @@ def test_every_chapter_moves_as_the_js(fixture, tmp_path):
     chapters = chapters_of(fixture, tmp_path)
     assert len(chapters) == len(expected)
     pushed = 0
-    for chapter, want in zip(chapters, expected):
+    for chapter, want in zip(chapters, expected, strict=True):
         label = f"{fixture} chapter {chapter.n}"
         length = chapter.clip.end - chapter.clip.start
 
@@ -53,7 +53,7 @@ def test_every_chapter_moves_as_the_js(fixture, tmp_path):
             {"from": w.start, "to": w.end, "zoom": w.zoom, "cx": w.cx, "cy": w.cy, "ease": w.ease} for w in ws
         ] == want["windows"], label
         assert (pushin.zoompan_filter(ws, frame) if ws else None) == want["zoompan"], label
-        for (in_chapter, span), keys in zip([(0, length), (1, length / 2)], want["keyed"]):
+        for (in_chapter, span), keys in zip([(0, length), (1, length / 2)], want["keyed"], strict=True):
             got = []
             if ws:
                 for t in pushin.moments(ws, in_chapter, span, 30):

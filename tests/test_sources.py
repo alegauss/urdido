@@ -30,7 +30,7 @@ def test_fixture_reads_into_chapters_equal_to_its_json(tmp_path, fixture):
 
     assert recording.language == "pt-BR"
     assert len(recording.chapters) == len(data["chapters"])
-    for n, (chapter, raw) in enumerate(zip(recording.chapters, data["chapters"]), 1):
+    for n, (chapter, raw) in enumerate(zip(recording.chapters, data["chapters"], strict=True), 1):
         assert chapter.n == n
         assert f"{chapter.n}. {chapter.title}" == raw["title"]
         assert (chapter.clip.file, chapter.clip.start, chapter.clip.end) == (webm, raw["start"], raw["end"])

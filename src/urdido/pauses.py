@@ -39,7 +39,7 @@ def intervals(samples, duration, spec):
     for index, current in enumerate(samples):
         at = min(index / spec["sample_fps"], duration)
         if previous is not None:
-            changed = sum(abs(a - b) > spec["pixel_delta"] for a, b in zip(previous, current))
+            changed = sum(abs(a - b) > spec["pixel_delta"] for a, b in zip(previous, current, strict=False))
             share = changed / len(current)
             moving = changed > 0 if spec["cursor_motion"] == "count" else share >= spec["min_changed_share"] and changed > 0
             if not moving and start is None:

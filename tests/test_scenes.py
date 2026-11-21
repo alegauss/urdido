@@ -60,7 +60,7 @@ def test_cenas_reads_filmed_scenes_measured_and_unfilmed_as_such():
     scenes = scene_clips(str(CENAS))
     listed = load(CENAS)["scenes"]
     assert [s.name for s in scenes] == [e["scene"] for e in listed]
-    for scene, entry in zip(scenes, listed):
+    for scene, entry in zip(scenes, listed, strict=True):
         assert scene.filmed == (entry.get("filmed") is not False and bool(entry.get("file")))
         if scene.filmed:
             assert scene.seconds == pytest.approx(media.seconds(scene.file))

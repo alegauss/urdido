@@ -188,7 +188,7 @@ class FullVideo(ClipVideo):
             k = 0
             for a, b_ in stretches:
                 stops = [a, at, b_] if at is not None and a < at < b_ else [a, b_]
-                for p, q in zip(stops, stops[1:]):
+                for p, q in zip(stops, stops[1:], strict=False):
                     if len(stretches) == 1 and len(stops) == 2:
                         piece = clip
                     else:
@@ -198,7 +198,7 @@ class FullVideo(ClipVideo):
                         k += 1
                     p3 = float(fixed(p, 3))
                     self._clock += place(
-                        piece, lambda length, f=piece, p3=p3: b.chapter(self.webm, in_recording + p3, i, p3, f, length)
+                        piece, lambda length, f=piece, p3=p3, at=in_recording, i=i: b.chapter(self.webm, at + p3, i, p3, f, length)
                     )
                     placed = self._clips[-1][0]
                     windows = pushin.windows(chapter, pushin.Frame(self.frame.width, self.frame.height), self.vertical)
@@ -250,5 +250,5 @@ class FullVideo(ClipVideo):
                 marks[n]["in"] = source_b
             else:
                 marks[n + 1]["out"] = source_a if still_a else self.last_frame(file_a, n)
-        for (clip, *_), mark in zip(self._clips, marks):
+        for (clip, *_), mark in zip(self._clips, marks, strict=False):
             b.dissolve(clip, into=mark["in"], out_of=mark["out"])

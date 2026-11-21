@@ -17,7 +17,7 @@ def test_burned_captions_use_the_written_words_in_short_groups_that_never_cross_
     assert [c.text for c in cues] == ["Esse é o", "primeiro bug.", "Era um inseto", "de verdade."]
     assert cues[0].start == pytest.approx(10.0)
     assert cues[2].start == pytest.approx(12.0)  # the second sentence starts on its first word
-    assert all(a.end == pytest.approx(b.start) for a, b in zip(cues, cues[1:]))
+    assert all(a.end == pytest.approx(b.start) for a, b in zip(cues, cues[1:], strict=False))
 
 
 def test_a_lone_last_word_joins_the_group_before_it():

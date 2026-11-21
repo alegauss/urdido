@@ -123,7 +123,7 @@ def beat_frames(beats: list[dict], total: int, max_static: float | None = None) 
     lengths = dict(fixed)
     lengths.update({n: edges[i + 1] - edges[i] for i, n in enumerate(free)})
     result = [lengths[i] for i in range(len(beats))]
-    for beat, frames in zip(beats, result):
+    for beat, frames in zip(beats, result, strict=True):
         if frames < 30:
             raise RecordingRefused("a beat must last at least one second")
         static = beat.get("layout", "date") != "footage" or beat.get("static", False)
@@ -146,7 +146,7 @@ def anchored_frames(beats: list[dict], total: int, audio: str,
         boundaries[i] = round((0.4 + anchor(Path(audio), beat["from_word"], **({"aliases": aliases} if aliases else {}))) * 30)
     result = []
     ordered = sorted(boundaries)
-    for left, right in zip(ordered, ordered[1:]):
+    for left, right in zip(ordered, ordered[1:], strict=False):
         duration = boundaries[right] - boundaries[left]
         if duration <= 0 or boundaries[right] > total:
             raise RecordingRefused("word anchors must increase within the narration take")
@@ -260,7 +260,7 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
         total_frames = scene_frames(document, name, take.length)
         lengths = anchored_frames(paced(beats, takes.tempo), total_frames, take.file, document.get("max_static_seconds"),
                                   aliases=declared_aliases(takes.script, language))
-        for i, (beat, frames) in enumerate(zip(beats, lengths)):
+        for i, (beat, frames) in enumerate(zip(beats, lengths, strict=True)):
             if frames < 30:
                 raise RecordingRefused(f"{name}: too many beats for the spoken take")
             n += 1
@@ -371,11 +371,11 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
     if beat_keys is not None:
         return result  # VM57: previews reuse the exact production beat clips, without full-take joins.
     progress.plan("join", len(result))
-    for scene, (_, beats, _) in zip(result, rows):
+    for scene, (_, beats, _) in zip(result, rows, strict=True):
         listing = out / f"{scene.name}.concat.txt"
         listing.write_text("".join(f"file '{scene.name}-{i}.mp4'\n" for i in range(len(beats))), encoding="utf-8")
         args = ["-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy", scene.file]
-        cache.run("illustrated take join", [scene.file], args, lambda: media.ffmpeg(args),
+        cache.run("illustrated take join", [scene.file], args, lambda args=args: media.ffmpeg(args),
                   inputs=[__file__, *[out / f"{scene.name}-{i}.mp4" for i in range(len(beats))]], tools=["ffmpeg"])
     return result
 

@@ -28,7 +28,7 @@ def opening_frames(log: str) -> dict:
     times = [int(row[2]) * tick for row in rows]
     if not times:
         raise RuntimeError("QA: no opening video frames decoded")
-    intervals = [round(b - a, 9) for a, b in zip(times, times[1:])]
+    intervals = [round(b - a, 9) for a, b in zip(times, times[1:], strict=False)]
     repeats = []
     start = 0
     for end in range(1, len(rows) + 1):
