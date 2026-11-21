@@ -112,7 +112,13 @@ SCHEMA = table(
         "highlights": table({"declaration": ANY, "fonts": ANY}),
         "claims": table({"declaration": ANY, "action": ANY}),
         "description": table(
-            {"summary": ANY, "notes": ANY, "sources": ANY, "generated": ANY}
+            {
+                "summary": ANY,
+                "notes": ANY,
+                "sources": ANY,
+                "generated": ANY,
+                "strings": ANY,
+            }
         ),
         "text_checks": table({"action": ANY, "protected_tokens": ANY, "glyphs": ANY}),
         "mark": table(

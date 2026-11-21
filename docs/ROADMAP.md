@@ -7,7 +7,6 @@
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-- 📋 **UR27** (deps: UR21 ✅) **Description, chapter and credit texts are hardcoded in Portuguese, and the description is shaped only for YouTube** — An English video gets Capitulos and Introducao, and a target other than YouTube cannot change the limits or the links. → §UR27
 - 📋 **UR28** (deps: UR22 ✅) **The Turing WordPress demo's store scraper, stills and transcript publishing live inside the core build** — WooCommerce selectors and writes into the Turing repository are one video's needs, and every user of the package carries them. → §UR28
 - 📋 **UR29** (deps: UR21 ✅) **Cards render only with a Windows Edge install, and thumbnail layouts load any brand.py by its path** — A Linux CI or another user has no msedge.exe, and executing a file named in a declaration is a plugin system with no contract. → §UR29
 - 📋 **UR30** (deps: UR21 ✅) **The Python build shells out to node for the opening gate, and the JavaScript helpers have no install path** — A pip install brings no .mjs files, and eight project scripts and Turing's e2e specs import them by relative path. → §UR30

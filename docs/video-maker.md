@@ -528,6 +528,15 @@ follows, then `notes`, any `sources` (`[[description.sources]]` with `label` and
 only its own chapter; a chapter whose take the cut lacks is refused. The
 opening's line is the script's `introTitle`.
 
+The description's words come from a table per language (UR27,
+`urdido.publish.strings`): headings such as `Capítulos` / `Chapters`, the
+licence labels and the default credit line follow the build's language, and
+`[description.strings]` replaces any of them by key (an unknown key is
+refused). A storyboard's licence text is recognised in either language
+(`Gravação própria` and `Own recording` are both an own capture). The
+publishing target owns what the platform imposes; YouTube's is a 5,000-unit
+limit, no angle brackets and youtu.be links.
+
 The public text groups shared licence links and declared modification notes,
 shortens YouTube watch links while retaining their time parameters, credits
 Pixabay stock by service, and groups the video's own screen recordings by

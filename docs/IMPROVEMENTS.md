@@ -50,21 +50,6 @@ lists every key the schema accepts.
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-### §UR27 Publishing texts by locale and by target
-
-`publish/description.py:39-157` holds "Capítulos", "Fontes e demonstrações", "Apoio",
-"Capturas próprias", licence prefixes in Portuguese and a default ElevenLabs credit;
-`sources/illustrated.py:387` writes "0:00 Introdução". The 5,000-unit limit, youtu.be
-shortening and the Shorts safe area are YouTube's; `cuts/render.py:45-47` defaults the
-languages to `en` and `pt-BR`.
-
-A strings table per language, chosen by the build's language and overridable in the
-declaration, and a publishing target (YouTube first) that owns the limits, link
-shortening and safe areas. `scion()` in `description.py:152` is dead and goes.
-
-**Done when** an English build writes an English description, and no Portuguese literal
-remains outside the pt-BR table.
-
 ### §UR28 One video's needs out of the core
 
 `build.py:299-343` visits `/?post_type=product` with WooCommerce selectors to take store

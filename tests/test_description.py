@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from urdido.publish.description import format_description, illustrated, scion, short_url, units, write
+from urdido.publish.description import format_description, illustrated, short_url, units, write
 from marketing import MARKETING, needs_marketing
 
 ROOT = MARKETING
@@ -18,7 +18,7 @@ def test_wordpress_case_fits_with_declared_notes_and_preserves_credits_vm52():
     script = json.loads((root / "narration/script.json").read_text(encoding="utf-8"))
     options = tomllib.loads((root / "video.toml").read_text(encoding="utf-8"))["description"]
     chapters = ["0:00 Introdução"] + [f"{i}:00 {c['title']['pt-BR']}" for i, c in enumerate(script["chapters"].values(), 1)]
-    text, proof = illustrated(document, chapters, options)
+    text, proof = illustrated(document, chapters, options, "pt-BR")
     assert units(text) <= 5000
     assert text.startswith(document["description"])
     assert document["title"] + "\n\n" not in text[:100]
@@ -32,23 +32,52 @@ def test_wordpress_case_fits_with_declared_notes_and_preserves_credits_vm52():
     assert proof["sources"] == document["sources"]
 
 
-@needs_marketing
-def test_scion_legacy_case_keeps_all_33_sources_and_titles_vm52():
-    root = ROOT / "japode/scion"
-    sources = json.loads((root / "sources.json").read_text(encoding="utf-8-sig"))
-    shots = json.loads((root / "shots.json").read_text(encoding="utf-8"))
-    script = json.loads((root / "narration/script.json").read_text(encoding="utf-8"))
-    publishing = json.loads((root / "publishing.json").read_text(encoding="utf-8"))
-    plan = {"shots": [shot for segment in shots["segments"] for shot in segment["shots"]],
-            "script": script, "segments": [{"chapter": int(n), "start": 25 + i * 30}
-                                          for i, n in enumerate(script["chapters"])]}
-    text, proof = scion(plan, sources, publishing)
-    assert units(text) <= 5000 and len(proof["assets"]) == 33
-    assert text.startswith(publishing["summary"])
-    for credit in proof["assets"]:
-        assert credit["title"] in text and credit["author"] in text
-        assert short_url(credit["url"]) in text
-    assert "0:25 " in text and publishing["license_url"] in text
+def test_an_english_build_writes_an_english_description_ur27():
+    from urdido.publish.strings import strings
+
+    document = {
+        "description": "WordPress in five minutes.",
+        "credits": "Thanks.",
+        "scenes": {"intro": [{"asset": "own", "source": "site"}, {"asset": "old", "source": "site"}]},
+        "media": {"own": {"file": "a.webm", "license": "Own recording", "url": "https://wp.test/x",
+                          "author": "Us", "title": "Capture"},
+                  "old": {"file": "b.png", "license": "Public domain; scanned", "url": "https://archive.test/b",
+                          "author": "Someone", "title": "Old photo"}},
+        "sources": {"site": {"label": "WordPress", "url": "https://wordpress.org"}},
+    }
+    text, _ = illustrated(document, ["0:00 Introduction", "0:30 Install"], {}, "en")
+    for english in ("Chapters", "Sources and demonstrations", "Own captures", "Images — Public domain",
+                    "Narration and music generated with ElevenLabs."):
+        assert english in text, english
+    for portuguese in ("Capítulos", "Fontes", "Capturas", "Imagens", "Domínio", "Narração"):
+        assert portuguese not in text, portuguese
+    pt, _ = illustrated(document, [], {}, "pt-BR")
+    assert "Capítulos" in pt and "Capturas próprias" in pt and "Domínio público" in pt
+    assert strings("pt-BR", {"chapters": "Capítulos do vídeo"})["chapters"] == "Capítulos do vídeo"
+    with pytest.raises(ValueError, match="has no chaptres"):
+        strings("en", {"chaptres": "x"})
+
+
+def test_no_portuguese_literal_outside_the_pt_table_ur27():
+    import re
+
+    source = Path(__file__).resolve().parents[1] / "src" / "urdido"
+    for file in (source / "publish" / "description.py", source / "sources" / "illustrated.py"):
+        text = file.read_text(encoding="utf-8")
+        for word in ("Capítulos", "Introdução", "Fontes e demonstrações", "Apoio", "Capturas próprias",
+                     "Imagens", "Trecho", "Domínio público", "Direitos reservados", "Narração"):
+            assert not re.search(re.escape(word), text), (file.name, word)
+
+
+def test_the_target_owns_the_limit_and_the_refused_characters_ur27():
+    from urdido.publish.strings import Target
+
+    tiny = Target("Tiny", 40, ("#",))
+    with pytest.raises(ValueError, match="limit 40"):
+        format_description("x" * 50, [], [], target=tiny)
+    with pytest.raises(ValueError, match="# , which Tiny|#, which Tiny"):
+        format_description("a #tag", [], [], target=tiny)
+    assert short_url("https://www.youtube.com/watch?v=abc", tiny) == "https://www.youtube.com/watch?v=abc"
 
 
 def test_required_notice_and_changes_survive_grouping_vm52():

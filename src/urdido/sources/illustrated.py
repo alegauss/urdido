@@ -383,13 +383,14 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
 
 def description(document: dict, script: dict, plan: dict, language: str, out: Path, name: str, options: dict | None = None):
     """Chapter times come from the composed voice placements, never estimated reading times."""
-    from urdido.publish.description import illustrated, write
+    from urdido.publish.description import illustrated, intro_line, write
+    from urdido.publish.strings import strings
 
-    lines = ["0:00 Introdução"]
+    lines = [intro_line(script, language, strings(language, (options or {}).get("strings")))]
     placed = plan["spoken"][language]
     # takes.lines uses a stable order; one spoken placement per take was validated above.
     for i, (key, chapter) in enumerate(script["chapters"].items()):
         at = int(max(0, placed[1 + i * 2]["at"] - 0.4))
         lines.append(f"{at // 60}:{at % 60:02} {chapter['title'][language]}")
-    text, provenance = illustrated(document, lines, options)
+    text, provenance = illustrated(document, lines, options, language)
     write(out, f"{name}.{language}", text, provenance)
