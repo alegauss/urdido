@@ -26,7 +26,7 @@
 ## Block D — Inherited from video-maker (marketing Block B)
 
 - 📋 **UR3** (deps: marketing: VM28) **Published videos have no end screen or cards pointing to the next video on the subject** — A viewer who finishes the Docker video is not offered the Scion one, and the end screen should point at the continuation, not the newest upload. → §UR3
-- 🛠 **UR4** (deps: UR2 ✅, UR33 ✅) **The Japode explainer videos are built by scripts copied into each video, outside video-maker** — video-maker only knows the recorded product demo, so the first video of another kind went around it, and its two copies already differ. → §UR4
+- ⏳ **UR4** (deps: UR2 ✅, UR33 ✅) **The Japode explainer videos are built by scripts copied into each video, outside video-maker** — The explainer renders its shots, titles, callouts and mix with the channel's theme and writes its credits, and the Japode videos drop their bin scripts. → §UR4
 - ⏳ **UR5** (deps: UR21 ✅, marketing: VM32) **A second cut of a video, to test a new opening, means copying the whole video folder and its declaration** — The review records which variant was uploaded and which retention report it is compared against, once marketing's VM32 review exists. → §UR5
 - 📋 **UR44** (deps: polyweave: PW720) **A retake moves the old take's files aside by hand because voice.lines cannot buy a current take again** — Moving files behind polyweave's back is a workaround that a crash mid-run can leave half done. → §UR44
 - 📋 **UR45** (deps: UR14 ✅) **The flash scan's threshold was set on synthetic frames, never on the Shio flash or a published cut** — At 32x18 a same-brightness flash may slip under the threshold, and a published cut may be refused for a blink that is fine. → §UR45
@@ -62,5 +62,11 @@
 - **The review names the uploaded variant and its retention report** A variant's review
   records which cut was uploaded and the retention report it is compared against, so two
   openings of one episode are judged side by side.
+
+## Done when — UR4
+
+- **The Japode videos build with urdido and drop their bin scripts** japode/scion and
+  japode/docker each build from a video.toml with urdido build, their bin/build.py and
+  short.py are gone, and the published cuts come out the same.
 
 ## Non-goals

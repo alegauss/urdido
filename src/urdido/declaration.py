@@ -80,6 +80,11 @@ SCHEMA = table(
                 "newer_than": ANY,
                 "record_command": ANY,
                 "vertical_record_command": ANY,
+                "shots": ANY,
+                "footage": ANY,
+                "lead": ANY,
+                "gap": ANY,
+                "end": ANY,
             },
             required=("kind",),
         ),
@@ -219,6 +224,7 @@ KIND_NEEDS = {
     "chaptered": ("folder", "recording", "chapters"),
     "scenes": ("listing",),
     "illustrated": ("declaration",),
+    "explainer": ("shots",),
 }
 
 

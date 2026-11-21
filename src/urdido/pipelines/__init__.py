@@ -15,7 +15,12 @@ from importlib.metadata import entry_points
 GROUP = "urdido.sources"
 
 #: urdido's own kinds, and the method of `Build` that builds each.
-BUILT_IN = {"chaptered": "chaptered", "scenes": "scenes", "illustrated": "scenes"}
+BUILT_IN = {
+    "chaptered": "chaptered",
+    "scenes": "scenes",
+    "illustrated": "scenes",
+    "explainer": "explainer",
+}
 
 
 def registered() -> dict:

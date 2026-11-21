@@ -48,10 +48,11 @@ from urdido.sources import RecordingRefused, chaptered_recording
 from urdido.timeline import from_plan, pieces as pieces_of, plan as plan_of
 
 from urdido.pipelines.chaptered import Chaptered
+from urdido.pipelines.explainer import Explainer
 from urdido.pipelines.scenes import Scenes
 from urdido.project import LEGACY_ROOTS, NEWLINE, TAB, Project, roots_of  # noqa: F401
 
-class Build(Scenes, Chaptered):
+class Build(Scenes, Chaptered, Explainer):
     """The pipelines, on the loaded declaration (`urdido.project`)."""
 
 

@@ -60,6 +60,16 @@ picks the pipeline and runs it. A package adds a source kind by registering a
 function `pipeline(build) -> int` under the entry point group
 `urdido.sources`; `[source] kind` then names it.
 
+An explainer (`[source] kind = "explainer"`, UR4) is narration over Creative
+Commons shots, as the Japode videos are made. `[source] shots` names the
+shots per take (a source id with its start second, an optional fixed `dur`,
+`speed` and crop `box`; shots without `dur` share what is left of the line),
+read from `<footage>/src/<id>.mp4` or a film of our own, `<kind>:<scene>`.
+Declared keywords become callouts when the take says them. For now
+`urdido build ... --plan` writes the plan (the one `urdido shorts` cuts from);
+for the Scion video it equals, segment for segment, shot for shot and callout
+for callout, the plan its own script wrote. Rendering it is the next step.
+
 A video can be built as a variant of another (UR5): `[video] base =
 "../wordpress"` in the variant's `video.toml` lays its tables over the base's
 (tables merge key by key, anything else is replaced), and the build reads its
