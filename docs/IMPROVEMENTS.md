@@ -370,28 +370,6 @@ urdido, and `roadkeep lint` passes in both repositories.
 
 ## Block D — Inherited from video-maker (marketing Block B)
 
-### §UR2 Shorts cut by the framework (was marketing VM31)
-
-The Docker and Scion Shorts are cut by scripts copied into each video
-(japode/*/bin/short.py); only the Scion copy carries what was learned on 2026-11-12.
-
-What the Scion cutter does now, and every video's Shorts should:
-
-- no frozen end card: a Short is replayed in a loop and replays count, so the last word runs straight back into the hook; the pointer to the full video replaces the hook for the last 2.6 s, over the moving picture;
-- a visual change every 2 to 4 s: a shot longer than 3.6 s is punched in to 1.1 at its middle (never a terminal, whose lines the 4:3 cut already trims);
-- the voice 1.1 times faster, pitch kept, and 0.35 s after the last word;
-- captions burned in, word-timed, 20 characters a line, numbers in the brand's green, inside the safe area (clear of the right 140 px from y 900 to 1700 and of the bottom 420 px);
-- the channel's look: night green with the glow, green rules around the picture;
-- loudness near -14 LUFS, true peak under -1 dBTP;
-- three Shorts per long video, posted a day or more apart, each self-contained, 20 to 55 s, opening on a number.
-
-Sources: Melvynx/video-agent-skills, Ansub/long-to-shorts, youtube-agent-skill.
-claude-youtube adds that a Short's related-video link converts under 1%: Shorts get the
-channel found, they do not feed the long video.
-
-Done when video-maker cuts the Shorts from any built video's plan and both Japode videos
-use it.
-
 ### §UR3 End screens and cards (was marketing VM33)
 
 Neither the Docker nor the Scion video has an end screen or a card, so a viewer who
@@ -424,7 +402,7 @@ What an explainer needs from the framework, all of it already working in japode/
 - callouts timed to the words said, with a one-line definition for a new term;
 - a channel theme (japode/brand: fonts, colours, logo, thumbnail layout) as the cards theme is for the product videos;
 - the description with chapters and the CC BY credits of the clips actually used;
-- the Shorts, through VM31.
+- the Shorts, through `urdido shorts` (UR2), each video declaring `[shorts]`.
 
 Done when the Docker and Scion videos are each a video.toml built by `python -m
 videomaker build`, their copied bin/ scripts are removed, and the published cuts are

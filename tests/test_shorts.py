@@ -159,6 +159,59 @@ def test_the_description_names_title_length_link_credits_notes_and_tags():
     ]
 
 
+def test_the_encoded_short_is_held_to_length_loudness_peak_and_a_moving_end():
+    spec = shorts.spec_text("demo", shorts.Rules())
+    assert spec.startswith('asset = "demo"\n')
+    assert 'measure = "video_loudness"\nmin = -15\nmax = -13' in spec
+    assert 'measure = "video_frozen_end"\nmax = 0.5' in spec
+    assert 'measure = "video_seconds"\nmax = 60' in spec
+
+
+def test_a_short_past_its_measures_is_refused_naming_each_miss(tmp_path, monkeypatch):
+    from urdido import extras, library
+
+    asked = {}
+
+    def answer(operation, root, **parameters):
+        asked.update(operation=operation, **parameters)
+        return {
+            "passed": False,
+            "predicates": [
+                {"measure": "video_seconds", "value": 30.0, "max": 60, "passed": True},
+                {
+                    "measure": "video_loudness",
+                    "value": -19.2,
+                    "min": -15,
+                    "max": -13,
+                    "passed": False,
+                },
+            ],
+        }
+
+    monkeypatch.setattr(extras, "require", lambda *a, **k: None)
+    monkeypatch.setattr(library, "delegate", answer)
+    video = tmp_path / "shorts" / "demo-1.mp4"
+    (video.parent / "work").mkdir(parents=True)
+    with pytest.raises(ValueError, match="video_loudness is -19.2, held to -15 to -13"):
+        shorts.measures(video, tmp_path, shorts.Rules())
+    assert asked == {
+        "operation": "accept.check",
+        "spec": "shorts/work/demo-1.spec.toml",
+        "subject": "shorts/demo-1.mp4",
+    }
+
+
+def test_without_polyweave_the_short_says_it_went_unmeasured(tmp_path, capsys):
+    pytest.importorskip("PIL")
+    try:
+        import polyweave  # noqa: F401
+    except ImportError:
+        assert shorts.measures(tmp_path / "a.mp4", tmp_path, shorts.Rules()) is None
+        assert "unmeasured" in capsys.readouterr().err
+    else:
+        pytest.skip("polyweave is installed here")
+
+
 def declaration(folder, plan=PLAN, title=CUT.title):
     (folder / "plan.json").write_text(json.dumps(plan), encoding="utf-8")
     (folder / "words").mkdir(exist_ok=True)

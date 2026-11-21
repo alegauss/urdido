@@ -406,7 +406,9 @@ word-timed captions with numbers in the accent colour, and is normalised to
 -14 LUFS. `[shorts.rules]` moves those numbers. A title over 60 characters,
 fewer than 3 or more than 5 hashtags, or a Short over a minute is refused;
 `--check` runs those checks without encoding. With the `polyweave` extra the
-burned captions are held to `video.safe_area` before encoding. Each Short
+burned captions are held to `video.safe_area` before encoding, and the
+encoded file to `accept.check`: under a minute, loudness within 1 LU of the
+target, true peak under -1 dBTP, no frozen end; a miss is refused. Each Short
 gets a `.txt` beside it with its title, description, link, credits for the
 sources its shots use, the declared `[shorts.notes]` and the hashtags.
 

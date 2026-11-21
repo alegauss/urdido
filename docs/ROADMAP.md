@@ -35,9 +35,8 @@
 
 ## Block D — Inherited from video-maker (marketing Block B)
 
-- ⏳ **UR2** (deps: polyweave: PW697, polyweave: PW698) **Each video cuts its Shorts with its own copied script, and the Shorts rules live only in japode/scion** — Both Japode videos declare [shorts] and drop bin/short.py, and each encoded Short is held to polyweave's length, loudness and frozen-end measures. → §UR2
 - 📋 **UR3** (deps: marketing: VM28) **Published videos have no end screen or cards pointing to the next video on the subject** — A viewer who finishes the Docker video is not offered the Scion one, and the end screen should point at the continuation, not the newest upload. → §UR3
-- 📋 **UR4** (deps: UR2 ⏳) **The Japode explainer videos are built by scripts copied into each video, outside video-maker** — video-maker only knows the recorded product demo, so the first video of another kind went around it, and its two copies already differ. → §UR4
+- 📋 **UR4** (deps: UR2 ✅) **The Japode explainer videos are built by scripts copied into each video, outside video-maker** — video-maker only knows the recorded product demo, so the first video of another kind went around it, and its two copies already differ. → §UR4
 - 📋 **UR5** (deps: UR21 ✅, UR33) **A second cut of a video, to test a new opening, means copying the whole video folder and its declaration** — Retention tests need several openings of the same episode, and each copy duplicates 722 MB and drifts from the published cut on every later fix. → §UR5
 - 📋 **UR8** (deps: UR21 ✅) **A thumbnail picture can be any file in the folder, unchecked against the video's media or its licence** — The thumbnail is the promise the video must keep, and a logo or photo fetched by hand reaches it with no provenance check. → §UR8
 - 📋 **UR9** (deps: UR21 ✅) **A video made of filmed scenes gets no YouTube description or chapter times from its build** — The Viglet Shio promo's chapter times were read by hand from its captions, and every new cut moves them. → §UR9
@@ -60,15 +59,5 @@
   marketing, given only the skill, writes a video.toml that urdido build accepts, with
   the commands and tables taken from the manual UR35 writes rather than from
   video-maker's README.
-
-## Done when — UR2
-
-- **Both Japode videos cut their Shorts with urdido shorts** japode/scion and
-  japode/docker declare [shorts] with their cuts and look, their bin/short.py are gone,
-  and each later Short is cut by urdido shorts.
-- **Each encoded Short is held to polyweave's video measures** After encoding, the
-  Short's length (20 to 55 s), loudness (-14 LUFS within 1), true peak (under -1 dBTP)
-  and frozen end are read off the file through polyweave (PW697), and a Short past them
-  is refused.
 
 ## Non-goals

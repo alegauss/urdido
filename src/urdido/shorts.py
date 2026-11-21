@@ -54,7 +54,9 @@ What every Short keeps (`[shorts.rules]` moves a number, never drops a rule):
 
 A title, hashtag count or length past those bounds is refused; a hook with no number
 and a length outside 20-55 s but under a minute are advised. With the polyweave extra,
-the burned .ass is held to `video.safe_area`'s youtube-shorts bounds before encoding.
+the burned .ass is held to `video.safe_area`'s youtube-shorts bounds before encoding,
+and the encoded file to `accept.check`: under a minute, loudness within 1 LU of the
+target, true peak under -1 dBTP and no frozen end.
 """
 
 from __future__ import annotations
@@ -526,6 +528,60 @@ def safe_area(ass: Path, root: Path, fonts: Path | None) -> None:
         )
 
 
+def bounds(rules: Rules) -> dict[str, dict[str, float]]:
+    """What the encoded file is held to: under the hard length, loudness within 1 LU
+    of the target, true peak under -1 dBTP, and no frozen end to break the loop."""
+    return {
+        "video_seconds": {"max": rules.hard_seconds},
+        "video_loudness": {"min": rules.loudness - 1, "max": rules.loudness + 1},
+        "video_true_peak": {"max": -1.0},
+        "video_frozen_end": {"max": 0.5},
+    }
+
+
+def spec_text(name: str, rules: Rules) -> str:
+    rows = [f'asset = "{name}"']
+    for measure, bound in bounds(rules).items():
+        rows += ["", "[[predicate]]", f'id = "{measure}"', f'measure = "{measure}"']
+        rows += [f"{key} = {value:g}" for key, value in bound.items()]
+    return "\n".join(rows) + "\n"
+
+
+def relative(path: Path, root: Path) -> str:
+    try:
+        return path.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return str(path.resolve())
+
+
+def measures(video: Path, root: Path, rules: Rules) -> dict | None:
+    """Hold the encoded Short to polyweave's video measures (PW697), where installed."""
+    from urdido import extras, library
+
+    try:
+        extras.require("polyweave")
+    except extras.MissingExtra as missing:
+        print(f"shorts: {video.name} is unmeasured: {missing}", file=sys.stderr)
+        return None
+    spec = video.parent / "work" / f"{video.stem}.spec.toml"
+    spec.write_text(spec_text(video.stem, rules), encoding="utf-8")
+    answer = library.delegate(
+        "accept.check",
+        root,
+        spec=relative(spec, root),
+        subject=relative(video, root),
+    )
+    if not answer.get("passed", False):
+        rows = []
+        for row in answer.get("predicates", []):
+            if not row.get("passed", False):
+                low, high = row.get("min"), row.get("max")
+                held = " to ".join(f"{v:g}" for v in (low, high) if v is not None)
+                rows.append(f"  {row['measure']} is {row['value']}, held to {held}")
+        raise ValueError(f"shorts: {video.name} misses its bounds:\n" + "\n".join(rows))
+    return answer
+
+
 @dataclass
 class Declared:
     here: Path
@@ -610,6 +666,7 @@ def cut_one(d: Declared, cut: Cut, plan: dict, language: str) -> Path:
         + ["-c:v", "libx264", "-preset", "medium", "-crf", "18", "-r", "30"]
         + ["-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(video)]
     )
+    measures(video, d.here, d.rules)
     notes = language_key(d.spec.get("notes", {}), language) or ""
     credits = credits_of(d, plan, cut_span)
     link = d.spec.get("link", "")
