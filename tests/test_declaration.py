@@ -92,6 +92,22 @@ def test_the_cli_checks_a_file_and_prints_the_json_schema(tmp_path, capsys):
     }
 
 
+def test_a_value_of_the_wrong_type_is_refused_ur47():
+    bad = {
+        **GOOD,
+        "narration": {"script": "s.json", "takes": "n", "tempo": "fast"},
+        "cuts": {"teaser": "yes"},
+        "audio": {"peak": True},
+    }
+    found = check(bad)
+    assert "video.toml [narration.tempo]: is 'fast', and it takes a number" in found
+    assert "video.toml [cuts.teaser]: is 'yes', and it takes a boolean" in found
+    assert (
+        "video.toml [audio.peak]: is True, and it takes a number" in found
+    )  # not a bool
+    assert check({**GOOD, "audio": {"peak": -1, "target": -14.0}}) == []
+
+
 def test_a_typo_inside_the_script_or_the_storyboard_is_refused_ur47(tmp_path, capsys):
     toml = tmp_path / "video.toml"
     toml.write_text(

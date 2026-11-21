@@ -19,13 +19,13 @@ check first.
 
 The video's name, its languages and, for a variant, its base.
 
-- `name` (required)
+- `name` (required): a string
 - `languages` (required): *any name*
 - `folders`: *any name*
 - `title_languages`
-- `revision`
-- `base`
-- `frame`
+- `revision`: a string
+- `base`: a string
+- `frame`: a array
 
 ## [roots]
 
@@ -37,67 +37,67 @@ Any key, each a name of your own.
 
 Where the build writes: `folder` (`video`) and `parts` inside it.
 
-- `folder`
-- `parts`
+- `folder`: a string
+- `parts`: a string
 
 ## [source]
 
 What the video is made of: its `kind` and what that kind reads.
 
-- `kind` (required)
-- `declaration`
-- `listing`
-- `folder`
+- `kind` (required): a string
+- `declaration`: a string
+- `listing`: a string
+- `folder`: a string
 - `vertical_folder`
-- `recording`
-- `chapters`
-- `newer_than`
+- `recording`: a string
+- `chapters`: a number
+- `newer_than`: a array
 - `record_command`
 - `vertical_record_command`
-- `shots`
-- `footage`
-- `lead`
-- `gap`
-- `end`
-- `styles`
+- `shots`: a string
+- `footage`: a string
+- `lead`: a number
+- `gap`: a number
+- `end`: a number
+- `styles`: a string
 - `closing`: *any name*
-- `fonts`
-- `sources`
+- `fonts`: a string
+- `sources`: a string
 
 ## [narration]
 
 The script, the folder of bought takes, and an optional tempo.
 
-- `script` (required)
-- `takes` (required)
-- `tempo`
+- `script` (required): a string
+- `takes` (required): a string
+- `tempo`: a number
 
 ## [cards]
 
 The cards' declaration (theme and words), and a browser channel.
 
-- `declaration`
+- `declaration`: a string
 - `words`
-- `channel`
+- `channel`: a string
 
 ## [music]
 
 The bed under the narration and how far it ducks.
 
-- `bed`
-- `reference`
-- `between`
-- `under`
-- `ramp`
+- `bed`: a string
+- `reference`: a number
+- `between`: a number
+- `under`: a number
+- `ramp`: a number
 
 ## [audio]
 
 Loudness target, true-peak ceiling and their margin.
 
-- `target`
-- `peak`
-- `tolerance`
-- `margin`
+- `target`: a number
+- `peak`: a number
+- `tolerance`: a number
+- `margin`: a number
 
 ## [opening]
 
@@ -114,7 +114,7 @@ A chaptered video's opening: animation, footage, photos, site screens.
 
 Which extra cuts a chaptered build makes.
 
-- `teaser`
+- `teaser`: a boolean
 
 ## [captions]
 
@@ -128,15 +128,15 @@ Translated captions, burned-in captions and the player's safe area.
 
 Word-timed callouts over the picture, and their fonts.
 
-- `declaration`
-- `fonts`
+- `declaration`: a string
+- `fonts`: a string
 
 ## [claims]
 
 The narration's claims, their evidence and how strictly they are held.
 
-- `declaration`
-- `action`
+- `declaration`: a string
+- `action`: a string
 
 ## [description]
 
@@ -155,22 +155,22 @@ The YouTube description: summary, notes, sources, licence, words.
 
 Encoding, glyph and layout checks over the text a video draws.
 
-- `action`
+- `action`: a string
 - `protected_tokens`
-- `glyphs`
+- `glyphs`: a boolean
 
 ## [mark]
 
 A brand mark in a corner through the whole video.
 
-- `logo`
-- `corner`
-- `margin`
-- `size`
-- `opacity`
-- `font`
-- `background`
-- `text`
+- `logo`: a string
+- `corner`: a string
+- `margin`: a array
+- `size`: a number
+- `opacity`: a number
+- `font`: a string
+- `background`: a string
+- `text`: a string
 
 ## [anchors]
 
@@ -182,9 +182,9 @@ Any key, each a name of your own.
 
 How the final verification treats a flash.
 
-- `flashes`
-- `flash_threshold`
-- `flash_refuse`
+- `flashes`: a string
+- `flash_threshold`: a number
+- `flash_refuse`: a number
 
 ## [publish]
 
@@ -202,8 +202,8 @@ The DaVinci Resolve project's settings.
 
 The thumbnail: layout, pictures, words, published title, pair check.
 
-- `layout`
-- `out`
+- `layout`: a string
+- `out`: a string
 - `picture`: `file` (required), `at`, `box`, `reason`, `license`, `author`, `url`, `fit`, `margin`, `background`
 - `proof`: `file` (required), `at`, `box`, `reason`, `license`, `author`, `url`, `fit`, `margin`, `background`
 - `words`: *any name*

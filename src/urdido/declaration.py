@@ -20,6 +20,19 @@ from pathlib import Path
 
 ANY = None  # a value the schema does not shape
 
+#: Values of one type (UR47): a number (an int or a float, never a bool), a text,
+#: a true or false, a list.
+NUMBER = {"type": "number"}
+TEXT = {"type": "string"}
+FLAG = {"type": "boolean"}
+LIST = {"type": "array"}
+
+
+def typed_ok(value, kind: str) -> bool:
+    if kind == "number":
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
+    return isinstance(value, {"string": str, "boolean": bool, "array": list}[kind])
+
 
 def table(keys: dict, required: tuple[str, ...] = ()) -> dict:
     return {"keys": keys, "required": required}
@@ -226,6 +239,64 @@ SCHEMA = table(
     required=("video",),
 )
 
+#: The keys whose values have one type, by table (UR47).
+TYPES = {
+    "video": {
+        "name": TEXT,
+        "revision": TEXT,
+        "frame": LIST,
+        "base": TEXT,
+    },
+    "output": {"folder": TEXT, "parts": TEXT},
+    "source": {
+        "kind": TEXT,
+        "declaration": TEXT,
+        "listing": TEXT,
+        "folder": TEXT,
+        "recording": TEXT,
+        "chapters": NUMBER,
+        "shots": TEXT,
+        "footage": TEXT,
+        "lead": NUMBER,
+        "gap": NUMBER,
+        "end": NUMBER,
+        "styles": TEXT,
+        "fonts": TEXT,
+        "sources": TEXT,
+        "newer_than": LIST,
+    },
+    "narration": {"script": TEXT, "takes": TEXT, "tempo": NUMBER},
+    "cards": {"declaration": TEXT, "channel": TEXT},
+    "music": {
+        "bed": TEXT,
+        "reference": NUMBER,
+        "between": NUMBER,
+        "under": NUMBER,
+        "ramp": NUMBER,
+    },
+    "audio": {"target": NUMBER, "peak": NUMBER, "tolerance": NUMBER, "margin": NUMBER},
+    "cuts": {"teaser": FLAG},
+    "highlights": {"declaration": TEXT, "fonts": TEXT},
+    "claims": {"declaration": TEXT, "action": TEXT},
+    "text_checks": {"action": TEXT, "glyphs": FLAG},
+    "mark": {
+        "logo": TEXT,
+        "corner": TEXT,
+        "size": NUMBER,
+        "opacity": NUMBER,
+        "font": TEXT,
+        "background": TEXT,
+        "text": TEXT,
+        "margin": LIST,
+    },
+    "qa": {"flashes": TEXT, "flash_threshold": NUMBER, "flash_refuse": NUMBER},
+    "thumbnail": {"layout": TEXT, "out": TEXT},
+}
+for _table, _keys in TYPES.items():
+    for _key, _kind in _keys.items():
+        assert _key in SCHEMA["keys"][_table]["keys"], (_table, _key)
+        SCHEMA["keys"][_table]["keys"][_key] = _kind
+
 #: The narration script a declaration names (`[narration] script`), UR47.
 SCRIPT = table(
     {
@@ -431,6 +502,8 @@ def reference() -> str:
     def keys_of(shape) -> list[str]:
         if shape is ANY:
             return []
+        if "type" in shape:
+            return [f"a {shape['type']}"]
         if "array" in shape:
             return keys_of(shape["array"])
         if "map" in shape:
@@ -496,6 +569,12 @@ def walk(value, shape, file: str, where: str, found: list[str]) -> None:
     if shape is ANY:
         return
     label = f"[{where}]" if where else "the top level"
+    if "type" in shape:
+        if not typed_ok(value, shape["type"]):
+            found.append(
+                f"{file} {label}: is {value!r}, and it takes a {shape['type']}"
+            )
+        return
     if "array" in shape:
         if not isinstance(value, list):
             found.append(f"{file} {label}: is a list of tables")
@@ -531,6 +610,8 @@ def json_schema(shape=SCHEMA):
     """The schema as JSON Schema (draft 2020-12), for editors and the reference docs."""
     if shape is ANY:
         return {}
+    if "type" in shape:
+        return {"type": shape["type"]}
     if "array" in shape:
         return {"type": "array", "items": json_schema(shape["array"])}
     if "map" in shape:
