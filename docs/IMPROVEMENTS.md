@@ -105,20 +105,6 @@ the key table.
 Done when no module reads a default that the model does not hold, and
 docs/specs/declaration.md names each key's default.
 
-### §UR59 One meaning for the bed's level
-
-Found moving the video.toml defaults into the schema (UR58). `[music] under` is the
-bed's gain under each line. When it is absent, a scenes or illustrated build ducks to
-0.2 (`urdido.audio.mix.Duck`), and an explainer ducks to 0.07 (`mixed` in
-`urdido.pipelines.explainer`). The same key in the same table therefore means two levels
-depending on the source kind, and the reference can state only one.
-
-Either the schema holds a per-kind default (`under` 0.2, 0.07 for an explainer), and the
-reference prints both, or one value wins and the videos built on the other change level.
-The published Japode explainers and the Shio and Turing scene videos were all mixed at
-their current levels, so the choice is the owner's: a per-kind default keeps every
-published mix as it is.
-
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
 ### §UR36 Marketing on an installed urdido

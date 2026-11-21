@@ -94,7 +94,7 @@ The bed under the narration and how far it ducks.
 - `bed`: a string
 - `reference`: a number, -18.0 if absent
 - `between`: a number, 0.4 if absent
-- `under`: a number
+- `under`: a number, 0.2 if absent, 0.07 for explainer
 - `ramp`: a number, 0.4 if absent
 
 ## [audio]

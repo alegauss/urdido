@@ -314,7 +314,7 @@ DEFAULTS = {
     "output": {"folder": "video", "parts": "parts"},
     "source": {"footage": "footage", "lead": 0.4, "gap": 0.5, "end": 4.5},
     "narration": {"tempo": 1.0},
-    "music": {"reference": -18.0, "between": 0.4, "ramp": 0.4},
+    "music": {"reference": -18.0, "between": 0.4, "under": 0.2, "ramp": 0.4},
     "audio": {"target": -14.0, "peak": -1.0, "tolerance": 0.3, "margin": 1.5},
     "cuts": {"teaser": False},
     "claims": {"action": "warn"},
@@ -328,8 +328,25 @@ for _table, _keys in DEFAULTS.items():
         SCHEMA["keys"][_table]["keys"][_key] = {**_shape, "default": _value}
 
 
+#: Defaults that differ by source kind (UR59), over DEFAULTS: an explainer's bed sits
+#: lower under the voice, as the Japode videos were mixed.
+KIND_DEFAULTS = {"explainer": {"music": {"under": 0.07}}}
+for _kind, _tables in KIND_DEFAULTS.items():
+    for _table, _keys in _tables.items():
+        for _key, _value in _keys.items():
+            _shape = SCHEMA["keys"][_table]["keys"][_key]
+            assert "default" in _shape and typed_ok(_value, _shape["type"])
+            _shape.setdefault("by_kind", {})[_kind] = _value
+
+
 def setting(decl: dict, table: str, key: str):
-    """A video.toml value, or the default the schema holds for it (None if none)."""
+    """A video.toml value, or the default the schema holds for it (None if none),
+    the source kind's own where it has one."""
+    if (decl.get(table) or {}).get(key) is None:
+        kind = (decl.get("source") or {}).get("kind")
+        own = KIND_DEFAULTS.get(kind, {}).get(table, {})
+        if key in own:
+            return own[key]
     return held(decl.get(table) or {}, SCHEMA["keys"][table], key)
 
 
@@ -703,7 +720,12 @@ def reference() -> str:
             return []
         if "type" in shape:
             if "default" in shape:
-                return [f"a {shape['type']}, {json.dumps(shape['default'])} if absent"]
+                kinds = "".join(
+                    f", {json.dumps(v)} for {k}"
+                    for k, v in shape.get("by_kind", {}).items()
+                )
+                default = json.dumps(shape["default"])
+                return [f"a {shape['type']}, {default} if absent{kinds}"]
             return [f"a {shape['type']}"]
         if "array" in shape:
             return keys_of(shape["array"])

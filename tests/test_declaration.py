@@ -155,6 +155,12 @@ def test_an_absent_key_reads_the_default_the_schema_holds_ur47():
     assert setting(GOOD, "narration", "tempo") == 1.0
     assert setting({**GOOD, "narration": {"tempo": 1.1}}, "narration", "tempo") == 1.1
     assert setting(GOOD, "video", "frame") == [1920, 1080]
+    # UR59: the bed's level under the voice defaults by source kind.
+    assert setting(GOOD, "music", "under") == 0.2
+    explainer = {**GOOD, "source": {"kind": "explainer", "shots": "s.json"}}
+    assert setting(explainer, "music", "under") == 0.07
+    assert setting({**explainer, "music": {"under": 0.3}}, "music", "under") == 0.3
+    assert "`under`: a number, 0.2 if absent, 0.07 for explainer" in reference()
     assert setting(GOOD, "narration", "script") == "script.json"
     assert setting({}, "cards", "channel") is None  # no default: absent stays absent
     from urdido.declaration import HIGHLIGHTS, held

@@ -282,7 +282,7 @@ class Explainer(Finishing):
         music = self.decl.get("music") or {}
         bed = self.path(music["bed"]) if music.get("bed") else None
         sound = work / "mix.wav"
-        mixed(made, bed, sound, music.get("under", 0.07))
+        mixed(made, bed, sound, setting(self.decl, "music", "under"))
         burn = f"subtitles='{filter_path(ass)}'"
         if source.get("fonts"):
             burn += f":fontsdir='{filter_path(Path(self.path(source['fonts'])))}'"

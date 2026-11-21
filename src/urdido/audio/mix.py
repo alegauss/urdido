@@ -37,7 +37,7 @@ class Duck:
     """The bed's level: `between` lines, `under` each, with a `ramp` either side (gains, s)."""
 
     between: float = DEFAULTS["music"]["between"]
-    under: float = 0.2  # a scenes build's; an explainer ducks to 0.07 (UR59)
+    under: float = DEFAULTS["music"]["under"]  # an explainer's is lower (KIND_DEFAULTS)
     ramp: float = DEFAULTS["music"]["ramp"]
 
 
@@ -90,7 +90,16 @@ def ducked(placed: Sequence[Take], t: float, duck: Duck = Duck()) -> float:
     return max(
         [0.0]
         + [
-            min(1.0, max(0.0, min((t - p.at + duck.ramp) / duck.ramp, (p.at + p.length + duck.ramp - t) / duck.ramp)))
+            min(
+                1.0,
+                max(
+                    0.0,
+                    min(
+                        (t - p.at + duck.ramp) / duck.ramp,
+                        (p.at + p.length + duck.ramp - t) / duck.ramp,
+                    ),
+                ),
+            )
             for p in placed
         ]
     )
@@ -140,8 +149,22 @@ def seamless_bed(bed: Bed, total: float, work_dir: str, crossfade: float = 3.0) 
     repeats joined by a crossfade, so looping never drops the music out (VM49)."""
     duration = media.seconds(bed.file)
     log = subprocess.run(
-        ["ffmpeg", "-hide_banner", "-i", bed.file, "-af", "silencedetect=noise=-40dB:d=0.5", "-f", "null", "-"],
-        stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8", errors="replace",
+        [
+            "ffmpeg",
+            "-hide_banner",
+            "-i",
+            bed.file,
+            "-af",
+            "silencedetect=noise=-40dB:d=0.5",
+            "-f",
+            "null",
+            "-",
+        ],
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
     ).stderr
     end = audible_end(log, duration)
     need = total - bed.start
@@ -149,7 +172,9 @@ def seamless_bed(bed: Bed, total: float, work_dir: str, crossfade: float = 3.0) 
         return bed  # plays once, with no silent tail to skip
     usable = max(end - crossfade, 1.0)
     copies = max(2, math.ceil((need - crossfade) / usable) + 1)
-    inputs = [arg for _ in range(copies) for arg in ("-t", f"{end:.3f}", "-i", bed.file)]
+    inputs = [
+        arg for _ in range(copies) for arg in ("-t", f"{end:.3f}", "-i", bed.file)
+    ]
     chain, last = [], "[0:a]"
     for n in range(1, copies):
         out = f"[x{n}]"
@@ -162,7 +187,9 @@ def seamless_bed(bed: Bed, total: float, work_dir: str, crossfade: float = 3.0) 
 
 def bed_trim(bed: Bed) -> float:
     """The gain, in dB, that brings the bed to its reference level; 0 when it cannot be read."""
-    measured = media.measure_loudness(["-i", bed.file, "-af", "loudnorm=print_format=json"])
+    measured = media.measure_loudness(
+        ["-i", bed.file, "-af", "loudnorm=print_format=json"]
+    )
     try:
         value = float(measured["input_i"])
     except (KeyError, ValueError):
@@ -197,7 +224,14 @@ def mix_graph(
     labels = "".join(f"[d{i}]" for i in range(len(placed)))
     count = len(placed)
     for n, sound in enumerate(sounds):
-        inputs += ["-ss", f"{sound.source_at:.3f}", "-t", f"{sound.length:.3f}", "-i", sound.file]
+        inputs += [
+            "-ss",
+            f"{sound.source_at:.3f}",
+            "-t",
+            f"{sound.length:.3f}",
+            "-i",
+            sound.file,
+        ]
         level = f"volume={_num(sound.gain_db)}dB," if sound.gain_db else ""
         graph.append(
             f"[{count}:a]{level}afade=t=out:st={max(0, sound.length - 0.6):.3f}:d=0.6,"
@@ -218,14 +252,18 @@ def mix_graph(
         )
         labels += "[m]"
         count += 1
-    graph.append(f"{labels}amix=inputs={count}:normalize=0,apad=whole_dur={total:.3f}[mix]")
+    graph.append(
+        f"{labels}amix=inputs={count}:normalize=0,apad=whole_dur={total:.3f}[mix]"
+    )
     return Graph(inputs, graph)
 
 
 def _integrated(file: str, loudness: Loudness) -> float:
     target = f"I={_num(loudness.target)}:TP={_num(loudness.peak)}:LRA=11"
     return float(
-        media.measure_loudness(["-i", file, "-af", f"loudnorm={target}:print_format=json"])["input_i"]
+        media.measure_loudness(
+            ["-i", file, "-af", f"loudnorm={target}:print_format=json"]
+        )["input_i"]
     )
 
 
@@ -253,16 +291,33 @@ def _voice_track(
         bed = seamless_bed(bed, total, work_dir)
     built = mix_graph(placed, total, sounds, bed, trim_db or 0.0, duck)
     mixed = os.path.join(work_dir, f"{name}.wav")
-    media.ffmpeg([*built.inputs, "-filter_complex", built.filter_complex, "-map", "[mix]", "-t", f"{total:.3f}", mixed])
+    media.ffmpeg(
+        [
+            *built.inputs,
+            "-filter_complex",
+            built.filter_complex,
+            "-map",
+            "[mix]",
+            "-t",
+            f"{total:.3f}",
+            mixed,
+        ]
+    )
     ceiling = 10 ** ((loudness.peak - loudness.margin) / 20)
 
     def render(gain: float) -> None:
         media.ffmpeg(
             [
-                "-i", mixed, "-af",
+                "-i",
+                mixed,
+                "-af",
                 f"volume={gain:.2f}dB,alimiter=limit={ceiling:.3f}:level=false:attack=5:release=80,"
                 "aresample=48000",
-                "-c:a", "aac", "-b:a", "160k", out_file,
+                "-c:a",
+                "aac",
+                "-b:a",
+                "160k",
+                out_file,
             ]
         )
 
@@ -279,18 +334,54 @@ def _voice_track(
 
 
 def voice_track(
-    placed: Sequence[Take], total: float, out_file: str, work_dir: str,
-    sounds: Sequence[Sound] = (), bed: Bed | None = None, trim_db: float | None = None,
-    duck: Duck = Duck(), loudness: Loudness = Loudness(), name: str = "mix",
+    placed: Sequence[Take],
+    total: float,
+    out_file: str,
+    work_dir: str,
+    sounds: Sequence[Sound] = (),
+    bed: Bed | None = None,
+    trim_db: float | None = None,
+    duck: Duck = Duck(),
+    loudness: Loudness = Loudness(),
+    name: str = "mix",
 ) -> float:
     """VM55: reuse only the independently verified mix for these audio/timing inputs."""
     from urdido import cache
 
-    settings = [[asdict(t) for t in placed], total, [asdict(s) for s in sounds],
-                asdict(bed) if bed else None, trim_db, asdict(duck), asdict(loudness), name]
-    inputs = [__file__, media.__file__, *[t.file for t in placed], *[s.file for s in sounds]]
+    settings = [
+        [asdict(t) for t in placed],
+        total,
+        [asdict(s) for s in sounds],
+        asdict(bed) if bed else None,
+        trim_db,
+        asdict(duck),
+        asdict(loudness),
+        name,
+    ]
+    inputs = [
+        __file__,
+        media.__file__,
+        *[t.file for t in placed],
+        *[s.file for s in sounds],
+    ]
     if bed:
         inputs.append(bed.file)
-    return cache.run("audio mix", [out_file], settings,
-                     lambda: _voice_track(placed, total, out_file, work_dir, sounds, bed, trim_db, duck, loudness, name),
-                     inputs=inputs, tools=["ffmpeg"])
+    return cache.run(
+        "audio mix",
+        [out_file],
+        settings,
+        lambda: _voice_track(
+            placed,
+            total,
+            out_file,
+            work_dir,
+            sounds,
+            bed,
+            trim_db,
+            duck,
+            loudness,
+            name,
+        ),
+        inputs=inputs,
+        tools=["ffmpeg"],
+    )
