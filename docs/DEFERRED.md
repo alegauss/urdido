@@ -7,6 +7,7 @@
 ## Block B — The engine extracted (videomaker without marketing)
 
 - ⏸ **UR30** (deps: UR21 ✅) **The Python build shells out to node for the opening gate, and the JavaScript helpers have no install path** — set aside (Needs npm publish.): urdido-record is published to the npm registry, so marketing's scripts and the e2e specs install it by name rather than from the checkout. → §UR30
+- ⏸ **UR34** (deps: —) **Polyweave's open tasks PW712 to PW716 describe video composition that urdido now owns** — set aside (Needs PW712-716 narrowed in polyweave.): Two roadmaps planning the same preflight, preview, progress and claims will build them twice or wait on each other. → §UR34
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

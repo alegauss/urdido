@@ -7,7 +7,6 @@
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-- 📋 **UR34** (deps: —) **Polyweave's open tasks PW712 to PW716 describe video composition that urdido now owns** — Two roadmaps planning the same preflight, preview, progress and claims will build them twice or wait on each other. → §UR34
 - 📋 **UR43** (deps: UR21 ✅) **The imported modules pass ruff only through a per-file baseline of ignored rules and unformatted files** — Each ignored B023 or B905 may hide a real bug, and new code in those files is checked against nothing. → §UR43
 - 📋 **UR46** (deps: UR22 ✅, UR37) **Four environment variables still fill undeclared roots, the last root names left in a module** — They were kept for one release so marketing's builds keep working; left longer, the shim becomes a second way to declare a root. → §UR46
 - 📋 **UR47** (deps: UR23 ✅) **Values in video.toml are untyped and the side files it names are not checked, so a typo inside them is still a KeyError** — urdido check refuses a misspelled table key, but storyboard.json or script.json still fail deep inside the build. → §UR47
