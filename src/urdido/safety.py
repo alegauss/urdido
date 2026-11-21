@@ -9,6 +9,7 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from pathlib import Path
 
+from urdido.declaration import HIGHLIGHTS, held
 from urdido.keywords import HIGHLIGHT_FONT_SIZE, HIGHLIGHT_OUTLINE
 from urdido.sources.model import RecordingRefused
 
@@ -76,7 +77,7 @@ def publish(findings: list[dict], path: Path) -> None:
 
 def highlights(style: dict, timed: list[dict], path: Path) -> None:
     """ASS uses a 1080p reference; its 18 px box outline extends below MarginV."""
-    margin = int(style.get("margin", 85))
+    margin = int(held(style, HIGHLIGHTS["keys"]["style"], "margin"))
     boxes = [{"label": "highlight", "text": cue["show"], "at": cue["at"], "end": cue["end"],
               "y": 1080 - margin - HIGHLIGHT_FONT_SIZE,
               "height": HIGHLIGHT_FONT_SIZE + HIGHLIGHT_OUTLINE} for cue in timed]

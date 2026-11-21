@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 from urdido import captions, keywords, media
 from urdido.cards.html import Frame, Theme, resolve
-from urdido.declaration import setting
+from urdido.declaration import HIGHLIGHTS, held, setting
 from urdido.narration import Takes
 from urdido.sources.illustrated import (
     anchored_frames,
@@ -98,7 +98,7 @@ def illustrated(build):
             value = highlights["style"]
             if not value["font"] or not re.fullmatch(r"#[0-9a-fA-F]{6}", value["color"]):
                 raise ValueError("highlight style needs a font name and #RRGGBB color")
-            if not math.isfinite(float(value.get("margin", 85))):
+            if not math.isfinite(float(held(value, HIGHLIGHTS["keys"]["style"], "margin"))):
                 raise ValueError("highlight margin must be finite")
         check(build.path(highlight_spec["declaration"]), "style", style)
     takes = None

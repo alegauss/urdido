@@ -157,6 +157,11 @@ def test_an_absent_key_reads_the_default_the_schema_holds_ur47():
     assert setting(GOOD, "video", "frame") == [1920, 1080]
     assert setting(GOOD, "narration", "script") == "script.json"
     assert setting({}, "cards", "channel") is None  # no default: absent stays absent
+    from urdido.declaration import HIGHLIGHTS, held
+
+    style = HIGHLIGHTS["keys"]["style"]
+    assert held({"font": "A"}, style, "margin") == 85  # a side file's default too
+    assert held({"margin": 120}, style, "margin") == 120
     assert "`tempo`: a number, 1.0 if absent" in reference()
     assert json_schema()["properties"]["qa"]["properties"]["flash_refuse"] == {
         "type": "number",

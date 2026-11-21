@@ -89,22 +89,25 @@ Done when no module names a root and no test sets one of the four variables.
 
 ### §UR47 The side files and values checked
 
-UR23 gave video.toml a key schema, UR56 typed its values, UR57 and the steps before it
-check every side file the declaration names, and UR58 moved the video.toml tables'
-defaults into the schema (`DEFAULTS`, read through `setting(decl, table, key)`; the
-reference and the JSON Schema print them).
+UR23 gave video.toml a key schema, UR56 typed its values, and UR57 and the steps before
+it check every side file the declaration names. UR58 moved the video.toml tables'
+defaults into the schema (`DEFAULTS`, read through `setting`). UR60 did the same for a
+side file, with `held(values, shape, key)` reading the highlight margin. UR59 (deferred
+to the owner) holds `[music] under`, which has two defaults.
 
-Left:
-- `[music] under` has two defaults: 0.2 in `mix.Duck` for a scenes build and 0.07 in
-  the explainer's mix. One key, one meaning: either a per-kind default the schema can
-  state or one value, decided against the published cuts it would change.
-- The side files' defaults still live in the modules: a highlight style's `margin`
-  (85), a storyboard beat's `presentation`, the shots file's keys, the repetition and
-  text-check policies (`action` defaulting by whether the table is present).
-- `mix.Loudness`, `Duck` and `Bed` repeat the schema's numbers, pinned equal by a test
-  rather than read from it.
+Left, one default at a time, each moved into its side file's schema and read through
+`held`:
+- the storyboard beat's `presentation` ("full") and the other `beat.get(key, ...)`
+  reads in `sources/illustrated.py`, `labels.py` and `preflight.py`;
+- the shots file's keys in `pipelines/explainer.py`;
+- `mix.Loudness`, `Duck` and `Bed` repeating the schema's numbers, which a test pins
+  equal rather than reading them.
 
-Done when no module reads a default that the model does not hold, side files included.
+The repetition and text-check `action` defaults depend on whether the table is present
+or the source is illustrated, so they stay in their modules, with that rule stated.
+
+Done when no `.get(key, default)` on a declaration or a side file holds a value the
+schema does not.
 
 ### Â§UR47 The side files and values checked
 
@@ -123,6 +126,20 @@ the key table.
 
 Done when no module reads a default that the model does not hold, and
 docs/specs/declaration.md names each key's default.
+
+### §UR59 One meaning for the bed's level
+
+Found moving the video.toml defaults into the schema (UR58). `[music] under` is the
+bed's gain under each line. When it is absent, a scenes or illustrated build ducks to
+0.2 (`urdido.audio.mix.Duck`), and an explainer ducks to 0.07 (`mixed` in
+`urdido.pipelines.explainer`). The same key in the same table therefore means two levels
+depending on the source kind, and the reference can state only one.
+
+Either the schema holds a per-kind default (`under` 0.2, 0.07 for an explainer), and the
+reference prints both, or one value wins and the videos built on the other change level.
+The published Japode explainers and the Shio and Turing scene videos were all mixed at
+their current levels, so the choice is the owner's: a per-kind default keeps every
+published mix as it is.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

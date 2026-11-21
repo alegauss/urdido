@@ -190,9 +190,11 @@ def write_ass(file: Path, timed: list[dict], style: dict, *, frame=None, burned:
               burn: dict | None = None):
     box = ass_color(style["color"])
     frame = frame or _Wide()
-    # A player draws the optional captions at the bottom; `margin` (px from the bottom edge, at
-    # 1080p) lifts the highlights clear of them (VM48). 85 keeps the earlier videos unchanged.
-    margin = int(style.get("margin", 85))
+    # A player draws the optional captions at the bottom; `margin` (its default in the schema)
+    # lifts the highlights clear of them (VM48).
+    from urdido.declaration import HIGHLIGHTS, held
+
+    margin = int(held(style, HIGHLIGHTS["keys"]["style"], "margin"))
     side = 130 if frame.width >= frame.height else 60
     styles = [f"Style: Key,{style['font']},{HIGHLIGHT_FONT_SIZE},&H00111111,&H00111111,{box},&H00000000,0,0,0,0,100,100,0,0,3,{HIGHLIGHT_OUTLINE},0,2,{side},{side},{margin},1"]
     if any(cue.get("look") == "meme" for cue in timed):

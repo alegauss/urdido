@@ -9,6 +9,7 @@
 - ⏸ **UR30** (deps: UR21 ✅) **The Python build shells out to node for the opening gate, and the JavaScript helpers have no install path** — set aside (Needs npm publish.): urdido-record is published to the npm registry, so marketing's scripts and the e2e specs install it by name rather than from the checkout. → §UR30
 - ⏸ **UR34** (deps: —) **Polyweave's open tasks PW712 to PW716 describe video composition that urdido now owns** — set aside (Needs PW712-716 narrowed in polyweave.): Two roadmaps planning the same preflight, preview, progress and claims will build them twice or wait on each other. → §UR34
 - ⏸ **UR43** (deps: UR21 ✅) **The imported modules pass ruff only through a per-file baseline of ignored rules and unformatted files** — set aside (Paid as modules move): The E501 entries and the 87 format exclusions still need paying down module by module, ideally with the change that next touches each module. → §UR43
+- ⏸ **UR59** (deps: —) **[music] under defaults to 0.2 in a scenes build and 0.07 in an explainer, so one key means two levels** — set aside (The owner picks the bed level.): The reference can state one default, and choosing one changes the level of videos already published. → §UR59
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

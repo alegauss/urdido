@@ -330,11 +330,16 @@ for _table, _keys in DEFAULTS.items():
 
 def setting(decl: dict, table: str, key: str):
     """A video.toml value, or the default the schema holds for it (None if none)."""
-    value = (decl.get(table) or {}).get(key)
+    return held(decl.get(table) or {}, SCHEMA["keys"][table], key)
+
+
+def held(values: dict, shape: dict, key: str):
+    """A table's value, or the default its shape holds for the key (None if none);
+    a key the shape lacks is a bug, and raises."""
+    value = values.get(key)
     if value is not None:
         return value
-    shape = SCHEMA["keys"][table]["keys"][key]  # a key the schema lacks is a bug
-    default = (shape or {}).get("default")
+    default = (shape["keys"][key] or {}).get("default")
     return list(default) if isinstance(default, list) else default
 
 
@@ -485,7 +490,11 @@ CARDS = table(
 #: The highlights declaration (`[highlights] declaration`), UR47.
 HIGHLIGHTS = table(
     {
-        "style": table({"font": ANY, "color": ANY, "margin": ANY}),
+        # `margin`: px from the bottom edge at 1080p, lifting the highlights clear of a
+        # player's captions (VM48); 85 keeps the earlier videos unchanged.
+        "style": table(
+            {"font": ANY, "color": ANY, "margin": {**NUMBER, "default": 85}}
+        ),
         "lines": mapping(
             array(
                 table(
