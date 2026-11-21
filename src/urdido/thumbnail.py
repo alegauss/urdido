@@ -25,6 +25,23 @@ what the video does not:
     top = "1 comentário"
     ...
 
+Each picture is checked before it is cut (UR8): its file is media the storyboard
+(`[source] declaration`) declares, and takes that media's licence, author and URL, or it
+says why it is in the thumbnail alone and carries its own:
+
+    [thumbnail.picture]
+    file = "footage/wordpress-wmark-white.png"
+    reason = "the official mark; the video shows it only inside the wp20 emblem"
+    license = "WordPress trademark policy"   # or a .prov.json beside the file
+    author = "WordPress Foundation"
+    url = "https://wordpress.org/about/logos/"
+    fit = "contain"                          # optional: cover or contain, with
+    margin = 80                              # margin and background, passed to the
+    background = "#0b1410"                   # layout as picture_fit, picture_margin...
+
+Anything else is refused, and the drawn JPG gets a `.prov.json` naming each picture's
+media key or reason, provenance and SHA-256.
+
     [thumbnail.title]                       # the video's published title, per language
     pt-BR = "O Git parou em 30 mil merges por dia"
 
@@ -42,7 +59,9 @@ text, where some string fields are not (a colour, a path), and otherwise every s
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
+import json
 import re
 import sys
 import tomllib
@@ -228,6 +247,72 @@ def still(here: Path, spec: dict, out: Path) -> Path:
     return out
 
 
+PROVENANCE = ("license", "author", "url")
+#: How a .prov.json names the fields a picture's provenance needs.
+RECORDED = {"license": "licence", "author": "author", "url": "source_page"}
+PLACEMENT = ("fit", "margin", "background")
+
+
+def storyboard_media(here: Path, video: dict) -> dict:
+    """The storyboard's media, library bindings resolved, keyed by their resolved file."""
+    declared = video.get("source", {}).get("declaration")
+    if not declared:
+        return {}
+    from urdido.library import resolve_asset
+
+    document = json.loads((here / declared).read_text(encoding="utf-8-sig"))
+    found = {}
+    for key, asset in document.get("media", {}).items():
+        resolved = resolve_asset(asset, here)
+        found[(here / resolved["file"]).resolve()] = (key, resolved)
+    return found
+
+
+def recorded(file: Path) -> dict:
+    """What a .prov.json beside the file says of its licence, author and source."""
+    for path in (Path(str(file) + ".prov.json"), file.with_suffix(".prov.json")):
+        if path.is_file():
+            record = json.loads(path.read_text(encoding="utf-8-sig"))
+            return {field: record.get(key) for field, key in RECORDED.items()}
+    return {}
+
+
+def provenance(here: Path, role: str, spec: dict, media_by_file: dict) -> dict:
+    """UR8: a thumbnail picture is media the storyboard declares, or one declared
+    thumbnail-only with a reason, and either way its licence, author and URL are known."""
+    file = (here / spec["file"]).resolve()
+    if file in media_by_file:
+        key, asset = media_by_file[file]
+        source = {"media": key, **{f: asset.get(f) for f in PROVENANCE}}
+    elif isinstance(spec.get("reason"), str) and spec["reason"].strip():
+        on_file = recorded(file)
+        source = {"reason": spec["reason"].strip(),
+                  **{f: spec.get(f) or on_file.get(f) for f in PROVENANCE}}
+    else:
+        raise ValueError(
+            f"thumbnail: [thumbnail.{role}] {spec['file']} is not media the storyboard "
+            "declares; name a storyboard media file, or declare it thumbnail-only with "
+            "reason, license, author and url (or a .prov.json beside it)")
+    missing = [f for f in PROVENANCE if not source.get(f)]
+    if missing:
+        raise ValueError(f"thumbnail: [thumbnail.{role}] {spec['file']} has no "
+                         f"{', '.join(missing)}; a thumbnail shows nothing unattributed")
+    if file.is_file():
+        source["sha256"] = hashlib.sha256(file.read_bytes()).hexdigest()
+    return {"role": role, "file": spec["file"], **source}
+
+
+def placement(role: str, spec: dict) -> dict:
+    """How a graphic is placed, passed to the layout only where declared."""
+    fields = {}
+    for key in PLACEMENT:
+        if key in spec:
+            fields[f"{role}_{key}"] = spec[key]
+    if fields.get(f"{role}_fit", "cover") not in {"cover", "contain"}:
+        raise ValueError(f"thumbnail: [thumbnail.{role}] fit is cover or contain")
+    return fields
+
+
 def layout(path: Path):
     spec = importlib.util.spec_from_file_location("channel_layout", path)
     module = importlib.util.module_from_spec(spec)
@@ -237,18 +322,27 @@ def layout(path: Path):
 
 def make(declaration: Path, language: str) -> Path:
     here = declaration.parent
-    decl = tomllib.loads(declaration.read_text(encoding="utf-8"))["thumbnail"]
+    video = tomllib.loads(declaration.read_text(encoding="utf-8"))
+    decl = video["thumbnail"]
     check(decl, language)
+    roles = [role for role in ("picture", "proof") if role in decl]
+    media_by_file = storyboard_media(here, video)
+    sources = [provenance(here, role, decl[role], media_by_file) for role in roles]
     words = dict(decl["words"][language])
     work = here / "video" / "parts" / "thumbnail"
     work.mkdir(parents=True, exist_ok=True)
-    fields = {**words, "picture": still(here, decl["picture"], work / "picture.png")}
-    if "proof" in decl:
-        fields["proof"] = still(here, decl["proof"], work / "proof.png")
+    fields = dict(words)
+    for role in roles:
+        fields[role] = still(here, decl[role], work / f"{role}.png")
+        fields.update(placement(role, decl[role]))
     if "badges" in fields:
         fields["badges"] = tuple(fields["badges"])
     out = here / decl.get("out", "video/thumbnail.{language}.jpg").format(language=language)
-    return layout((here / decl["layout"]).resolve())(**fields, out=out)
+    drawn = layout((here / decl["layout"]).resolve())(**fields, out=out)
+    record = Path(str(drawn) + ".prov.json")
+    record.write_text(json.dumps({"pictures": sources}, ensure_ascii=False, indent=2) + "\n",
+                      encoding="utf-8")
+    return drawn
 
 
 def main(argv: list[str]) -> int:
@@ -260,11 +354,18 @@ def main(argv: list[str]) -> int:
     if args.check:
         declaration = Path(args.declaration).resolve()
         try:
-            check(tomllib.loads(declaration.read_text(encoding="utf-8"))["thumbnail"], args.language)
-        except ValueError as refused:
+            video = tomllib.loads(declaration.read_text(encoding="utf-8"))
+            decl = video["thumbnail"]
+            check(decl, args.language)
+            media_by_file = storyboard_media(declaration.parent, video)
+            for role in ("picture", "proof"):
+                if role in decl:
+                    provenance(declaration.parent, role, decl[role], media_by_file)
+                    placement(role, decl[role])
+        except (ValueError, OSError) as refused:
             print(refused, file=sys.stderr)
             return 1
-        print(f"thumbnail ({args.language}): the title and thumbnail pass as a pair")
+        print(f"thumbnail ({args.language}): the pair and its pictures pass")
         return 0
     out = make(Path(args.declaration).resolve(), args.language)
     print(out)

@@ -78,6 +78,72 @@ def test_the_cli_check_refuses_before_drawing_and_says_an_undeclared_title_is_un
     assert "unchecked" in capsys.readouterr().err
 
 
+def storyboard(tmp_path, media):
+    import json
+
+    (tmp_path / "footage").mkdir(exist_ok=True)
+    (tmp_path / "storyboard.json").write_text(json.dumps({"media": media}), encoding="utf-8")
+    return {"source": {"declaration": "storyboard.json"}}
+
+
+def test_a_picture_from_the_storyboard_takes_its_media_provenance_ur8(tmp_path):
+    from urdido.thumbnail import provenance, storyboard_media
+
+    clip = {"file": "footage/matt.mp4", "license": "CC BY 3.0", "author": "Matt", "url": "https://m"}
+    video = storyboard(tmp_path, {"matt": clip})
+    (tmp_path / "footage" / "matt.mp4").write_bytes(b"frames")
+    found = provenance(tmp_path, "picture", {"file": "footage/../footage/matt.mp4"},
+                       storyboard_media(tmp_path, video))
+    assert found["media"] == "matt" and found["license"] == "CC BY 3.0"
+    assert len(found["sha256"]) == 64
+
+
+def test_a_picture_the_video_never_shows_is_refused_without_a_reason_ur8(tmp_path):
+    from urdido.thumbnail import provenance, storyboard_media
+
+    media = storyboard_media(tmp_path, storyboard(tmp_path, {}))
+    with pytest.raises(ValueError, match="not media the storyboard declares"):
+        provenance(tmp_path, "picture", {"file": "footage/logo.png"}, media)
+    with pytest.raises(ValueError, match="no license, author, url"):
+        provenance(tmp_path, "picture", {"file": "footage/logo.png", "reason": "the mark"}, media)
+
+
+def test_a_thumbnail_only_picture_reads_its_provenance_from_a_prov_json_ur8(tmp_path):
+    import json
+
+    from urdido.thumbnail import provenance
+
+    (tmp_path / "logo.png").write_bytes(b"png")
+    (tmp_path / "logo.png.prov.json").write_text(json.dumps(
+        {"licence": "trademark policy", "author": "WordPress Foundation", "source_page": "https://w"}),
+        encoding="utf-8")
+    found = provenance(tmp_path, "proof", {"file": "logo.png", "reason": "the official mark"}, {})
+    assert found["reason"] == "the official mark" and found["url"] == "https://w"
+    assert found["license"] == "trademark policy" and found["role"] == "proof"
+
+
+def test_a_graphic_declares_its_placement_for_the_layout_ur8():
+    from urdido.thumbnail import placement
+
+    assert placement("picture", {"file": "x", "fit": "contain", "margin": 80}) == {
+        "picture_fit": "contain", "picture_margin": 80}
+    assert placement("proof", {"file": "x"}) == {}
+    with pytest.raises(ValueError, match="cover or contain"):
+        placement("picture", {"fit": "stretch"})
+
+
+def test_the_cli_check_refuses_an_unattributed_picture_ur8(tmp_path, capsys):
+    from urdido.thumbnail import main
+
+    storyboard(tmp_path, {})
+    toml = tmp_path / "video.toml"
+    toml.write_text('[source]\ndeclaration = "storyboard.json"\n[thumbnail]\nlayout = "x.py"\n'
+                    '[thumbnail.picture]\nfile = "footage/logo.png"\n'
+                    '[thumbnail.words.pt-BR]\ntop = "30 mil"\n', encoding="utf-8")
+    assert main([str(toml), "--language", "pt-BR", "--check"]) == 1
+    assert "not media the storyboard declares" in capsys.readouterr().err
+
+
 def test_translated_title_fits_both_lines_away_from_subject_vm54():
     import os
 

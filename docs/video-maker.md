@@ -383,6 +383,16 @@ A title that still does not fit is refused before writing the JPG. The
 `.fit.json` sidecar records the chosen size, each line's measured bounds and
 the rendered image's SHA-256.
 
+Each thumbnail picture (`[thumbnail.picture]`, `[thumbnail.proof]`) must be a
+media file the storyboard declares, and takes that entry's licence, author and
+URL (UR8). A picture the video never shows is refused unless it declares
+`reason` (why it is in the thumbnail alone) and its `license`, `author` and
+`url`, or has a `.prov.json` beside it. A graphic can declare `fit` (`cover` or
+`contain`), `margin` and `background`, which reach the layout as
+`picture_fit`, `picture_margin` and `picture_background` (or `proof_...`). The
+drawn JPG gets a `.prov.json` with each picture's media key or reason, its
+provenance and its SHA-256.
+
 Declare the published title beside the thumbnail, `[thumbnail.title] pt-BR = "..."`,
 and the two are checked as a pair before anything is drawn (UR1); `urdido
 thumbnail <video.toml> --language <l> --check` runs the check alone. The pair is

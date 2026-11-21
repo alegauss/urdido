@@ -434,28 +434,6 @@ Sequenced after UR33: the overlay must resolve every relative path through the b
 about 25 call sites read `build.here` directly; UR33's declaration loader is the one
 place it belongs.
 
-### §UR8 A thumbnail picture is not checked against the video (was marketing VM73)
-
-Where it happened: `japode/wordpress2`, on 2026-11-16 (`python -m videomaker thumbnail
-japode/wordpress2/video.toml --language pt-BR`). The owner asked for the WordPress logo
-alone in place of Matt Mullenweg.
-
-What happened: the only large logo in the video's sources is inside the 20th-anniversary
-emblem (`wp20.webm`). Cropping the W alone would have stretched about 140 px to 660. So
-the official mark was downloaded by hand from wordpress.org/about/logos into
-`footage/wordpress-wmark-white.png`, with a hand-written `.prov.json` (trademark policy,
-URL, hash). It does not appear in the cut. `thumbnail.py` says every picture is a frame
-of the video's own sources, but it checks only that the file exists. The white mark on
-transparent landed well on the layout's background by luck: nothing declares how a
-graphic is placed (size, margin, background).
-
-What video-maker should do:
-- check that `thumbnail.picture` and `thumbnail.proof` are media the storyboard declares, or
-  sources the cut shows, and refuse otherwise unless the declaration marks them as thumbnail-only
-  with a reason;
-- require their provenance (license, author, URL) like any storyboard media;
-- let a graphic declare its placement instead of the photo-style `cover` crop.
-
 ### §UR9 Descriptions for scene videos (was marketing VM80)
 
 `[description]` writes a ready description with measured chapter times, but only for the
