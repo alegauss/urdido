@@ -8,9 +8,8 @@
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
-- 📋 **UR38** (deps: UR30 ✅, UR36 ✅) **Project scripts and Turing's e2e specs import narration and recording helpers by a relative path into video-maker/** — Turing's story specs reach takes.mjs through marketing, so removing the folder breaks a recording in another repository. → §UR38
 - 📋 **UR39** (deps: UR31 ✅, UR36 ✅) **The golden check proves one marketing video but lives inside the framework, reading the Turing repository** — It belongs to the WordPress demo, and in urdido it would be a test that only runs on one machine. → §UR39
-- 📋 **UR41** (deps: UR37 ✅, UR38, UR39) **Nothing proves that each published video comes out the same when built by urdido instead of video-maker** — A changed cut found after re-upload costs a published video, and the owner should not be the check. → §UR41
+- 📋 **UR41** (deps: UR37 ✅, UR38 ✅, UR39) **Nothing proves that each published video comes out the same when built by urdido instead of video-maker** — A changed cut found after re-upload costs a published video, and the owner should not be the check. → §UR41
 - 📋 **UR42** (deps: UR40 ✅, UR41) **video-maker/ still sits in marketing after every video is built by urdido** — Two copies of the framework drift on the first fix applied to only one of them. → §UR42
 
 ## Block D — Inherited from video-maker (marketing Block B)

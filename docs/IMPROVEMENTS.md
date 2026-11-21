@@ -107,21 +107,6 @@ docs/specs/declaration.md names each key's default.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
-### §UR38 JavaScript imports from the package
-
-Eight scripts import `../../../video-maker/...`: `narration-takes.mjs` and
-`story-narration.mjs` in turing/wordpress, shio/promo and both japode explainers;
-shio/promo's `cenas.mjs`, `pace.mjs`, `story-scenes.mjs` and `story-terminal.mjs`.
-Turing's `wordpress/tests/e2e/marketing.mjs:16-35` imports marketing's
-`turing/wordpress/bin/narration-takes.mjs`, which imports `takes.mjs`.
-
-Switch each import to the npm package from the JavaScript-packaging task, installed by a
-`package.json` at the root of marketing. `narrationFor` stays exported from
-`turing/wordpress/bin/ narration-takes.mjs`, so Turing's specs need no change.
-
-**Done when** no marketing script imports a path under `video-maker/`, and Turing's
-story recording still finds its narration.
-
 ### §UR39 The golden check moves to the video it proves
 
 `video-maker/test/golden/run.mjs` rebuilds the WordPress demo's variants from
