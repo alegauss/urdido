@@ -23,6 +23,15 @@ undeclared one is refused by name. For one release STORY_VIDEO_DIR,
 STORY_RECORDINGS, TURING_WORDPRESS and SHIO_REPO still fill an undeclared
 root, with a notice.
 
+`urdido --help` lists every command (UR24): build, check, prepare, words,
+thumbnail, shorts, record, claims, library, storyboard, instance, export and
+publish, each running as `urdido <command>`. The library never exits: it
+raises `urdido.UrdidoError`, as `Refused` (an input cannot make the video;
+`RecordingRefused` is one), `DeclarationError` (the declaration is wrong) or
+`MissingTool` (a program is absent), each with its `remedy`. Only the command
+line turns one into a message on stderr and exit code 1, so a program that
+embeds urdido catches the exception.
+
 `urdido check <video.toml>` checks a declaration without building (UR23):
 a key no table takes is refused with the file, the table and the nearest
 valid name (`[narration]: unknown key tempoo; did you mean tempo?`), and so is

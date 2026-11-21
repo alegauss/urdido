@@ -13,6 +13,7 @@
 - ✅ **UR21** **urdido holds none of the videomaker code, and marketing's history of each module would be lost by a copy** — video-maker's 75 commits merged into src/urdido, tests and js under the urdido name; the suite passes here and skips by name without marketing (design recorded in `tests/marketing.py`).
 - ✅ **UR22** **The build defaults its roots to sibling Turing and Shio checkouts and writes to a fixed video/ folder** — A declaration names its roots in [roots] and its output in [output]; no module holds a sibling path, and a path at an undeclared root is refused (design recorded in `docs/video-maker.md`).
 - ✅ **UR23** **A misspelled or missing key in video.toml fails as a KeyError deep inside the build** — urdido check and every build refuse an unknown video.toml key with its file, table and nearest name, and a missing one; check --schema prints JSON Schema (design recorded in `docs/video-maker.md`).
+- ✅ **UR24** **Library code raises SystemExit and the CLI is an if-chain, so urdido can be neither embedded nor discovered** — urdido --help lists every command; the library raises UrdidoError with a remedy, which only the command line turns into an exit (design recorded in `docs/video-maker.md`).
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

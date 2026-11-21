@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from urdido.build import Build, roots_of
+from urdido.errors import DeclarationError
 
 
 def test_only_the_project_roots_exist_without_a_declaration(tmp_path):
@@ -29,9 +30,9 @@ def test_declared_roots_are_relative_paths_or_environment_variables(tmp_path):
 
 
 def test_an_unset_variable_or_a_reserved_name_is_refused(tmp_path):
-    with pytest.raises(SystemExit, match=r"reads \$NOPE, which is not set"):
+    with pytest.raises(DeclarationError, match=r"reads \$NOPE, which is not set"):
         roots_of(tmp_path, {"roots": {"shio": "$NOPE"}}, env={})
-    with pytest.raises(SystemExit, match="root and video are not declared there"):
+    with pytest.raises(DeclarationError, match="root and video are not declared there"):
         roots_of(tmp_path, {"roots": {"video": "x"}}, env={})
 
 
@@ -58,7 +59,7 @@ def test_a_path_at_an_undeclared_root_is_refused_by_name(tmp_path, monkeypatch):
     assert build.parts == (tmp_path / "built" / "work").resolve()
     assert build.path("<root>/a.json") == str(Path(tmp_path / "a.json"))
     with pytest.raises(
-        SystemExit, match=r"<plugin>, which the declaration does not declare"
+        DeclarationError, match=r"<plugin>, which the declaration does not declare"
     ):
         build.path("<plugin>/cards.json")
 

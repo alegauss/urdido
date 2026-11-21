@@ -5,8 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
+from urdido.errors import Refused
 
-class RecordingRefused(Exception):
+
+class RecordingRefused(Refused):
     """A source that cannot make the video, with what to do about it."""
 
 

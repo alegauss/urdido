@@ -2,14 +2,13 @@
 
 ## Block A — Package foundation (urdido installable from PyPI)
 
-- ⏳ **UR19** (deps: UR18 ✅, UR24) **A version cannot reach PyPI except by a hand-run upload with a token** — Releasing 0.1.0 still needs the trusted publishers registered on PyPI and TestPyPI, and a wheel that carries urdido build and its package data. → §UR19
+- ⏳ **UR19** (deps: UR18 ✅, UR24 ✅) **A version cannot reach PyPI except by a hand-run upload with a token** — Releasing 0.1.0 still needs the trusted publishers registered on PyPI and TestPyPI, and a wheel that carries urdido build and its package data. → §UR19
 - ⏳ **UR20** (deps: UR16 ✅, UR17 ✅, UR35) **An agent working in this repo or driving urdido has no CLAUDE.md, skill or friction path** — Consumers still have no urdido skill on declaring and building a video, which waits for the code and its manual. → §UR20
 - 📋 **UR35** (deps: UR16 ✅, UR23 ✅) **Nobody outside this machine can learn what a declaration accepts or how to build a first video** — A package on PyPI is read by people who never saw marketing, and today the only manual is a 600-line README full of VM ids. → §UR35
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-- 📋 **UR24** (deps: UR21 ✅) **Library code raises SystemExit and the CLI is an if-chain, so urdido can be neither embedded nor discovered** — A package is used from other Python code and by agents reading --help, and both see an exit or a usage line naming two of seven commands. → §UR24
-- 📋 **UR25** (deps: UR21 ✅, UR24) **Polyweave is called through three separate subprocess wrappers, and its polyweave.toml is read directly** — Each wrapper parses answers its own way and a change to polyweave's config breaks urdido silently. → §UR25
+- 📋 **UR25** (deps: UR21 ✅, UR24 ✅) **Polyweave is called through three separate subprocess wrappers, and its polyweave.toml is read directly** — Each wrapper parses answers its own way and a change to polyweave's config breaks urdido silently. → §UR25
 - 📋 **UR26** (deps: UR25) **Word times come from a direct ElevenLabs Scribe call inside the package, with no provider seam** — polyweave PW703 is meant to supply word times, and a second transcriber should not mean editing every caller. → §UR26
 - 📋 **UR27** (deps: UR21 ✅) **Description, chapter and credit texts are hardcoded in Portuguese, and the description is shaped only for YouTube** — An English video gets Capitulos and Introducao, and a target other than YouTube cannot change the limits or the links. → §UR27
 - 📋 **UR28** (deps: UR22 ✅) **The Turing WordPress demo's store scraper, stills and transcript publishing live inside the core build** — WooCommerce selectors and writes into the Turing repository are one video's needs, and every user of the package carries them. → §UR28
@@ -22,11 +21,12 @@
 - 📋 **UR43** (deps: UR21 ✅) **The imported modules pass ruff only through a per-file baseline of ignored rules and unformatted files** — Each ignored B023 or B905 may hide a real bug, and new code in those files is checked against nothing. → §UR43
 - 📋 **UR46** (deps: UR22 ✅, UR37) **Four environment variables still fill undeclared roots, the last root names left in a module** — They were kept for one release so marketing's builds keep working; left longer, the shim becomes a second way to declare a root. → §UR46
 - 📋 **UR47** (deps: UR23 ✅) **Values in video.toml are untyped and the side files it names are not checked, so a typo inside them is still a KeyError** — urdido check refuses a misspelled table key, but storyboard.json or script.json still fail deep inside the build. → §UR47
+- 📋 **UR49** (deps: UR24 ✅) **Building a video from Python means filling an argparse Namespace and importing build internals** — The package exports only its errors, so an embedding program reaches into Build and the modules' underscored names. → §UR49
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
 - 📋 **UR36** (deps: UR21 ✅) **Marketing installs the framework from its own folder with pip -e, with no version pinned** — Replacing the folder needs an install that does not point into it, and a pin says which urdido a video was built with. → §UR36
-- 📋 **UR37** (deps: UR36, UR24) **Marketing's npm scripts, READMEs, bin scripts and brand code call python -m videomaker or import videomaker** — A flag-day rename across about twenty files would break whichever video is mid-build, so the switch needs a bridge. → §UR37
+- 📋 **UR37** (deps: UR36, UR24 ✅) **Marketing's npm scripts, READMEs, bin scripts and brand code call python -m videomaker or import videomaker** — A flag-day rename across about twenty files would break whichever video is mid-build, so the switch needs a bridge. → §UR37
 - 📋 **UR38** (deps: UR30, UR36) **Project scripts and Turing's e2e specs import narration and recording helpers by a relative path into video-maker/** — Turing's story specs reach takes.mjs through marketing, so removing the folder breaks a recording in another repository. → §UR38
 - 📋 **UR39** (deps: UR36, UR31) **The golden check proves one marketing video but lives inside the framework, reading the Turing repository** — It belongs to the WordPress demo, and in urdido it would be a test that only runs on one machine. → §UR39
 - 📋 **UR40** (deps: UR20 ⏳) **Marketing's video-maker gate hook, friction skill and CLAUDE.md rules point at a folder and a Block B that will be gone** — The rule that every friction becomes a framework task stops working the day the folder leaves, unless it points here. → §UR40

@@ -50,23 +50,6 @@ lists every key the schema accepts.
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-### §UR24 Errors raised, commands declared
-
-`SystemExit` is raised deep in `build.py`, `preflight.py` and the assemblers;
-`RecordingRefused` stands in for every other error. `__main__.py` routes on
-`sys.argv[1]` and its usage names only `build` and `thumbnail`, while `publish`,
-`export` and `narration_words` are separate `-m` entry points.
-
-A small exception hierarchy (`UrdidoError` with refusal, missing-tool and declaration
-kinds, each with a remedy) is raised by the library and turned into exit codes and
-messages only in `urdido.cli`. One argparse tree holds every command: `build`, `check`,
-`prepare`, `thumbnail`, `claims`, `library`, `storyboard`, `instance`, `export`,
-`publish`, `words`. A public API (`urdido.build(...)`, `urdido.load(...)`) is declared
-in `__all__`; private names stop crossing modules.
-
-**Done when** `urdido --help` lists every command and a refused build raised from Python
-is an exception, not an exit.
-
 ### §UR25 One polyweave adapter behind provider seams
 
 `prepare.py:43-54` (`voice.lines`), `library.py:225-239` (`stock.fetch`,
@@ -273,6 +256,25 @@ Schema export then comes from the dataclasses rather than from the key table.
 Done when a misspelled key inside storyboard.json or script.json is refused by `urdido
 check` with its file and the nearest name, and no module reads a default that the model
 does not hold.
+
+### §UR49 A declared Python API
+
+UR24 made the library raise `urdido.UrdidoError` (with `Refused`, `DeclarationError` and
+`MissingTool`) instead of exiting, and put every command under one `urdido --help`. The
+package's `__all__` names only those errors. A program that wants to build a video still
+imports `urdido.build.Build`, fills an `argparse.Namespace` by hand and calls its
+methods, and the modules reach into each other's underscored names (`timeline._rounded`,
+`build._portable_all`).
+
+What to build: a small declared API in `urdido/__init__.py`, loaded lazily so `import
+urdido` stays cheap: `urdido.check(path)` returning the problems, `urdido.load(path)`
+returning the parsed declaration with its roots, and a build entry (`urdido.make(path,
+language, cut=...)`; not `urdido.build`, which is the submodule's name) that takes
+keyword options rather than a Namespace. Each module's public names go in its own
+`__all__`; an underscored name used from another module is renamed or moved.
+
+Done when the README's Python example builds a plan without argparse, and no module
+imports another's underscored name.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

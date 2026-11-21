@@ -54,12 +54,12 @@ def transcribe(file: Path, language: str, *, base_url="https://api.elevenlabs.io
     return f"transcribed {file.stem}: {len(words)} words"
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+def main(argv: list[str] | None = None):
+    parser = argparse.ArgumentParser(prog="urdido words", description=__doc__)
     parser.add_argument("root", type=Path)
     parser.add_argument("--language", default="pt-BR")
     parser.add_argument("--service-language", default="por")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     folder = args.root / "narration"
     takes = Takes(json.loads((folder / "script.json").read_text(encoding="utf-8")), str(folder))
     files = [Path(takes.take_file(args.language, name)) for name in takes.lines]

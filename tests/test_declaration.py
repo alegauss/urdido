@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 from urdido.declaration import SCHEMA, check, json_schema, main
+from urdido.errors import DeclarationError
 
 GOOD = {
     "video": {
@@ -66,7 +67,7 @@ def test_the_build_refuses_a_bad_declaration_before_any_work(tmp_path):
         '[video]\nname = "x"\nlanguages = { en = "eng" }\n[musc]\nbed = "a"\n',
         encoding="utf-8",
     )
-    with pytest.raises(SystemExit, match="unknown key musc; did you mean music"):
+    with pytest.raises(DeclarationError, match="unknown key musc; did you mean music"):
         Build(toml, SimpleNamespace(language="en", cut="full", vertical=False))
     assert not (tmp_path / "video").exists()
 

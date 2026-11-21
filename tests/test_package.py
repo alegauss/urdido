@@ -30,9 +30,45 @@ def test_module_entry_point_answers_version():
     assert ran.stdout.strip() == f"urdido {urdido.__version__}"
 
 
-def test_no_arguments_answers_the_usage():
+def test_no_arguments_answers_the_help_naming_every_command_ur24():
     said = cli.main([])
-    assert isinstance(said, str) and said.startswith("usage: urdido build")
+    assert isinstance(said, str) and said.startswith("usage: urdido")
+    for command in cli.COMMANDS:
+        assert f"\n    {command} " in said, command
+
+
+def test_every_command_module_has_a_main_ur24():
+    import importlib
+
+    for name, (module, _) in cli.COMMANDS.items():
+        assert callable(importlib.import_module(module).main), name
+
+
+def test_a_refusal_from_the_library_is_a_message_and_an_exit_code_ur24(
+    monkeypatch, capsys
+):
+    def refuse(argv):
+        raise urdido.Refused("the take is stale", remedy="urdido prepare --take intro")
+
+    fake = type("Module", (), {"main": staticmethod(refuse)})
+    monkeypatch.setattr(cli.importlib, "import_module", lambda name: fake)
+    assert cli.main(["build", "video.toml"]) == 1
+    err = capsys.readouterr().err
+    assert "urdido build: the take is stale" in err
+    assert "remedy: urdido prepare --take intro" in err
+
+
+def test_a_refused_build_raised_from_python_is_an_exception_ur24(tmp_path):
+    from types import SimpleNamespace
+
+    from urdido.build import Build
+
+    toml = tmp_path / "video.toml"
+    toml.write_text(
+        '[video]\nname = "x"\nlanguages = { en = "eng" }\n', encoding="utf-8"
+    )
+    with pytest.raises(urdido.UrdidoError, match="speaks en, not fr"):
+        Build(toml, SimpleNamespace(language="fr", cut="full", vertical=False))
 
 
 def test_a_command_runs_its_module_main(monkeypatch):
@@ -44,7 +80,7 @@ def test_a_command_runs_its_module_main(monkeypatch):
 
 
 def test_every_command_names_an_imported_module():
-    for module in cli.COMMANDS.values():
+    for module, _ in cli.COMMANDS.values():
         assert (ROOT / "src" / Path(*module.split("."))).with_suffix(".py").is_file()
 
 

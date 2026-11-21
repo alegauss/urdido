@@ -41,6 +41,7 @@ from urdido import media
 from urdido import cache
 from urdido.audio import mix
 from urdido.cards import html
+from urdido.errors import DeclarationError, Refused
 from urdido.jsnum import fixed
 from urdido.narration import Takes
 from urdido.sources import RecordingRefused, chaptered_recording
@@ -66,11 +67,11 @@ def roots_of(here: Path, decl: Mapping, env: Mapping[str, str] | None = None) ->
     declared = dict(decl.get("roots") or {})
     for name, value in declared.items():
         if name in ("root", "video") or not isinstance(value, str) or not value:
-            raise SystemExit(f"urdido build: [roots] {name} must be a path, and root and video are not declared there")
+            raise DeclarationError(f"urdido build: [roots] {name} must be a path, and root and video are not declared there")
         if value.startswith("$"):
             variable = value.strip("${}")
             if not env.get(variable):
-                raise SystemExit(f"urdido build: [roots] {name} reads ${variable}, which is not set")
+                raise DeclarationError(f"urdido build: [roots] {name} reads ${variable}, which is not set")
             value = env[variable]
         roots[name] = str((here / value).resolve())
     for name, variable in LEGACY_ROOTS.items():
@@ -91,7 +92,7 @@ class Build:
 
         problems = check_declaration(self.decl, str(toml))
         if problems:
-            raise SystemExit("urdido build: the declaration is refused:\n" + "\n".join(problems))
+            raise DeclarationError("urdido build: the declaration is refused:\n" + "\n".join(problems))
         self.input_hashes = {toml.resolve(): hashlib.sha256(raw).hexdigest()}
         self.args = args
         self.roots = roots_of(self.here, self.decl)
@@ -100,7 +101,7 @@ class Build:
         video = self.decl["video"]
         self.name = video["name"]
         if self.language not in video["languages"]:
-            raise SystemExit(f"urdido build: {self.name} speaks {', '.join(video['languages'])}, not {self.language}")
+            raise DeclarationError(f"urdido build: {self.name} speaks {', '.join(video['languages'])}, not {self.language}")
         self.revision = None
         self.checked: list[str] = []
         revision = getattr(args, "revision", None) or video.get("revision")
@@ -124,7 +125,7 @@ class Build:
                 return os.path.normpath(declared.replace(f"<{name}>", root))
         if declared.startswith("<") and ">" in declared:
             name = declared[1:declared.index(">")]
-            raise SystemExit(f"urdido build: {declared} starts at <{name}>, which the declaration does not "
+            raise DeclarationError(f"urdido build: {declared} starts at <{name}>, which the declaration does not "
                              f"declare; add it under [roots]")
         return os.path.normpath(str(self.here / declared))
 
@@ -188,11 +189,11 @@ class Build:
                 audio = self.path(take["file"])
                 stem = Path(audio).stem
                 if stem not in table:
-                    raise SystemExit(f"captions.{language}: no translation for the take {stem}")
+                    raise Refused(f"captions.{language}: no translation for the take {stem}")
                 try:
                     cues += cap.translated_cues(take, word_record(Path(audio)), table[stem])
                 except ValueError as e:
-                    raise SystemExit(f"captions.{language}, {stem}: {e}")
+                    raise Refused(f"captions.{language}, {stem}: {e}")
             tracks.append((language, spec.get("track", language), cues))
         return tracks
 
@@ -236,7 +237,7 @@ class Build:
         clip = int(cut.split(":")[1]) if cut.startswith("chapter:") else None
         vertical = self.args.vertical
         if vertical and clip is None:
-            raise SystemExit("urdido build: --vertical cuts one chapter: add --cut chapter:<n>")
+            raise Refused("urdido build: --vertical cuts one chapter: add --cut chapter:<n>")
         folder = self.path(src["vertical_folder"] if vertical else src["folder"])
         command = src.get("vertical_record_command" if vertical else "record_command", "the recording")
         webm = os.path.join(folder, src["recording"])
@@ -245,7 +246,7 @@ class Build:
                 webm, os.path.join(folder, "chapters.json"), language=self.language, chapters=src["chapters"],
                 record_command=command, sources=[self.path(p) for p in src.get("newer_than", [])])
         except RecordingRefused as refused:
-            raise SystemExit(f"urdido build: {refused}")
+            raise Refused(f"urdido build: {refused}") from refused
         frame = html.Frame(1080, 1920) if vertical else html.Frame(1920, 1080)
         script = self.load(self.decl["narration"]["script"])
         takes = Takes(script, self.path(self.decl["narration"]["takes"]), self.decl["narration"].get("tempo", 1.0))
@@ -451,9 +452,9 @@ class Build:
         encoder = os.environ.get("STORY_ENCODER") or ("x264" if self.args.cards or self.args.plan else media.detect_encoder())
         if illustrated:
             if self.args.cut != "full" or self.args.vertical or self.args.project:
-                raise SystemExit("illustrated videos support full cuts, cards, plans and motion previews")
+                raise Refused("illustrated videos support full cuts, cards, plans and motion previews")
             if self.args.cards and (self.args.plan or getattr(self.args, "preview", None)):
-                raise SystemExit("use --cards separately from --plan or --preview")
+                raise Refused("use --cards separately from --plan or --preview")
             from urdido.sources.illustrated import scenes as illustrations
 
             if getattr(self.args, "preview", None):
@@ -529,7 +530,7 @@ class Build:
         total = media.seconds(joined)
         placed = plan_of(timeline)["spoken"].get(self.language, [])
         if (self.decl.get("captions") or {}).get("burn") and not self.decl.get("highlights"):
-            raise SystemExit("urdido build: [captions] burn draws in the highlights' pass; declare [highlights] "
+            raise DeclarationError("urdido build: [captions] burn draws in the highlights' pass; declare [highlights] "
                              "(its lines may be empty) for its fonts")
         if self.decl.get("highlights"):
             from urdido.keywords import overlay
@@ -581,7 +582,7 @@ class Build:
         """The declared `[video] frame = [width, height]`, 1920x1080 by default (VM74)."""
         size = (self.decl.get("video") or {}).get("frame", [1920, 1080])
         if not (isinstance(size, list) and len(size) == 2 and all(isinstance(v, int) and v >= 16 and v % 2 == 0 for v in size)):
-            raise SystemExit(f"urdido build: [video] frame must be [width, height] in even pixels, got {size!r}")
+            raise DeclarationError(f"urdido build: [video] frame must be [width, height] in even pixels, got {size!r}")
         return html.Frame(*size)
 
     def beat_sounds(self, opening: float) -> list:
@@ -635,7 +636,7 @@ def main(argv: list[str] | None = None) -> int:
     build = Build(Path(a.declaration), a)
     kind = build.decl["source"]["kind"]
     if a.preview and kind != "illustrated":
-        raise SystemExit("--preview requires an illustrated source")
+        raise Refused("--preview requires an illustrated source")
     from urdido.safety import configured
     from urdido import textcheck
     from urdido import progress

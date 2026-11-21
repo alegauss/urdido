@@ -24,6 +24,8 @@ from dataclasses import dataclass
 from html import escape
 from pathlib import Path
 
+from urdido.errors import DeclarationError
+
 CORNERS = ("top-left", "top-right", "bottom-left", "bottom-right")
 
 
@@ -43,30 +45,30 @@ def declared(decl: dict, resolve) -> Mark:
     """The `[mark]` table, checked: a value the build cannot honour refuses before anything renders."""
     unknown = set(decl) - {"logo", "text", "corner", "size", "margin", "opacity", "font", "background"}
     if unknown:
-        raise SystemExit(f"urdido build: [mark] does not take {', '.join(sorted(unknown))}")
+        raise DeclarationError(f"urdido build: [mark] does not take {', '.join(sorted(unknown))}")
     if not decl.get("logo"):
-        raise SystemExit("urdido build: [mark] needs logo, an svg or png")
+        raise DeclarationError("urdido build: [mark] needs logo, an svg or png")
     logo = Path(resolve(decl["logo"]))
     if logo.suffix.lower() not in {".svg", ".png"} or not logo.is_file():
-        raise SystemExit(f"urdido build: [mark] logo must be an existing svg or png, got {logo}")
+        raise DeclarationError(f"urdido build: [mark] logo must be an existing svg or png, got {logo}")
     corner = decl.get("corner", "top-left")
     if corner not in CORNERS:
-        raise SystemExit(f"urdido build: [mark] corner must be one of {', '.join(CORNERS)}, got {corner!r}")
+        raise DeclarationError(f"urdido build: [mark] corner must be one of {', '.join(CORNERS)}, got {corner!r}")
     margin = decl.get("margin", [70, 50])
     if not (isinstance(margin, list) and len(margin) == 2 and all(isinstance(v, int) and v >= 0 for v in margin)):
-        raise SystemExit(f"urdido build: [mark] margin must be [x, y] in pixels, got {margin!r}")
+        raise DeclarationError(f"urdido build: [mark] margin must be [x, y] in pixels, got {margin!r}")
     size = decl.get("size", 44)
     if not isinstance(size, int) or not 12 <= size <= 300:
-        raise SystemExit(f"urdido build: [mark] size must be 12 to 300 pixels, got {size!r}")
+        raise DeclarationError(f"urdido build: [mark] size must be 12 to 300 pixels, got {size!r}")
     opacity = float(decl.get("opacity", 0.9))
     if not 0 < opacity <= 1:
-        raise SystemExit(f"urdido build: [mark] opacity must be above 0 and at most 1, got {opacity}")
+        raise DeclarationError(f"urdido build: [mark] opacity must be above 0 and at most 1, got {opacity}")
     font = Path(resolve(decl["font"])) if decl.get("font") else None
     if font and not font.is_file():
-        raise SystemExit(f"urdido build: [mark] font {font} does not exist")
+        raise DeclarationError(f"urdido build: [mark] font {font} does not exist")
     background = decl.get("background", "")
     if not isinstance(background, str) or any(c in background for c in ";{}<>"):
-        raise SystemExit(f"urdido build: [mark] background must be one CSS colour, got {background!r}")
+        raise DeclarationError(f"urdido build: [mark] background must be one CSS colour, got {background!r}")
     return Mark(logo, str(decl.get("text", "")), corner, size, (margin[0], margin[1]), opacity, font, background)
 
 
