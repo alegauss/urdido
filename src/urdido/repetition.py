@@ -8,6 +8,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from urdido.cache import file_hash
+from urdido.declaration import BEAT, held
 from urdido.sources.model import RecordingRefused
 
 RULES = {"overlap", "gap", "adjacent", "source_seconds", "category_share"}
@@ -88,7 +89,7 @@ def inspect(document, edit, folder, opening=0):
         if key not in identity:
             continue
         sha, canonical, offset = identity[key]
-        at = beat.get("at", 0)
+        at = held(beat, BEAT, "at")
         rows.append({"beat": beat.get("id", shot["beat"]), "take": take, "asset": key,
                      "index": index, "group": find(key), "sha256": sha, "source_id": canonical,
                      "source_offset": offset, "source_start": at, "source_end": at + shot["seconds"],

@@ -10,6 +10,7 @@ from datetime import date
 from pathlib import Path
 
 from urdido.cache import file_hash
+from urdido.declaration import BEAT, held
 from urdido.sources.model import RecordingRefused
 
 
@@ -120,7 +121,7 @@ def inspect(document, edit, folder, opening=0):
         if beat.get("layout") != "footage" or not selected:
             continue
         path = (Path(folder) / asset["file"]).resolve()
-        at, duration = beat.get("at", 0), shot["seconds"]
+        at, duration = held(beat, BEAT, "at"), shot["seconds"]
         key = (str(path), at, duration)
         if key not in measured:
             measured[key] = measure(path, at, duration, spec)

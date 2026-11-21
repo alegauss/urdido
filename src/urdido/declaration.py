@@ -443,6 +443,17 @@ _BEAT = table(
         )
     }
 )
+#: What an absent beat key means (UR47): a date card, shown full frame, from the clip's
+#: start, weighed like any other beat, moving unless said static.
+BEAT_DEFAULTS = {
+    "layout": {**TEXT, "default": "date"},
+    "presentation": {**TEXT, "default": "full"},
+    "at": {**NUMBER, "default": 0},
+    "weight": {**NUMBER, "default": 1},
+    "static": {**FLAG, "default": False},
+}
+_BEAT["keys"].update(BEAT_DEFAULTS)
+BEAT = _BEAT
 #: The storyboard an illustrated source names (`[source] declaration`), UR47.
 STORYBOARD = table(
     {
@@ -498,13 +509,20 @@ HIGHLIGHTS = table(
         "lines": mapping(
             array(
                 table(
-                    {"show": ANY, "hear": ANY, "duration": ANY, "look": ANY},
+                    {
+                        "show": ANY,
+                        "hear": ANY,
+                        "duration": {**NUMBER, "default": 2.8},
+                        "look": ANY,
+                    },
                     required=("show",),
                 )
             )
         ),
     }
 )
+#: One highlight line, whose `duration` defaults in the schema (UR47).
+HIGHLIGHT_LINE = HIGHLIGHTS["keys"]["lines"]["map"]["array"]
 #: The claims declaration (`[claims] declaration`), UR47.
 CLAIMS = table(
     {

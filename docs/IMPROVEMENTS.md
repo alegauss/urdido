@@ -91,23 +91,24 @@ Done when no module names a root and no test sets one of the four variables.
 
 UR23 gave video.toml a key schema, UR56 typed its values, and UR57 and the steps before
 it check every side file the declaration names. UR58 moved the video.toml tables'
-defaults into the schema (`DEFAULTS`, read through `setting`). UR60 did the same for a
-side file, with `held(values, shape, key)` reading the highlight margin. UR59 (deferred
-to the owner) holds `[music] under`, which has two defaults.
+defaults into the schema, read through `setting`. UR60 and UR61 did the same for the
+side files, read through `held(values, shape, key)`: the highlight margin and duration,
+and a beat's layout, presentation, start, weight and stillness. UR59 (deferred to the
+owner) holds `[music] under`, which has two defaults.
 
-Left, one default at a time, each moved into its side file's schema and read through
-`held`:
-- the storyboard beat's `presentation` ("full") and the other `beat.get(key, ...)`
-  reads in `sources/illustrated.py`, `labels.py` and `preflight.py`;
-- the shots file's keys in `pipelines/explainer.py`;
-- `mix.Loudness`, `Duck` and `Bed` repeating the schema's numbers, which a test pins
-  equal rather than reading them.
+Left:
+- The explainer's shots file (`[source] shots`) has no schema, so a misspelled key in it
+  is not refused and its `speed` (1.0) defaults in `pipelines/explainer.py`. Add a
+  SHOTS shape (per take, a list of `{src, start, dur, speed, box}`, plus `callouts`
+  with `show`, `hear`, `def`) to `side_files`, with `speed` defaulting there.
+- `mix.Loudness`, `Duck` and `Bed` repeat the schema's numbers, which a test pins equal.
+  Their defaults should come from `DEFAULTS`.
 
 The repetition and text-check `action` defaults depend on whether the table is present
 or the source is illustrated, so they stay in their modules, with that rule stated.
 
-Done when no `.get(key, default)` on a declaration or a side file holds a value the
-schema does not.
+Done when a typo in shots.json is refused by `urdido check`, and no literal default on a
+declaration or side file is spelled outside the schema.
 
 ### Â§UR47 The side files and values checked
 

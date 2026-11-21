@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import warnings
 
+from urdido.declaration import BEAT, held
 from urdido.keywords import fold
 from urdido.sources.model import RecordingRefused
 
@@ -21,7 +22,7 @@ def check(document: dict, edit: dict, highlights: list[dict], opening: float = 0
             touched.append(shot["beat"])
             beat = beats[shot["beat"]]
             caption = " ".join(str(t) for t in (beat.get("caption", beat["title"]), beat.get("text", ""))).strip()
-            full = beat.get("layout") in {"footage", "picture"} and beat.get("presentation", "full") == "full"
+            full = beat.get("layout") in {"footage", "picture"} and held(beat, BEAT, "presentation") == "full"
             visible_end = min(end, start + beat["overlay_seconds"]) if full and beat.get("overlay_seconds") else end
             if caption and cue["at"] < visible_end:
                 errors.append(f"{shot['beat']}: highlight {cue['show']!r} overlaps beat caption {caption!r} "

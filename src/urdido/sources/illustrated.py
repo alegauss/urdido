@@ -15,6 +15,7 @@ from pathlib import Path
 from urdido import cache, media
 from urdido.cards.html import Frame, Theme
 from urdido.cards.render import render as draw
+from urdido.declaration import BEAT, held
 from urdido.narration import Takes
 from urdido.sources.model import RecordingRefused
 from urdido.sources.scenes import Scene
@@ -47,9 +48,9 @@ def validate(document: dict, takes: Takes, language: str) -> list[tuple[str, lis
                 raise RecordingRefused(f"{name}: a beat needs its title")
             if beat.get("source") not in document["sources"]:
                 raise RecordingRefused(f"{name}: unknown source {beat.get('source')}")
-            if beat.get("layout", "date") not in {"date", "path", "quote", "record", "blocks", "split", "footage", "picture"}:
+            if held(beat, BEAT, "layout") not in {"date", "path", "quote", "record", "blocks", "split", "footage", "picture"}:
                 raise RecordingRefused(f"{name}: unknown illustration layout")
-            if beat.get("weight", 1) <= 0:
+            if held(beat, BEAT, "weight") <= 0:
                 raise RecordingRefused(f"{name}: beat weight must be positive")
             if beat.get("layout") in {"footage", "picture"} and beat.get("asset") not in document.get("media", {}):
                 raise RecordingRefused(f"{name}: unknown media asset")
@@ -126,7 +127,7 @@ def beat_frames(beats: list[dict], total: int, max_static: float | None = None) 
     for beat, frames in zip(beats, result, strict=True):
         if frames < 30:
             raise RecordingRefused("a beat must last at least one second")
-        static = beat.get("layout", "date") != "footage" or beat.get("static", False)
+        static = held(beat, BEAT, "layout") != "footage" or held(beat, BEAT, "static")
         if static and max_static is not None and frames > math.floor(max_static * 30):
             raise RecordingRefused(f"static beat {beat['title']!r} exceeds {max_static:g} seconds")
     return result
@@ -157,8 +158,8 @@ def anchored_frames(beats: list[dict], total: int, audio: str,
 def page(beat: dict, document: dict, theme: Theme, frame: Frame, logo: str, number: int, *, field_prefix="scene") -> str:
     esc = lambda s: html.escape(str(s), quote=True)
     source = document["sources"][beat["source"]]
-    layout = beat.get("layout", "date")
-    full = layout in {"footage", "picture"} and beat.get("presentation", "full") == "full"
+    layout = held(beat, BEAT, "layout")
+    full = layout in {"footage", "picture"} and held(beat, BEAT, "presentation") == "full"
     items = beat.get("items", [])
     tiles = "".join(f'<div class="tile"><span>{i + 1:02}</span><strong>{esc(item)}</strong></div>'
                     for i, item in enumerate(items))
@@ -284,17 +285,17 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
                     raise RecordingRefused(f"{name}: media asset needs its licence, author and source URL")
                 check_range(beat, asset, frames)
                 check_rejected(beat, asset, frames)
-                if beat["layout"] == "footage" and beat.get("at", 0) + frames / 30 > media.seconds(str(file)) + 0.02:
+                if beat["layout"] == "footage" and held(beat, BEAT, "at") + frames / 30 > media.seconds(str(file)) + 0.02:
                     raise RecordingRefused(f"{name}: the footage is shorter than the requested beat")
                 asset = {**asset, "path": str(file), "sha256": cache.file_hash(file)}
             jobs.append((key, content, frames, beat, asset))
             if beat.get("sound") and beat.get("layout") != "footage":
                 raise RecordingRefused(f"{name}: only a footage beat can play its own sound")
             audit.append({"take": name, "beat": key, "at": clock / 30, "seconds": frames / 30,
-                          "static": beat.get("layout", "date") != "footage" or beat.get("static", False),
+                          "static": held(beat, BEAT, "layout") != "footage" or held(beat, BEAT, "static"),
                           "asset": beat.get("asset"),
                           # Where the mix finds the clip's sound (VM78).
-                          **({"sound": {"file": asset["path"], "source_at": beat.get("at", 0),
+                          **({"sound": {"file": asset["path"], "source_at": held(beat, BEAT, "at"),
                                         "gain_db": sound_gain(beat)}}
                              if beat.get("sound") and asset else {})})
             clock += frames
@@ -316,14 +317,14 @@ def scenes(document: dict, takes: Takes, theme: Theme, language: str, folder: st
         file = out / f"{key}.mp4"
         inputs = ["-i", str(out / f"{key}.png")]
         if asset:
-            full = beat.get("presentation", "full") == "full"
+            full = held(beat, BEAT, "presentation") == "full"
             if full:
                 inputs = ["-i", str(out / f"{key}-text.png")]
             inputs = ["-loop", "1", "-framerate", "30", *inputs]
             if beat["layout"] == "picture":
                 inputs += ["-loop", "1", "-framerate", "30", "-i", asset["path"]]
             else:
-                inputs += ["-ss", str(beat.get("at", 0)), "-i", asset["path"]]
+                inputs += ["-ss", str(held(beat, BEAT, "at")), "-i", asset["path"]]
             if full:
                 if beat["layout"] == "picture":
                     cut = picture_crop(beat)

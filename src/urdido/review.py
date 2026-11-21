@@ -11,6 +11,7 @@ from pathlib import Path
 from urdido import captions, media
 from urdido.cards.html import Frame
 from urdido.cards.render import render
+from urdido.declaration import BEAT, held
 from urdido.keywords import word_record
 from urdido.sources.model import RecordingRefused
 
@@ -36,10 +37,10 @@ def rows(document: dict, edit: dict, placed: list[dict], highlights: list[dict],
         asset = document.get("media", {}).get(beat.get("asset"), {})
         overlap = lambda at, until, start=start, end=end: at < end and until > start
         result.append({"beat": shot["beat"], "start": start, "end": end,
-                       "source": asset.get("file"), "source_start": beat.get("at", 0),
-                       "source_end": beat.get("at", 0) + shot["seconds"],
+                       "source": asset.get("file"), "source_start": held(beat, BEAT, "at"),
+                       "source_end": held(beat, BEAT, "at") + shot["seconds"],
                        "source_url": asset.get("url"), "source_title": asset.get("title"),
-                       "layout": beat.get("layout", "date"),
+                       "layout": held(beat, BEAT, "layout"),
                        "spoken": " ".join(w["text"] for w in timed if overlap(w["at"], w["end"])),
                        "captions": [c.text for c in cues if overlap(c.start, c.end)],
                        "highlights": [h["show"] for h in highlights if overlap(h["at"], h["end"])],

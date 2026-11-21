@@ -34,6 +34,7 @@
 - ✅ **UR49** **Building a video from Python means filling an argparse Namespace and importing build internals** — urdido.check, urdido.load and urdido.make build from Python without argparse, and no module imports another's underscored name.
 - ✅ **UR58** **An absent key in video.toml means whatever default a module reads, which the reference and JSON Schema never state** — The video.toml defaults live in the schema: setting() reads them, the reference and JSON Schema state them.
 - ✅ **UR60** **A side file's default lives in each module that reads it, as the highlight margin did in three** — A side file's default lives in its schema: the highlight margin is read through held() in all three modules.
+- ✅ **UR61** **A storyboard beat's layout, presentation, start, weight and stillness default inside each of eight modules** — A beat's layout, presentation, start, weight and stillness, and a highlight's duration, default in their schemas.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

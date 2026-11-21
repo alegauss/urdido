@@ -7,6 +7,7 @@ import re
 import unicodedata
 from pathlib import Path
 
+from urdido.declaration import HIGHLIGHT_LINE, HIGHLIGHTS, held
 from urdido.sources.model import RecordingRefused
 
 HIGHLIGHT_FONT_SIZE = 76
@@ -132,7 +133,7 @@ def cues(placed: list[dict], lines: dict, *, aliases=None) -> list[dict]:
             # A fact callout stays at most 2.8 s; a meme may hold its punchline longer (VM77).
             longest = 5.0 if look == "meme" else 2.8
             found.append({"at": take["at"] + tokens[i][1], "show": item["show"],
-                          "duration": min(longest, item.get("duration", 2.8)), "take": name,
+                          "duration": min(longest, held(item, HIGHLIGHT_LINE, "duration")), "take": name,
                           **{k: item[k] for k in ("person", "event", "look") if k in item}})
         for i, cue in enumerate(found):
             # A reaction meme lands after the line, so it may hold into the take's 0.5 s tail (VM77).
@@ -192,8 +193,6 @@ def write_ass(file: Path, timed: list[dict], style: dict, *, frame=None, burned:
     frame = frame or _Wide()
     # A player draws the optional captions at the bottom; `margin` (its default in the schema)
     # lifts the highlights clear of them (VM48).
-    from urdido.declaration import HIGHLIGHTS, held
-
     margin = int(held(style, HIGHLIGHTS["keys"]["style"], "margin"))
     side = 130 if frame.width >= frame.height else 60
     styles = [f"Style: Key,{style['font']},{HIGHLIGHT_FONT_SIZE},&H00111111,&H00111111,{box},&H00000000,0,0,0,0,100,100,0,0,3,{HIGHLIGHT_OUTLINE},0,2,{side},{side},{margin},1"]

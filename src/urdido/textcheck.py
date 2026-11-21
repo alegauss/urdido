@@ -13,6 +13,7 @@ from dataclasses import asdict, dataclass
 from functools import lru_cache
 from pathlib import Path
 
+from urdido.declaration import BEAT, held
 from urdido.sources.model import RecordingRefused
 
 
@@ -81,7 +82,7 @@ def inputs(document, script, language, theme, settings):
     for take, beats in document.get("scenes", {}).items():
         for i, beat in enumerate(beats):
             prefix = f"scenes.{take}.{i}"
-            full = beat.get("layout") in {"footage", "picture"} and beat.get("presentation", "full") == "full"
+            full = beat.get("layout") in {"footage", "picture"} and held(beat, BEAT, "presentation") == "full"
             for key, role in (("caption", "display-800"), ("text", "text")):
                 fields.append((f"{prefix}.{key}", beat.get(key, beat.get("title", "") if key == "caption" else ""), role))
             if brand_mark(beat, document) != "none":
@@ -90,7 +91,7 @@ def inputs(document, script, language, theme, settings):
                     fields.append(("series", document.get("series", ""), "text"))
             if not full:
                 fields.append((f"{prefix}.kicker", beat.get("kicker", ""), "display-800"))
-                layout = beat.get("layout", "date")
+                layout = held(beat, BEAT, "layout")
                 for key, role in ({"date": [("big", "display-800")], "quote": [("quote", "display-800"), ("by", "text")]}.get(layout, [])):
                     fields.append((f"{prefix}.{key}", beat.get(key, ""), role))
                 for n, item in enumerate(beat.get("items", [])):

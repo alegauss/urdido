@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 from urdido import captions, keywords, media
 from urdido.cards.html import Frame, Theme, resolve
-from urdido.declaration import HIGHLIGHTS, held, setting
+from urdido.declaration import BEAT, HIGHLIGHT_LINE, HIGHLIGHTS, held, setting
 from urdido.narration import Takes
 from urdido.sources.illustrated import (
     anchored_frames,
@@ -140,7 +140,7 @@ def illustrated(build):
                 if transcript is not None:
                     cursor = 0
                     for i, item in enumerate(wanted):
-                        duration = item.get("duration", 2.8)
+                        duration = held(item, HIGHLIGHT_LINE, "duration")
                         if not isinstance(duration, (int, float)) or not math.isfinite(duration) or duration <= 0:
                             issue(build.path(highlight_spec["declaration"]), f"lines.{name}.{i}.duration",
                                   "highlight duration must be finite and positive", name)
@@ -224,7 +224,7 @@ def illustrated(build):
                     if file.is_file() and beat.get("layout") == "footage":
                         if file not in durations:
                             durations[file] = check(file, "duration", lambda file=file: media.seconds(str(file)), name, key)
-                        at = beat.get("at", 0)
+                        at = held(beat, BEAT, "at")
                         if not isinstance(at, (int, float)) or not math.isfinite(at) or at < 0:
                             issue(source_file, f"scenes.{name}.{i}.at", "source start must be finite and nonnegative", name, key)
                         elif durations[file] is not None and at + frames / 30 > durations[file] + 0.02:

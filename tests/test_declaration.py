@@ -162,6 +162,22 @@ def test_an_absent_key_reads_the_default_the_schema_holds_ur47():
     style = HIGHLIGHTS["keys"]["style"]
     assert held({"font": "A"}, style, "margin") == 85  # a side file's default too
     assert held({"margin": 120}, style, "margin") == 120
+    from urdido.declaration import BEAT, BEAT_DEFAULTS
+
+    assert held({}, BEAT, "layout") == "date"
+    assert held({"static": False, "at": 0}, BEAT, "static") is False
+    # No module spells a beat default of its own any more (a fallback to another
+    # record, as a library binding's start, is not a default).
+    import re
+
+    source = Path(__file__).resolve().parents[1] / "src" / "urdido"
+    spelled = [
+        f"{file.name}: beat.get({key!r}, <literal>)"
+        for file in source.rglob("*.py")
+        for key in BEAT_DEFAULTS
+        if re.search(rf'beat\.get\("{key}", ["\d.TF-]', file.read_text("utf-8"))
+    ]
+    assert spelled == []
     assert "`tempo`: a number, 1.0 if absent" in reference()
     assert json_schema()["properties"]["qa"]["properties"]["flash_refuse"] == {
         "type": "number",

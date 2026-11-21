@@ -5,7 +5,7 @@
 ## Block B — The engine extracted (videomaker without marketing)
 
 - 📋 **UR46** (deps: UR22 ✅, UR37) **Four environment variables still fill undeclared roots, the last root names left in a module** — They were kept for one release so marketing's builds keep working; left longer, the shim becomes a second way to declare a root. → §UR46
-- 🛠 **UR47** (deps: UR23 ✅) **Values in video.toml are untyped and the side files it names are not checked, so a typo inside them is still a KeyError** — The storyboard's and shots file's defaults still live in the modules rather than in their schemas. → §UR47
+- 🛠 **UR47** (deps: UR23 ✅) **Values in video.toml are untyped and the side files it names are not checked, so a typo inside them is still a KeyError** — The explainer's shots file has no schema, and the mix dataclasses repeat the schema's numbers. → §UR47
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
