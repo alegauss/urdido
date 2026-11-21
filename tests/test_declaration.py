@@ -92,6 +92,18 @@ def test_the_cli_checks_a_file_and_prints_the_json_schema(tmp_path, capsys):
     }
 
 
+def test_the_committed_reference_is_the_one_the_schema_writes_ur35():
+    from urdido.declaration import PURPOSE, reference
+
+    committed = (
+        Path(__file__).resolve().parents[1] / "docs" / "specs" / "declaration.md"
+    )
+    assert committed.read_text(encoding="utf-8") == reference(), (
+        "docs/specs/declaration.md is stale: urdido check --reference > it"
+    )
+    assert set(PURPOSE) == set(SCHEMA["keys"])  # every table says what it is for
+
+
 def test_every_table_the_code_reads_is_in_the_schema():
     source = Path(__file__).resolve().parents[1] / "src" / "urdido"
     import re
