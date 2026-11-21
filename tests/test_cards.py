@@ -13,10 +13,9 @@ import pytest
 
 from urdido import captions
 from urdido.cards import html
+from fonts import card_theme
 from golden_plans import main_plan
-from marketing import GOLDEN, MARKETING, module_needs_marketing
-
-module_needs_marketing()
+from marketing import GOLDEN, MARKETING, needs_marketing
 
 WORDPRESS = MARKETING / "turing" / "wordpress"
 NARRATION = WORDPRESS / "demo" / "narration"
@@ -38,12 +37,25 @@ def named_font(path: str) -> str:
     return f"<font:{os.path.basename(path)}>"
 
 
-DECLARATION = load(WORDPRESS / "demo" / "cards.json")
-THEME = html.Theme.load(DECLARATION["theme"], {"turing": "turing"}, font=named_font)
+def wordpress_declaration():
+    """The WordPress demo's cards, which the golden pages were built from (UR39 moves
+    the goldens to marketing)."""
+    return load(WORDPRESS / "demo" / "cards.json")
 
 
+@pytest.fixture(scope="module")
+def theme(tmp_path_factory):
+    """A theme on generated fonts, for what does not compare with a golden (UR31)."""
+    pytest.importorskip("fontTools")
+    made, _ = card_theme(tmp_path_factory.mktemp("fonts"))
+    return html.Theme.load(made, {}, font=named_font)
+
+
+@needs_marketing
 @pytest.mark.parametrize("variant", sorted(VARIANTS))
 def test_pages_equal_the_js_cards(variant):
+    DECLARATION = wordpress_declaration()
+    THEME = html.Theme.load(DECLARATION["theme"], {"turing": "turing"}, font=named_font)
     story, fixture, script_file = VARIANTS[variant]
     folder = GOLDEN / "expected" / variant
     expected = {f.stem: f.read_bytes().decode("utf-8") for f in (folder / "cards").glob("*.html")}
@@ -62,15 +74,15 @@ def test_pages_equal_the_js_cards(variant):
         assert built[name] == page, name
 
 
-def test_ridge_is_encoded_as_encode_uri_component():
-    ridge = THEME.ridge("near")
+def test_ridge_is_encoded_as_encode_uri_component(theme):
+    ridge = theme.ridge("near")
     assert ridge.startswith("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org")
     assert "'" not in ridge.split(",", 1)[1].replace("%27", "")
 
 
-def test_parallax_slides_each_range_at_its_speed():
+def test_parallax_slides_each_range_at_its_speed(theme):
     frame = html.Frame(1920, 1080)
-    args = html.parallax_args(THEME, frame, lambda n: f"{n}.png", 3, 2.5, "card-3.mp4", ["-c:v", "libx264"])
+    args = html.parallax_args(theme, frame, lambda n: f"{n}.png", 3, 2.5, "card-3.mp4", ["-c:v", "libx264"])
     graph = args[args.index("-filter_complex") + 1]
     assert "overlay=x='-min(t*24,1152)':y=713" in graph
     assert "overlay=x='-min(t*64,1152)':y=713" in graph
@@ -88,6 +100,7 @@ def _png_size(file: Path) -> tuple[int, int]:
     return int.from_bytes(head[:4], "big"), int.from_bytes(head[4:], "big")
 
 
+@needs_marketing
 @pytest.mark.skipif(
     not (SHIO / "marketplace" / "quilhara" / "assets" / "fonts").exists(),
     reason="the Viglet Shio repository (its Quilhara fonts) is not on this machine",
@@ -119,6 +132,22 @@ def test_a_viglet_shio_card_renders_in_its_theme(tmp_path):
     assert (tmp_path / "card-1-text.png").stat().st_size < (tmp_path / "card-1.png").stat().st_size
 
 
+def test_a_card_renders_in_a_generated_theme(tmp_path):
+    pytest.importorskip("fontTools")
+    pytest.importorskip("playwright.sync_api")
+    from urdido.cards.render import render
+
+    made, words = card_theme(tmp_path / "fonts")
+    theme = html.Theme.load(made, {})
+    frame = html.Frame(1920, 1080)
+    css = html.style(theme, frame)
+    page = html.card(css, f"{words['chapter']} 1", "One command", words["store"], pill=True)
+    assert "One command" in page and "Urdido Test Display" in page
+    files = render({"card-1": page, "card-backdrop": html.backdrop(css)}, frame, str(tmp_path / "out"))
+    assert [Path(f).name for f in files] == ["card-1.png", "card-1-text.png", "card-backdrop.png"]
+    assert _png_size(tmp_path / "out" / "card-1.png") == (1920, 1080)
+
+
 # The JS build's own card pictures, which the golden check leaves in its work folder.
 GOLDEN_WORK = Path(os.environ.get("URDIDO_GOLDEN_WORK", Path(os.environ.get("TEMP", "/tmp")) / "video-maker-golden"))
 TURING_WORDPRESS = Path(os.environ.get("TURING_WORDPRESS", r"D:\Git\viglet\turing\latest\wordpress"))
@@ -135,6 +164,7 @@ def _differing_share(a: Path, b: Path) -> float:
     return mask.histogram()[255] / (x.size[0] * x.size[1])
 
 
+@needs_marketing
 @pytest.mark.parametrize("variant", sorted(VARIANTS))
 def test_pictures_match_the_js_cards(variant, tmp_path):
     pytest.importorskip("PIL")
@@ -142,6 +172,8 @@ def test_pictures_match_the_js_cards(variant, tmp_path):
     if not (js_parts / "card-0.png").exists() or not TURING_WORDPRESS.exists():
         pytest.skip("run the golden check first: its work folder holds the JS cards' pictures")
     from urdido.cards.render import render
+
+    DECLARATION = wordpress_declaration()
 
     story, fixture, script_file = VARIANTS[variant]
     plan = load(main_plan(GOLDEN / "expected" / variant))

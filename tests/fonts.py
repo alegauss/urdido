@@ -37,8 +37,35 @@ def card_theme(folder: Path) -> tuple[dict, dict]:
             "display": {"family": DISPLAY, "files": {"800": "display.ttf"}},
             "text": {"family": TEXT, "file": "text.ttf"},
         },
-        "colors": {"text": "#F5FCF7", "muted": "#D4F7DF", "accent": "#2BCB6B"},
+        "colors": {
+            "text": "#F5FCF7",
+            "muted": "#D4F7DF",
+            "accent": "#2BCB6B",
+            "ink": "#0b1410",
+            "hot": "#C8551B",
+            "hotText": "#FFF",
+            "mainLabel": "#E3F7EA",
+            "tile": "rgba(245,252,247,.08)",
+            "tileBorder": "rgba(245,252,247,.18)",
+        },
         "background": "linear-gradient(135deg, #0b1410, #102b1d)",
+        "glow": {
+            "color": "rgba(43, 203, 107, .3)",
+            "landscape": "24% 46%",
+            "portrait": "30% 40%",
+        },
+        "ridges": {
+            "far": {
+                "fill": 'fill="#163524" fill-opacity=".75"',
+                "points": "0,420 0,240 480,150 960,230 1440,140 1920,200 1920,420",
+            },
+            "near": {
+                "fill": 'fill="#0e2418"',
+                "points": "0,420 0,320 480,250 960,320 1440,240 1920,300 1920,420",
+            },
+            "height": {"landscape": 0.34, "portrait": 0.22},
+            "drift": {"far": 24, "near": 64},
+        },
     }
     words = {
         "brand": "Fixture",
