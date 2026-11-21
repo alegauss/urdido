@@ -191,6 +191,26 @@ def test_an_absent_key_reads_the_default_the_schema_holds_ur47():
     assert bed.reference == DEFAULTS["music"]["reference"]
 
 
+def test_a_typo_in_an_explainers_shots_is_refused_ur47(tmp_path):
+    from urdido.declaration import SHOT, check_side_files, held
+
+    shots = {
+        "title": "T",
+        "segments": [{"take": "intro", "shots": [{"src": "a", "at": 1, "sped": 2}]}],
+        "callouts": {"intro": [{"show": "Git", "deff": "x"}]},
+    }
+    (tmp_path / "shots.json").write_text(json.dumps(shots), encoding="utf-8")
+    decl = {"source": {"kind": "explainer", "shots": "shots.json"}}
+    found = check_side_files(decl, lambda declared: tmp_path / declared)
+    assert any(
+        "[segments.shots]: unknown key sped; did you mean speed?" in f for f in found
+    )
+    assert any(
+        "[callouts.intro]: unknown key deff; did you mean def?" in f for f in found
+    )
+    assert held({"src": "a", "at": 0}, SHOT, "speed") == 1.0
+
+
 def test_a_value_of_the_wrong_type_is_refused_ur47():
     bad = {
         **GOOD,

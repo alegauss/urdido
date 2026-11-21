@@ -19,6 +19,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 
 from urdido import media
+from urdido.declaration import DEFAULTS
 
 
 def _num(x: float) -> str:
@@ -35,9 +36,9 @@ def _ms(seconds: float) -> int:
 class Duck:
     """The bed's level: `between` lines, `under` each, with a `ramp` either side (gains, s)."""
 
-    between: float = 0.4
-    under: float = 0.2
-    ramp: float = 0.4
+    between: float = DEFAULTS["music"]["between"]
+    under: float = 0.2  # a scenes build's; an explainer ducks to 0.07 (UR59)
+    ramp: float = DEFAULTS["music"]["ramp"]
 
 
 @dataclass(frozen=True)
@@ -47,7 +48,7 @@ class Bed:
 
     file: str
     start: float = 0.0
-    reference: float = -18.0
+    reference: float = DEFAULTS["music"]["reference"]
 
 
 @dataclass(frozen=True)
@@ -65,11 +66,11 @@ class Sound:
 class Loudness:
     """The mix's target: YouTube's playback level with a true-peak ceiling."""
 
-    target: float = -14.0
-    peak: float = -1.0
-    tolerance: float = 0.3
+    target: float = DEFAULTS["audio"]["target"]
+    peak: float = DEFAULTS["audio"]["peak"]
+    tolerance: float = DEFAULTS["audio"]["tolerance"]
     # AAC overshoots the limiter's sample peaks (a limit at -2.5 dBFS encoded to -1.1 dBTP).
-    margin: float = 1.5
+    margin: float = DEFAULTS["audio"]["margin"]
 
 
 @dataclass(frozen=True)

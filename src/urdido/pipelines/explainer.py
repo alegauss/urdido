@@ -34,7 +34,7 @@ import unicodedata
 from pathlib import Path
 
 from urdido import media
-from urdido.declaration import DEFAULTS, setting
+from urdido.declaration import DEFAULTS, SHOT, held, setting
 from urdido.errors import DeclarationError, Refused
 from urdido.narration import Takes
 from urdido.pipelines.finishing import Finishing
@@ -150,7 +150,7 @@ def plan(
         for s in declared:
             dur = s.get("dur", share)
             path = source_file(s["src"])
-            speed = s.get("speed", 1.0)
+            speed = held(s, SHOT, "speed")
             begin = min(s["at"], max(0.0, seconds(path) - dur * speed - 0.05))
             shots.append(
                 {

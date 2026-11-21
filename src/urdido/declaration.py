@@ -521,6 +521,33 @@ HIGHLIGHTS = table(
         ),
     }
 )
+#: An explainer's shots (`[source] shots`), UR47: per take, the shots under its line
+#: (a shot with no `dur` shares what the fixed ones leave), and the keywords that pop
+#: in when the take says them.
+SHOT = table(
+    {
+        "src": TEXT,
+        "at": NUMBER,
+        "dur": NUMBER,
+        "speed": {**NUMBER, "default": 1.0},
+        "box": LIST,
+    },
+    required=("src", "at"),
+)
+SHOTS = table(
+    {
+        "title": ANY,
+        "about": ANY,
+        "callouts_about": ANY,
+        "segments": array(
+            table({"take": TEXT, "shots": array(SHOT)}, required=("take", "shots"))
+        ),
+        "callouts": mapping(
+            array(table({"show": TEXT, "hear": TEXT, "def": TEXT}, required=("show",)))
+        ),
+    },
+    required=("title", "segments"),
+)
 #: One highlight line, whose `duration` defaults in the schema (UR47).
 HIGHLIGHT_LINE = HIGHLIGHTS["keys"]["lines"]["map"]["array"]
 #: The claims declaration (`[claims] declaration`), UR47.
@@ -575,6 +602,8 @@ def side_files(decl: dict) -> list[tuple[str, dict]]:
         source.get("declaration"), str
     ):
         found.append((source["declaration"], STORYBOARD))
+    if source.get("kind") == "explainer" and isinstance(source.get("shots"), str):
+        found.append((source["shots"], SHOTS))
     return found
 
 
