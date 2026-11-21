@@ -42,6 +42,7 @@
 
 - ✅ **UR36** **Marketing installs the framework from its own folder with pip -e, with no version pinned** — Marketing installs urdido from requirements.txt, editable from the sibling checkout until the PyPI pin.
 - ✅ **UR40** **Marketing's video-maker gate hook, friction skill and CLAUDE.md rules point at a folder and a Block B that will be gone** — Marketing's gate hook, task skill and CLAUDE.md route framework friction to urdido's UR roadmap.
+- ✅ **UR37** **Marketing's npm scripts, READMEs, bin scripts and brand code call python -m videomaker or import videomaker** — Marketing calls urdido everywhere: scripts, READMEs, brand and Scion code; each video plans or stops where video-maker did.
 
 ## Block D — Inherited from video-maker (marketing Block B)
 

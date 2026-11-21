@@ -107,22 +107,6 @@ docs/specs/declaration.md names each key's default.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
-### §UR37 Every call switched to urdido
-
-The callers: `package.json` in turing/wordpress and shio/promo (`story:video`,
-`story:developer`); `turing/wordpress/bin/transcript.mjs` (which imports the package by
-running from `video-maker/`); `shio/promo/bin/story-scenes.mjs:92` (`instance`); the
-japode READMEs and `PUBLICACAO.md`; `japode/brand/brand.py:186`
-(`videomaker.thumbnail.fit_title`); `japode/scion/bin/build.py:347`
-(`videomaker.publish.description`).
-
-urdido ships a `videomaker` shim for one minor release: the module name and `python -m
-videomaker` forward to urdido with a deprecation notice. Marketing switches project by
-project; the shim goes in the next release.
-
-**Done when** grep finds no `videomaker` in marketing outside the changelog, and every
-video still builds.
-
 ### §UR38 JavaScript imports from the package
 
 Eight scripts import `../../../video-maker/...`: `narration-takes.mjs` and
