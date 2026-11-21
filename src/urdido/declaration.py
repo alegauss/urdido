@@ -61,6 +61,7 @@ SCHEMA = table(
                 "folders": LANGUAGES,
                 "title_languages": ANY,
                 "revision": ANY,
+                "base": ANY,
                 "frame": ANY,
             },
             required=("name", "languages"),

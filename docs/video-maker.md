@@ -51,6 +51,16 @@ finds on the page before). The screenshots are kept in
 with no declared screens is refused; the package holds no shop's selectors.
 Transcript and stills publishing were already declared in `publish.json`.
 
+A video can be built as a variant of another (UR5): `[video] base =
+"../wordpress"` in the variant's `video.toml` lays its tables over the base's
+(tables merge key by key, anything else is replaced), and the build reads its
+files from a view of the base folder with the variant's own files laid over.
+The view is made of hard links, so no footage is copied, and both folders
+must be on one disk. A JSON side file both hold is merged, so a variant
+`storyboard.json` can carry only the scene lists it changes. The variant
+builds into its own output folder, and a fix in the base reaches it on its
+next build. A base cannot itself be a variant.
+
 `urdido check <video.toml>` checks a declaration without building (UR23):
 a key no table takes is refused with the file, the table and the nearest
 valid name (`[narration]: unknown key tempoo; did you mean tempo?`), and so is

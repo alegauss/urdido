@@ -81,24 +81,125 @@ def roots_of(here: Path, decl: Mapping, env: Mapping[str, str] | None = None) ->
     return roots
 
 
+#: What a base folder holds that a variant's view leaves out (UR5).
+NOT_SHARED = {".git", ".urdido", "node_modules", "__pycache__", "video.toml"}
+
+
+def merged(base, over):
+    """`over` laid on `base`: tables merge key by key, anything else is replaced."""
+    if isinstance(base, dict) and isinstance(over, dict):
+        out = dict(base)
+        for key, value in over.items():
+            out[key] = merged(base[key], value) if key in base else value
+        return out
+    return over
+
+
+def link(source: Path, target: Path) -> None:
+    target.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        os.link(source, target)
+    except OSError as failed:
+        raise DeclarationError(
+            f"urdido build: cannot link {source} into the variant's view ({failed}); a "
+            "variant shares its base's files without copying them, so both folders "
+            "must "
+            "be on one disk"
+        ) from None
+
+
+def overlay(base: Path, variant: Path, view: Path, skip: set[str]) -> int:
+    """`view` as `base` with `variant` laid over it, by hard link (UR5).
+
+    No byte is copied: each base file is linked in, then each variant file replaces
+    it, and a JSON file both hold is written as the variant's merged over the base's
+    (so a variant storyboard can carry only the scene lists it changes). The view is
+    made again on every build, so a fix in the base reaches the variant. Returns how
+    many files were linked."""
+    import shutil
+
+    if view.exists():
+        shutil.rmtree(view)
+    count = 0
+    for folder in (base, variant):
+        for file in sorted(folder.rglob("*")):
+            relative = file.relative_to(folder)
+            if not file.is_file() or relative.parts[0] in skip or view in file.parents:
+                continue
+            target = view / relative
+            if folder == variant and target.exists():
+                target_text = (
+                    target.read_text("utf-8-sig") if file.suffix == ".json" else ""
+                )
+                target.unlink()
+                if file.suffix == ".json":
+                    joined = merged(
+                        json.loads(target_text), json.loads(file.read_text("utf-8-sig"))
+                    )
+                    target.write_text(
+                        json.dumps(joined, ensure_ascii=False, indent=2) + "\n",
+                        encoding="utf-8",
+                    )
+                    continue
+            link(file, target)
+            count += 1
+    return count
+
+
 class Project:
-    """A declaration loaded for one language, with its roots and folders."""
+    """A declaration loaded for one language, with its roots and folders.
+
+    A declaration with `[video] base = "../published"` is a variant (UR5): its tables
+    are laid over the base's, it resolves every relative path through a view of the
+    base folder with its own files laid over (`overlay`), its declared roots join the
+    base's (each resolved from the folder that declared it), and it builds into its own
+    output folder."""
 
     def __init__(self, toml: Path, args: argparse.Namespace):
         from urdido.declaration import check as check_declaration
 
         self.here = toml.parent.resolve()
+        self.variant = None
         raw = toml.read_bytes()
         self.decl = tomllib.loads(raw.decode("utf-8-sig"))
+        self.input_hashes = {toml.resolve(): hashlib.sha256(raw).hexdigest()}
+        own = self.decl
+        base_decl, base_folder = self._base(own)
+        if base_decl is not None:
+            tables = {k: v for k, v in own.items() if k not in ("output", "roots")}
+            self.decl = merged(base_decl, tables)
+            self.decl["video"].pop("base", None)
+            self.decl["output"] = own.get("output") or {}
+            self.decl["roots"] = {
+                **(base_decl.get("roots") or {}),
+                **(own.get("roots") or {}),
+            }
         problems = check_declaration(self.decl, str(toml))
         if problems:
             raise DeclarationError(
                 "urdido build: the declaration is refused:\n" + "\n".join(problems)
             )
-        self.input_hashes = {toml.resolve(): hashlib.sha256(raw).hexdigest()}
         self.args = args
-        self.roots = roots_of(self.here, self.decl)
+        if base_decl is None:
+            self.roots = roots_of(self.here, self.decl)
+        else:
+            base_roots = roots_of(base_folder, base_decl)
+            mine = roots_of(
+                self.here,
+                {"roots": own.get("roots") or {}, "output": own.get("output") or {}},
+            )
+            self.roots = {**base_roots, **mine}
+            view = Path(mine["video"]) / "base-view"
+            overlay(
+                base_folder,
+                self.here,
+                view,
+                NOT_SHARED | {Path(base_roots["video"]).name, Path(mine["video"]).name},
+            )
+            self.variant, self.here = self.here, view
+            self.roots.update(root=str(view), recordings=str(view / "recordings"))
         self.out = Path(self.roots["video"])
+
         self.language = args.language
         video = self.decl["video"]
         self.name = video["name"]
@@ -128,6 +229,26 @@ class Project:
             self.out = self.revision.folder
         self.parts = self.out / (self.decl.get("output") or {}).get("parts", "parts")
         self.parts.mkdir(parents=True, exist_ok=True)
+
+    def _base(self, own: dict):
+        """The base declaration and its folder for a variant, else (None, None)."""
+        declared = (own.get("video") or {}).get("base")
+        if not declared:
+            return None, None
+        base_toml = (self.here / declared).resolve()
+        if base_toml.is_dir():
+            base_toml = base_toml / "video.toml"
+        if not base_toml.is_file():
+            raise DeclarationError(
+                f"urdido build: [video] base names {declared}, "
+                "where there is no video.toml"
+            )
+        base_raw = base_toml.read_bytes()
+        base_decl = tomllib.loads(base_raw.decode("utf-8-sig"))
+        if (base_decl.get("video") or {}).get("base"):
+            raise DeclarationError("urdido build: a base cannot itself be a variant")
+        self.input_hashes[base_toml] = hashlib.sha256(base_raw).hexdigest()
+        return base_decl, base_toml.parent
 
     # -- paths -------------------------------------------------------------------------
 
