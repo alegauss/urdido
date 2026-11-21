@@ -36,7 +36,7 @@
 ## Block D — Inherited from video-maker (marketing Block B)
 
 - 📋 **UR3** (deps: marketing: VM28) **Published videos have no end screen or cards pointing to the next video on the subject** — A viewer who finishes the Docker video is not offered the Scion one, and the end screen should point at the continuation, not the newest upload. → §UR3
-- 📋 **UR4** (deps: UR2 ✅) **The Japode explainer videos are built by scripts copied into each video, outside video-maker** — video-maker only knows the recorded product demo, so the first video of another kind went around it, and its two copies already differ. → §UR4
+- 🛠 **UR4** (deps: UR2 ✅, UR33) **The Japode explainer videos are built by scripts copied into each video, outside video-maker** — video-maker only knows the recorded product demo, so the first video of another kind went around it, and its two copies already differ. → §UR4
 - 📋 **UR5** (deps: UR21 ✅, UR33) **A second cut of a video, to test a new opening, means copying the whole video folder and its declaration** — Retention tests need several openings of the same episode, and each copy duplicates 722 MB and drifts from the published cut on every later fix. → §UR5
 - 📋 **UR8** (deps: UR21 ✅) **A thumbnail picture can be any file in the folder, unchecked against the video's media or its licence** — The thumbnail is the promise the video must keep, and a logo or photo fetched by hand reaches it with no provenance check. → §UR8
 - 📋 **UR9** (deps: UR21 ✅) **A video made of filmed scenes gets no YouTube description or chapter times from its build** — The Viglet Shio promo's chapter times were read by hand from its captions, and every new cut moves them. → §UR9
