@@ -48,6 +48,88 @@ def rows(document: dict, edit: dict, placed: list[dict], highlights: list[dict],
     return result
 
 
+FEED_SIZES = ((320, 180), (168, 94))
+
+
+def scene_moments(placed: list[dict], script: dict, language: str, total: float,
+                  edge: float = 0.5) -> list[dict]:
+    """UR12: where to look in a finished scene video, from its own takes.
+
+    The cold open (before the first chapter's take), each chapter's start, middle and end
+    (from its `chapter-<n>` take to the next chapter's, or to the closing), and the closing
+    card in the last second. Each moment carries the chapter's title and the line spoken
+    over it, so no second is picked by hand."""
+    heard = {}
+    for take in placed:
+        heard.setdefault(Path(take["file"]).stem, take["at"])
+    cues = captions.narration_cues(placed)
+
+    def spoken(at: float) -> str:
+        return " ".join(c.text for c in cues if c.start <= at < c.end)
+
+    def moment(label: str, at: float, title: str = "") -> dict:
+        at = round(min(max(0.0, at), max(0.0, total - 0.05)), 3)
+        return {"label": label, "at": at, "title": title, "spoken": spoken(at)}
+
+    starts = [(key, heard[f"chapter-{key}"]) for key in script["chapters"] if f"chapter-{key}" in heard]
+    closing = heard.get("outro", total)
+    found = []
+    if starts and starts[0][1] > edge:
+        found.append(moment("cold open", starts[0][1] / 2, captions.intro_title(script, language)))
+    for i, (key, start) in enumerate(starts):
+        end = starts[i + 1][1] if i + 1 < len(starts) else closing
+        title = script["chapters"][key]["title"].get(language, "")
+        found += [moment(f"chapter {key} start", start + edge, title),
+                  moment(f"chapter {key} middle", (start + end) / 2, title),
+                  moment(f"chapter {key} end", end - edge, title)]
+    found.append(moment("closing card", total - edge))
+    return found
+
+
+def scene_sheet(video: Path, placed: list[dict], script: dict, language: str, out: Path,
+                thumbnail: Path | None = None) -> Path:
+    """UR12: a contact sheet of a finished scene video, beside it under `review/`."""
+    total = media.seconds(str(video))
+    data = scene_moments(placed, script, language, total)
+    review = out / "review"
+    review.mkdir(parents=True, exist_ok=True)
+    for n, row in enumerate(data):
+        image = review / f"scene-{n:02d}.png"
+        image.unlink(missing_ok=True)
+        media.ffmpeg(["-ss", f"{row['at']:.3f}", "-i", str(video), "-frames:v", "1",
+                      "-vf", "scale=640:-2", str(image)])
+        if not image.is_file():
+            raise RecordingRefused(f"{row['label']}: review frame was not produced")
+        row["image"] = image.name
+    feeds = []
+    if thumbnail is not None and thumbnail.is_file():
+        for width, height in FEED_SIZES:
+            image = review / f"thumbnail-{width}x{height}.png"
+            image.unlink(missing_ok=True)
+            media.ffmpeg(["-i", str(thumbnail), "-vf", f"scale={width}:{height}", str(image)])
+            feeds.append(image.name)
+    esc = lambda value: html.escape(str(value), quote=True)
+    cards = [f'<article><h2>{esc(row["label"])} {row["at"]:.2f}s</h2>'
+             f'<img src="{esc(row["image"])}" alt="{esc(row["label"])}">'
+             f'<p><b>Chapter:</b> {esc(row["title"])}</p><p><b>Narration:</b> {esc(row["spoken"])}</p></article>'
+             for row in data]
+    if feeds:
+        cards.append('<article><h2>Thumbnail at feed sizes</h2>'
+                     + "".join(f'<img class="feed" src="{esc(name)}" alt="{esc(name)}">' for name in feeds)
+                     + '</article>')
+    (review / "scenes.json").write_text(json.dumps({"video": video.name, "moments": data, "thumbnail": feeds},
+                                                   ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    file = review / "scenes.html"
+    file.write_text('<!doctype html><meta charset="utf-8"><title>Scene review</title>'
+                    '<style>body{font:16px system-ui;margin:2rem;background:#eee}main{display:grid;'
+                    'grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:1rem}'
+                    'article{background:white;padding:1rem;overflow-wrap:anywhere}img{width:100%}'
+                    'img.feed{width:auto;margin-right:1rem}</style>'
+                    f'<h1>Scene review: {esc(video.name)}</h1><main>' + "".join(cards) + '</main>',
+                    encoding="utf-8")
+    return file
+
+
 def sheet(document: dict, edit: dict, placed: list[dict], highlights: list[dict],
           folder: Path, parts: Path, out: Path, *, opening: float = 0) -> Path:
     data = rows(document, edit, placed, highlights, opening)

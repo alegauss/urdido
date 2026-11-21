@@ -414,6 +414,14 @@ language than the video's without refusing them. A selector's `match` also
 reads a tool answer with its JSON escapes undone, so `não` is found in
 `não`.
 
+A full build of a filmed-scenes video writes a contact sheet,
+`review/scenes.html` with `scenes.json` beside it (UR12): a frame from the
+finished MP4 at the cold open, at the start, middle and end of each chapter
+(found from its `chapter-<n>` take up to the next chapter's or the closing),
+and in the last half second for the closing card, each with its chapter title
+and the line spoken over it. When the thumbnail (`[thumbnail] out`) is drawn,
+the sheet also shows it at 320x180 and 168x94, the feed sizes.
+
 `urdido record <video.toml>` records a scene video with one command (UR10).
 Each `[[record.step]]` is a `name`, a `command` (a list runs as is, a string in
 a shell) and the paths it `makes`; `always = true` marks a step that runs last

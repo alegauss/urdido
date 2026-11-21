@@ -434,23 +434,6 @@ Sequenced after UR33: the overlay must resolve every relative path through the b
 about 25 call sites read `build.here` directly; UR33's declaration loader is the one
 place it belongs.
 
-### §UR12 A review sheet for scene videos (was marketing VM83)
-
-`videomaker build --plan` prints a review sheet for illustrated videos (`review.sheet`),
-one frame per beat with its line. A video made of filmed scenes has none. On 2026-11-17
-every check of the Viglet Shio promo was a frame grabbed by hand: the corner mark over
-the console and over a light page, the purple closing card, the Marketplace search, the
-agent's prompt and its final report, the thumbnail at 320x180 and 168x94. Each was an
-ffmpeg call with a guessed second and a stacked image in the scratchpad.
-
-The build knows where each chapter, card and line sits. It should write a contact sheet
-for a scene video: a frame at the start, the middle and the end of each chapter with its
-title and spoken line, the cold open, and the closing card, and the thumbnail at the two
-feed sizes beside it.
-
-**Done when** the Viglet Shio promo's build writes a sheet that shows each of those
-without a hand-picked second.
-
 ### §UR13 Takes heard back (was marketing VM84)
 
 `pronounce` in a script changes what is sent to the voice, but nothing listens to what

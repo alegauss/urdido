@@ -520,6 +520,12 @@ class Build:
         cache.run("final mux", [file], mux_args, lambda: media.ffmpeg(mux_args),
                   inputs=[__file__, media.__file__, *mux_inputs], tools=["ffmpeg"])
         print(self.checked_output(file, illustrated=illustrated))
+        if not illustrated:
+            from urdido.review import scene_sheet
+
+            thumbnail = (self.decl.get("thumbnail") or {}).get("out", "video/thumbnail.{language}.jpg")
+            print(scene_sheet(Path(file), placed, script, self.language, self.out,
+                              self.here / thumbnail.format(language=self.language)))
         return 0
 
     def frame(self):
