@@ -92,6 +92,35 @@ def test_the_cli_checks_a_file_and_prints_the_json_schema(tmp_path, capsys):
     }
 
 
+def test_a_typo_inside_the_script_or_the_storyboard_is_refused_ur47(tmp_path, capsys):
+    toml = tmp_path / "video.toml"
+    toml.write_text(
+        '[video]\nname = "x"\nlanguages = { en = "eng" }\n'
+        '[source]\nkind = "illustrated"\ndeclaration = "story.json"\n'
+        '[narration]\nscript = "script.json"\ntakes = "narration"\n',
+        encoding="utf-8",
+    )
+    script = {
+        "intro": {"en": "Hi"},
+        "chapters": {"1": {"titel": {"en": "One"}}},
+        "outro": {"en": "Bye"},
+    }
+    (tmp_path / "script.json").write_text(json.dumps(script), encoding="utf-8")
+    story = {"scenes": {"intro": [{"title": "A", "captoin": "x"}]}, "media": {}}
+    (tmp_path / "story.json").write_text(json.dumps(story), encoding="utf-8")
+    assert main([str(toml)]) == 1
+    err = capsys.readouterr().err
+    assert "script.json [chapters.1]: unknown key titel; did you mean title?" in err
+    assert (
+        "story.json [scenes.intro]: unknown key captoin; did you mean caption?" in err
+    )
+
+    from urdido.build import Build
+
+    with pytest.raises(DeclarationError, match="a side file is refused"):
+        Build(toml, SimpleNamespace(language="en", cut="full", vertical=False))
+
+
 def test_the_committed_reference_is_the_one_the_schema_writes_ur35():
     from urdido.declaration import PURPOSE, reference
 

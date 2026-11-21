@@ -226,6 +226,168 @@ SCHEMA = table(
     required=("video",),
 )
 
+#: The narration script a declaration names (`[narration] script`), UR47.
+SCRIPT = table(
+    {
+        "voice": ANY,
+        "voiceName": ANY,
+        "narrator": ANY,
+        "model": ANY,
+        "intro": LANGUAGES,
+        "outro": LANGUAGES,
+        "introTitle": LANGUAGES,
+        "chapters": mapping(
+            table({"title": LANGUAGES, "card": LANGUAGES, "result": LANGUAGES})
+        ),
+        "pronounce": ANY,
+        "alignment_aliases": ANY,
+        "opening": table({"words_per_minute": ANY, "proof": ANY}),
+        "stability": ANY,
+        "similarity": ANY,
+        "style": ANY,
+        "speed": ANY,
+    },
+    required=("intro", "chapters", "outro"),
+)
+_MEDIA = table(
+    {
+        k: ANY
+        for k in (
+            "file",
+            "title",
+            "author",
+            "url",
+            "license",
+            "license_url",
+            "license_label",
+            "plain_background",
+            "brand_mark",
+            "fit",
+            "people",
+            "events",
+            "categories",
+            "topics",
+            "section",
+            "sha256",
+            "retrieved",
+            "download_url",
+            "rejected",
+            "library",
+            "candidate",
+            "range",
+            "kind",
+            "screen_recording",
+            "source_id",
+            "source_offset",
+            "changes",
+            "copyright",
+            "notice",
+            "disclaimer",
+            "attribution",
+            "attribution_required",
+            "credit_label",
+        )
+    }
+)
+_BEAT = table(
+    {
+        k: ANY
+        for k in (
+            "id",
+            "title",
+            "caption",
+            "text",
+            "kicker",
+            "source",
+            "layout",
+            "asset",
+            "at",
+            "weight",
+            "seconds",
+            "static",
+            "from_word",
+            "sound",
+            "overlay_seconds",
+            "brand_mark",
+            "presentation",
+            "big",
+            "quote",
+            "by",
+            "items",
+            "crop",
+            "fit",
+            "hero",
+            "people",
+            "events",
+            "topics",
+            "categories",
+            "screen_recording",
+            "mark_only",
+        )
+    }
+)
+#: The storyboard an illustrated source names (`[source] declaration`), UR47.
+STORYBOARD = table(
+    {
+        "title": ANY,
+        "description": ANY,
+        "credits": ANY,
+        "generated": ANY,
+        "logo": ANY,
+        "brand": ANY,
+        "series": ANY,
+        "brand_mark": ANY,
+        "max_asset_uses": ANY,
+        "asset_use_limits": ANY,
+        "max_static_seconds": ANY,
+        "entities": ANY,
+        "pauses": ANY,
+        "repetition": ANY,
+        "sources": mapping(table({"label": ANY, "url": ANY, "credit_label": ANY})),
+        "media": mapping(_MEDIA),
+        "scenes": mapping(array(_BEAT)),
+    },
+    required=("scenes",),
+)
+
+
+def side_files(decl: dict) -> list[tuple[str, dict]]:
+    """The side files a declaration names that have a schema: (declared path, shape)."""
+    found = []
+    script = (decl.get("narration") or {}).get("script")
+    if isinstance(script, str):
+        found.append((script, SCRIPT))
+    source = decl.get("source") or {}
+    if source.get("kind") == "illustrated" and isinstance(
+        source.get("declaration"), str
+    ):
+        found.append((source["declaration"], STORYBOARD))
+    return found
+
+
+def check_side_files(decl: dict, resolve) -> list[str]:
+    """Every problem inside the side files a declaration names, each with its file.
+
+    `resolve(declared)` turns a declared path into a file; a file that is not there is
+    left for the build to report, which says what made it."""
+    found: list[str] = []
+    for declared, shape in side_files(decl):
+        try:
+            path = Path(resolve(declared))
+        except Exception as unresolved:  # an undeclared root: the build names it
+            found.append(f"{declared}: {unresolved}")
+            continue
+        if not path.is_file():
+            continue
+        try:
+            document = json.loads(path.read_text(encoding="utf-8-sig"))
+        except ValueError as broken:
+            found.append(f"{path}: is not JSON ({broken})")
+            continue
+        walk(document, shape, str(path), "", found)
+    return found
+
+
 #: What a source kind cannot build without.
 KIND_NEEDS = {
     "chaptered": ("folder", "recording", "chapters"),
@@ -409,6 +571,21 @@ def main(argv: list[str]) -> int:
         print(f"{path}: {unreadable}", file=sys.stderr)
         return 1
     problems = check(document, str(path))
+    if not problems:
+        from urdido.project import roots_of
+
+        here = path.resolve().parent
+        roots = roots_of(here, document, env={})
+
+        def resolve(declared: str) -> Path:
+            for name, root in roots.items():
+                if declared.startswith(f"<{name}>"):
+                    return Path(declared.replace(f"<{name}>", root))
+            if declared.startswith("<"):
+                raise ValueError("starts at a root this check cannot resolve")
+            return here / declared
+
+        problems = check_side_files(document, resolve)
     for problem in problems:
         print(problem, file=sys.stderr)
     if not problems:

@@ -227,6 +227,13 @@ class Project:
                 cut = "preview-" + digest
             self.revision = Revision(self.out, self.name, self.language, cut, revision)
             self.out = self.revision.folder
+        from urdido.declaration import check_side_files
+
+        inside = check_side_files(self.decl, self.path)
+        if inside:
+            raise DeclarationError(
+                "urdido build: a side file is refused:\n" + "\n".join(inside)
+            )
         self.parts = self.out / (self.decl.get("output") or {}).get("parts", "parts")
         self.parts.mkdir(parents=True, exist_ok=True)
 

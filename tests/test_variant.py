@@ -20,7 +20,7 @@ def base(folder):
     (folder / "footage" / "big.mp4").write_bytes(b"0" * 4096)
     story = {
         "title": "Published",
-        "scenes": {"intro": ["old opening"], "outro": ["end"]},
+        "scenes": {"intro": [{"title": "old opening"}], "outro": [{"title": "end"}]},
         "media": {"big": {"file": "footage/big.mp4"}},
     }
     (folder / "storyboard.json").write_text(json.dumps(story), encoding="utf-8")
@@ -38,7 +38,7 @@ def variant(folder):
     (folder / "narration" / "en").mkdir(parents=True)
     (folder / "narration" / "en" / "intro.mp3").write_bytes(b"new intro")
     (folder / "storyboard.json").write_text(
-        json.dumps({"scenes": {"intro": ["new opening"]}}), encoding="utf-8"
+        json.dumps({"scenes": {"intro": [{"title": "new opening"}]}}), encoding="utf-8"
     )
     (folder / "video.toml").write_text(
         '[video]\nname = "wordpress2"\nlanguages = { en = "eng" }\n'
@@ -69,7 +69,10 @@ def test_a_variant_overrides_what_it_holds_and_shares_the_rest(pair):
         footage, root / "wordpress" / "footage" / "big.mp4"
     )  # linked
     story = project.load("storyboard.json")
-    assert story["scenes"] == {"intro": ["new opening"], "outro": ["end"]}
+    assert story["scenes"] == {
+        "intro": [{"title": "new opening"}],
+        "outro": [{"title": "end"}],
+    }
     assert story["media"]["big"]["file"] == "footage/big.mp4"
 
 

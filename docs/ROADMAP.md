@@ -5,7 +5,7 @@
 ## Block B — The engine extracted (videomaker without marketing)
 
 - 📋 **UR46** (deps: UR22 ✅, UR37) **Four environment variables still fill undeclared roots, the last root names left in a module** — They were kept for one release so marketing's builds keep working; left longer, the shim becomes a second way to declare a root. → §UR46
-- 📋 **UR47** (deps: UR23 ✅) **Values in video.toml are untyped and the side files it names are not checked, so a typo inside them is still a KeyError** — urdido check refuses a misspelled table key, but storyboard.json or script.json still fail deep inside the build. → §UR47
+- 🛠 **UR47** (deps: UR23 ✅) **Values in video.toml are untyped and the side files it names are not checked, so a typo inside them is still a KeyError** — urdido check refuses a misspelled table key, but storyboard.json or script.json still fail deep inside the build. → §UR47
 - 📋 **UR49** (deps: UR24 ✅) **Building a video from Python means filling an argparse Namespace and importing build internals** — The package exports only its errors, so an embedding program reaches into Build and the modules' underscored names. → §UR49
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
@@ -59,5 +59,12 @@
 
 - **No baseline is left in pyproject.toml** pyproject.toml has neither per-file ignores
   nor format exclusions, and ruff check and ruff format --check pass on the whole tree.
+
+## Done when — UR47
+
+- **Every side file and value is checked against a typed model** Each side file a
+  declaration names has a model with its types and defaults, urdido check refuses a
+  misspelled key or a wrong type in any of them, and no module reads a default the model
+  lacks.
 
 ## Non-goals

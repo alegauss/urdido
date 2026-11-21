@@ -7,7 +7,9 @@ made before it says it is done. Each check below names what refuses and what fix
 
 - **The declaration.** `urdido check` and every build refuse a key no table takes, with
   the nearest valid name, a missing required key, and a source without what its kind
-  needs. See [the declaration reference](specs/declaration.md).
+  needs. It follows the declaration into its narration script and storyboard and
+  refuses a misspelled key there too, with the file and the nearest name. See
+  [the declaration reference](specs/declaration.md).
 - **The opening.** Before any take is bought, an intro that opens on a preamble ("today
   we will…") or a first proof later than 20 seconds at the narrator's declared pace is
   refused.
