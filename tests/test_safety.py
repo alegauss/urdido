@@ -36,7 +36,7 @@ def test_browser_reports_actual_bottom_brand_and_refuses_before_png_vm48(tmp_pat
     page = '<style>body{margin:0}header{position:absolute;bottom:10px;height:50px}</style><header>Viglet</header>'
     with safety.configured({"action": "error"}):
         with pytest.raises(RecordingRefused, match="Viglet"):
-            render({"mark": page}, Frame(1920, 1080), str(tmp_path), channel=os.environ.get("E2E_CHANNEL", "msedge"))
+            render({"mark": page}, Frame(1920, 1080), str(tmp_path), channel=os.environ.get("E2E_CHANNEL"))
     assert not (tmp_path / "mark.png").exists()
     data = json.loads((tmp_path / "caption-safe-area.json").read_text())
     assert data["findings"][0]["label"] == "header"
@@ -49,7 +49,7 @@ def test_warn_mode_writes_images_and_ignores_hidden_labels_vm48(tmp_path):
             '<header>Hidden</header><h1>Visible</h1>')
     with safety.configured({"action": "warn"}):
         with pytest.warns(UserWarning, match="1 overlap"):
-            render({"card": page}, Frame(1920, 1080), str(tmp_path), channel=os.environ.get("E2E_CHANNEL", "msedge"))
+            render({"card": page}, Frame(1920, 1080), str(tmp_path), channel=os.environ.get("E2E_CHANNEL"))
     assert (tmp_path / "card.png").is_file()
     findings = json.loads((tmp_path / "caption-safe-area.json").read_text())["findings"]
     assert len(findings) == 1 and findings[0]["text"] == "Visible"
@@ -62,7 +62,7 @@ def test_text_overlay_is_checked_after_its_layout_changes_vm48(tmp_path):
             '.layer-text h1{top:auto;bottom:10px}</style><h1>Overlay</h1>')
     with safety.configured({"action": "error"}):
         with pytest.raises(RecordingRefused, match="Overlay"):
-            render({"card": page}, Frame(1920, 1080), str(tmp_path), channel=os.environ.get("E2E_CHANNEL", "msedge"))
+            render({"card": page}, Frame(1920, 1080), str(tmp_path), channel=os.environ.get("E2E_CHANNEL"))
     assert (tmp_path / "card.png").is_file()
     assert not (tmp_path / "card-text.png").exists()
     findings = json.loads((tmp_path / "caption-safe-area.json").read_text())["findings"]

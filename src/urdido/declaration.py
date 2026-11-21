@@ -85,7 +85,7 @@ SCHEMA = table(
         "narration": table(
             {"script": ANY, "takes": ANY, "tempo": ANY}, required=("script", "takes")
         ),
-        "cards": table({"declaration": ANY, "words": ANY}),
+        "cards": table({"declaration": ANY, "words": ANY, "channel": ANY}),
         "music": table(
             {"bed": ANY, "reference": ANY, "between": ANY, "under": ANY, "ramp": ANY}
         ),

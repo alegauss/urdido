@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import os
 import re
+from contextvars import ContextVar
 from dataclasses import asdict
 from importlib.metadata import version
 from pathlib import Path
@@ -14,9 +15,22 @@ from typing import Mapping
 from urdido.cards.html import Frame
 
 
+EDGE = "Microsoft/Edge/Application/msedge.exe"
+#: The declaration's `[cards] channel`, set around a build (see `urdido.build.main`).
+DECLARED: ContextVar[str | None] = ContextVar("cards_channel", default=None)
+
+
+def browser_channel(asked: str | None = None) -> str | None:
+    """The browser cards are drawn with (UR29): the caller's, else the declaration's
+    `[cards] channel`, else `E2E_CHANNEL`, else none, which is Playwright's own Chromium
+    on every system."""
+    return asked or DECLARED.get() or os.environ.get("E2E_CHANNEL") or None
+
+
 def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | None = None) -> list[str]:
     """Write `<layer>.png` for every page in `pages` (and `card-<n>-text.png` for each card)
-    to `out_dir`; returns the files in the order written."""
+    to `out_dir`; returns the files in the order written. `channel` names a browser other
+    than Playwright's bundled Chromium (`msedge`, `chrome`); none is the default."""
     from playwright.sync_api import sync_playwright
     from urdido import safety
     from urdido import cache
@@ -32,13 +46,18 @@ def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | 
     safe_report.unlink(missing_ok=True)
     text_report.unlink(missing_ok=True)
     progress.plan("raster", len(pages))
-    channel = channel if channel is not None else os.environ.get("E2E_CHANNEL", "msedge")
+    channel = browser_channel(channel)
     with sync_playwright() as p:
         executable = Path(p.chromium.executable_path)
+        if not channel and not executable.is_file():
+            from urdido.errors import MissingTool
+
+            raise MissingTool("Playwright's Chromium is not installed, and cards are drawn with it",
+                              remedy='python -m playwright install chromium, or declare [cards] channel = "msedge"')
         if channel == "msedge":
-            executable = next((Path(os.environ.get(root, "")) / "Microsoft/Edge/Application/msedge.exe"
+            executable = next((Path(os.environ.get(root, "")) / EDGE
                                for root in ("PROGRAMFILES(X86)", "PROGRAMFILES", "LOCALAPPDATA")
-                               if (Path(os.environ.get(root, "")) / "Microsoft/Edge/Application/msedge.exe").is_file()), None)
+                               if (Path(os.environ.get(root, "")) / EDGE).is_file()), None)
         elif channel:
             # Other named channels have different binaries. Refuse caching when we cannot
             # fingerprint that browser, while retaining the renderer's existing channel support.

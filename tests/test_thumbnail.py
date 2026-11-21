@@ -1,4 +1,4 @@
-﻿"""A thumbnail's pictures are crops of the video's own sources, declared by box (VM51)."""
+"""A thumbnail's pictures are crops of the video's own sources, declared by box (VM51)."""
 import pytest
 
 from urdido.thumbnail import crop_filter
@@ -149,7 +149,7 @@ def test_translated_title_fits_both_lines_away_from_subject_vm54():
 
     playwright = pytest.importorskip("playwright.sync_api")
     with playwright.sync_playwright() as driver:
-        browser = driver.chromium.launch(channel=os.environ.get("E2E_CHANNEL", "msedge"))
+        browser = driver.chromium.launch(channel=os.environ.get("E2E_CHANNEL"))
         try:
             page = browser.new_page(viewport={"width": 1280, "height": 720})
             page.set_content('<style>h1{position:absolute;right:44px;top:34px;font: bold 104px/.98 Arial;white-space:nowrap}'

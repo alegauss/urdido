@@ -313,11 +313,40 @@ def placement(role: str, spec: dict) -> dict:
     return fields
 
 
-def layout(path: Path):
-    spec = importlib.util.spec_from_file_location("channel_layout", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.thumbnail
+#: Where installed packages offer thumbnail layouts, by name (UR29).
+LAYOUTS = "urdido.thumbnail_layouts"
+
+
+def layout(declared: str | Path, here: Path | None = None):
+    """The channel's layout: a function `thumbnail(*, out: Path, picture: Path, proof:
+    Path = None, **words) -> Path` that draws the JPG and returns where (UR29).
+
+    `layout` names it as an entry point an installed package registers under
+    `urdido.thumbnail_layouts` (`layout = "japode"`), as `package.module:function`
+    (`layout = "japode_brand:thumbnail"`), or as a path to a .py file beside the
+    declaration (`layout = "../brand/brand.py"`, which runs that file)."""
+    text = str(declared)
+    if text.endswith(".py") or "/" in text or "\\" in text:
+        path = Path(text) if here is None else (here / text).resolve()
+        spec = importlib.util.spec_from_file_location("channel_layout", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module.thumbnail
+    from importlib.metadata import entry_points
+
+    found = [ep for ep in entry_points(group=LAYOUTS) if ep.name == text]
+    if found:
+        return found[0].load()
+    module_name, _, function = text.partition(":")
+    try:
+        module = importlib.import_module(module_name)
+    except ImportError:
+        raise ValueError(f"thumbnail: layout {text!r} is no entry point under {LAYOUTS}, "
+                         "no importable module and no .py path") from None
+    drawn = getattr(module, function or "thumbnail", None)
+    if not callable(drawn):
+        raise ValueError(f"thumbnail: {module_name} has no {function or 'thumbnail'}(**fields) function")
+    return drawn
 
 
 def make(declaration: Path, language: str) -> Path:
@@ -341,7 +370,7 @@ def make(declaration: Path, language: str) -> Path:
     if "badges" in fields:
         fields["badges"] = tuple(fields["badges"])
     out = here / decl.get("out", "video/thumbnail.{language}.jpg").format(language=language)
-    drawn = layout((here / decl["layout"]).resolve())(**fields, out=out)
+    drawn = layout(decl["layout"], here)(**fields, out=out)
     record = Path(str(drawn) + ".prov.json")
     record.write_text(json.dumps({"pictures": sources}, ensure_ascii=False, indent=2) + "\n",
                       encoding="utf-8")

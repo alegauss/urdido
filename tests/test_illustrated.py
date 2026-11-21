@@ -173,7 +173,7 @@ def test_brand_corners_in_actual_browser_layout_vm45():
     document = {"brand": "JAPODE", "series": "S", "sources": {"source": {"label": "L", "url": "U"}}}
     beat = {"kicker": "", "title": "Page", "layout": "footage", "source": "source"}
     with playwright.sync_playwright() as driver:
-        browser = driver.chromium.launch(channel=os.environ.get("E2E_CHANNEL", "msedge"))
+        browser = driver.chromium.launch(channel=os.environ.get("E2E_CHANNEL"))
         try:
             view = browser.new_page(viewport={"width": 1920, "height": 1080})
             for corner in ("top-right", "bottom-left", "bottom-right"):

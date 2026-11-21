@@ -7,7 +7,6 @@
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-- 📋 **UR29** (deps: UR21 ✅) **Cards render only with a Windows Edge install, and thumbnail layouts load any brand.py by its path** — A Linux CI or another user has no msedge.exe, and executing a file named in a declaration is a plugin system with no contract. → §UR29
 - 📋 **UR30** (deps: UR21 ✅) **The Python build shells out to node for the opening gate, and the JavaScript helpers have no install path** — A pip install brings no .mjs files, and eight project scripts and Turing's e2e specs import them by relative path. → §UR30
 - 📋 **UR31** (deps: UR21 ✅) **Ten test files read japode, shio and turing folders, so the suite cannot run outside marketing** — CI here has none of those folders, and a test that skips everywhere but one machine proves nothing. → §UR31
 - 📋 **UR32** (deps: UR21 ✅, UR22 ✅) **Every stage cache is keyed on absolute module and input paths, so moving the code invalidates every cache** — Each marketing video would rebuild from scratch on install, and caches would never be shared between two checkouts. → §UR32

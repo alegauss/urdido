@@ -70,7 +70,7 @@ def test_clipping_is_measured_at_multiple_target_sizes_and_hidden_text_is_ignore
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as driver:
-        browser = driver.chromium.launch(channel=os.environ.get("E2E_CHANNEL", "msedge"))
+        browser = driver.chromium.launch(channel=os.environ.get("E2E_CHANNEL"))
         try:
             for width, height in ((320, 180), (640, 360)):
                 page = browser.new_page(viewport={"width": width, "height": height})

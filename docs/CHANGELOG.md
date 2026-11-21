@@ -18,6 +18,7 @@
 - ✅ **UR26** **Word times come from a direct ElevenLabs Scribe call inside the package, with no provider seam** — Word times come through a transcriber seam, Scribe being one provider and a test a fake, in the language the declaration gives; the language default is gone (design recorded in `docs/video-maker.md`).
 - ✅ **UR27** **Description, chapter and credit texts are hardcoded in Portuguese, and the description is shaped only for YouTube** — Description words follow the build language's table, overridable by [description.strings]; YouTube's limit and links live in a target (design recorded in `docs/video-maker.md`).
 - ✅ **UR28** **The Turing WordPress demo's store scraper, stills and transcript publishing live inside the core build** — The opening's site screens are declared as paths and follow selectors, publishing writes only where publish.json says, and no module names a shop (design recorded in `docs/video-maker.md`).
+- ✅ **UR29** **Cards render only with a Windows Edge install, and thumbnail layouts load any brand.py by its path** — Cards draw with Playwright's own Chromium unless [cards] channel names another; a thumbnail layout loads as an entry point, module function or path (design recorded in `docs/video-maker.md`).
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

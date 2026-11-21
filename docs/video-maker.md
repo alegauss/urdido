@@ -440,6 +440,16 @@ URL (UR8). A picture the video never shows is refused unless it declares
 drawn JPG gets a `.prov.json` with each picture's media key or reason, its
 provenance and its SHA-256.
 
+Cards, the brand mark and the site screens are drawn with Playwright's own
+Chromium (UR29), on any system: `python -m playwright install chromium` once.
+`[cards] channel = "msedge"` (or `E2E_CHANNEL`) draws with another browser
+instead; without Chromium and without a channel the build stops with that
+remedy. A thumbnail's `layout` is a function
+`thumbnail(*, out, picture, proof=None, **words) -> Path`, named as an entry
+point an installed package registers under `urdido.thumbnail_layouts`, as
+`package.module:function`, or as a path to a `.py` file beside the
+declaration.
+
 Declare the published title beside the thumbnail, `[thumbnail.title] pt-BR = "..."`,
 and the two are checked as a pair before anything is drawn (UR1); `urdido
 thumbnail <video.toml> --language <l> --check` runs the check alone. The pair is

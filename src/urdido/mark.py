@@ -103,8 +103,10 @@ def render(mark: Mark, parts: Path, height: int) -> Path:
     out = parts / "mark.png"
     html = page(mark, height / 1080)
     (parts / "mark.html").write_text(html, encoding="utf-8")
+    from urdido.cards.render import browser_channel
+
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = p.chromium.launch(channel=browser_channel())
         try:
             view = browser.new_page(viewport={"width": 1600, "height": 600})
             view.set_content(html, wait_until="networkidle")

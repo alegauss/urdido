@@ -370,7 +370,9 @@ class Build:
             return []
         files: list[str] = []
         with sync_playwright() as p:
-            browser = p.chromium.launch(channel=os.environ.get("E2E_CHANNEL", "msedge"))
+            from urdido.cards.render import browser_channel
+
+            browser = p.chromium.launch(channel=browser_channel())
             page = browser.new_page(viewport={"width": 1920, "height": 1080})
 
             def shot(path: str, scroll: int = 0) -> None:
@@ -650,7 +652,9 @@ def main(argv: list[str] | None = None) -> int:
     from urdido.safety import configured
     from urdido import textcheck
     from urdido import progress
+    from urdido.cards.render import DECLARED
 
+    DECLARED.set((build.decl.get("cards") or {}).get("channel"))
     with progress.configured(build.parts / f"progress.{build.language}.jsonl", mode=a.progress), \
             cache.configured(build.parts / f"cache.{build.language}.json", enabled=kind == "illustrated" and not a.plan), \
             textcheck.configured(build.decl.get("text_checks", {}), build.language, enabled=kind == "illustrated"), \

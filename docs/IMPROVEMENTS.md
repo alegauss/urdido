@@ -50,21 +50,6 @@ lists every key the schema accepts.
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-### §UR29 Browser and layout without machine assumptions
-
-`cards/render.py:35-41` and `build.py:316` default the Playwright channel to `msedge`
-and look for `msedge.exe` under `PROGRAMFILES` and `LOCALAPPDATA`; elsewhere the
-executable is `None` and caching is refused. `thumbnail.py:85` runs `exec_module` on the
-declaration's `layout = "../brand/brand.py"`.
-
-Default to Playwright's bundled Chromium, identified by its own version for the cache,
-with the channel an opt-in in the declaration. Thumbnail layouts register through an
-entry point group (`urdido.thumbnail_layouts`) or a declared module name, with a
-documented function signature; japode's `brand.py` becomes one.
-
-**Done when** the card and thumbnail tests pass on Linux CI, and the Japode thumbnail
-still renders through the declared layout.
-
 ### §UR30 The JavaScript side packaged
 
 `prepare.py:30-38` runs `node` on `narration/takes.mjs` and `opening.mjs` found at
