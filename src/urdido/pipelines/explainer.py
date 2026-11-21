@@ -34,11 +34,12 @@ import unicodedata
 from pathlib import Path
 
 from urdido import media
+from urdido.declaration import DEFAULTS, setting
 from urdido.errors import DeclarationError, Refused
 from urdido.narration import Takes
 from urdido.pipelines.finishing import Finishing
 
-LEAD, GAP, END = 0.4, 0.5, 4.5
+LEAD, GAP, END = (DEFAULTS["source"][key] for key in ("lead", "gap", "end"))
 
 
 def lines(script: dict, language: str) -> list[tuple[str, str, int | None]]:
@@ -197,9 +198,9 @@ class Explainer(Finishing):
         takes = Takes(
             script,
             self.path(self.decl["narration"]["takes"]),
-            self.decl["narration"].get("tempo", 1.0),
+            setting(self.decl, "narration", "tempo"),
         )
-        footage = Path(self.path(source.get("footage", "footage")))
+        footage = Path(self.path(setting(self.decl, "source", "footage")))
 
         def source_file(src: str) -> Path:
             kind, _, scene = src.partition(":")
@@ -227,9 +228,9 @@ class Explainer(Finishing):
             seconds=lambda path: media.seconds(str(path)),
             source_file=source_file,
             words_of=words_of,
-            lead=source.get("lead", LEAD),
-            gap=source.get("gap", GAP),
-            end=source.get("end", END),
+            lead=setting(self.decl, "source", "lead"),
+            gap=setting(self.decl, "source", "gap"),
+            end=setting(self.decl, "source", "end"),
         )
         file = self.write_plan(self.name, made)
         print(
@@ -273,7 +274,8 @@ class Explainer(Finishing):
         closing = (source.get("closing") or {}).get(self.language, {})
         ass = work / "titles.ass"
         ass.write_text(
-            titles(made, styles, closing, source.get("end", END)), encoding="utf-8"
+            titles(made, styles, closing, setting(self.decl, "source", "end")),
+            encoding="utf-8",
         )
         srt = self.out / f"{self.name}.{self.language}.srt"
         srt.write_text(captions_srt(made), encoding="utf-8", newline="")

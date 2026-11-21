@@ -12,6 +12,7 @@ from urdido import captions as cap
 from urdido import media
 from urdido.audio import mix
 from urdido.cards import html
+from urdido.declaration import setting
 from urdido.errors import DeclarationError, Refused
 from urdido.jsnum import fixed
 from urdido.narration import Takes
@@ -54,7 +55,7 @@ class Chaptered(Finishing):
         takes = Takes(
             script,
             self.path(self.decl["narration"]["takes"]),
-            self.decl["narration"].get("tempo", 1.0),
+            setting(self.decl, "narration", "tempo"),
         )
         cards = self.load(self.decl["cards"]["declaration"])
         theme = html.Theme.load(cards["theme"], self.roots)
@@ -159,9 +160,7 @@ class Chaptered(Finishing):
             write_plan=self.write_plan,
             portable=self.portable,
         )
-        made = renderer.full(
-            builder, teaser=self.decl.get("cuts", {}).get("teaser", False)
-        )
+        made = renderer.full(builder, teaser=setting(self.decl, "cuts", "teaser"))
         for file in made:
             self.checked_output(file)
         self.stills(video)

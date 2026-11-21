@@ -89,21 +89,22 @@ Done when no module names a root and no test sets one of the four variables.
 
 ### §UR47 The side files and values checked
 
-UR23 gave video.toml a key schema (`urdido.declaration.SCHEMA`). UR56 typed its values
-(NUMBER, TEXT, FLAG, LIST), and the steps since check every side file the declaration
-names against its own shape with the same did-you-mean refusal: the narration script,
-the storyboard, the cards, the highlights, the claims and the translation tables
-(`side_files`, `check_side_files`, run by `urdido check` and by `Project` before any
-work).
+UR23 gave video.toml a key schema, UR56 typed its values, UR57 and the steps before it
+check every side file the declaration names, and UR58 moved the video.toml tables'
+defaults into the schema (`DEFAULTS`, read through `setting(decl, table, key)`; the
+reference and the JSON Schema print them).
 
-What is left: the defaults still live at each `.get(key, default)` in the modules, so
-the reference and the JSON Schema cannot say what an absent key means. Give each table a
-dataclass holding its types and its defaults, load the declaration into them once in
-`Project`, and let `reference()` and `json_schema()` read the dataclasses rather than
-the key table.
+Left:
+- `[music] under` has two defaults: 0.2 in `mix.Duck` for a scenes build and 0.07 in
+  the explainer's mix. One key, one meaning: either a per-kind default the schema can
+  state or one value, decided against the published cuts it would change.
+- The side files' defaults still live in the modules: a highlight style's `margin`
+  (85), a storyboard beat's `presentation`, the shots file's keys, the repetition and
+  text-check policies (`action` defaulting by whether the table is present).
+- `mix.Loudness`, `Duck` and `Bed` repeat the schema's numbers, pinned equal by a test
+  rather than read from it.
 
-Done when no module reads a default that the model does not hold, and
-docs/specs/declaration.md names each key's default.
+Done when no module reads a default that the model does not hold, side files included.
 
 ### Â§UR47 The side files and values checked
 

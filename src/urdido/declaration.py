@@ -307,6 +307,37 @@ for _table, _keys in TYPES.items():
         assert _key in SCHEMA["keys"][_table]["keys"], (_table, _key)
         SCHEMA["keys"][_table]["keys"][_key] = _kind
 
+#: What an absent key means, by table (UR47): `setting` reads it, and the reference
+#: prints it, so no module holds a default of its own.
+DEFAULTS = {
+    "video": {"frame": [1920, 1080]},
+    "output": {"folder": "video", "parts": "parts"},
+    "source": {"footage": "footage", "lead": 0.4, "gap": 0.5, "end": 4.5},
+    "narration": {"tempo": 1.0},
+    "music": {"reference": -18.0, "between": 0.4, "ramp": 0.4},
+    "audio": {"target": -14.0, "peak": -1.0, "tolerance": 0.3, "margin": 1.5},
+    "cuts": {"teaser": False},
+    "claims": {"action": "warn"},
+    "mark": {"corner": "top-left", "margin": [70, 50], "size": 44, "opacity": 0.9},
+    "qa": {"flashes": "error", "flash_threshold": 6.0, "flash_refuse": 40.0},
+}
+for _table, _keys in DEFAULTS.items():
+    for _key, _value in _keys.items():
+        _shape = SCHEMA["keys"][_table]["keys"][_key]
+        assert typed_ok(_value, _shape["type"]), (_table, _key)
+        SCHEMA["keys"][_table]["keys"][_key] = {**_shape, "default": _value}
+
+
+def setting(decl: dict, table: str, key: str):
+    """A video.toml value, or the default the schema holds for it (None if none)."""
+    value = (decl.get(table) or {}).get(key)
+    if value is not None:
+        return value
+    shape = SCHEMA["keys"][table]["keys"][key]  # a key the schema lacks is a bug
+    default = (shape or {}).get("default")
+    return list(default) if isinstance(default, list) else default
+
+
 #: The narration script a declaration names (`[narration] script`), UR47.
 SCRIPT = table(
     {
@@ -615,6 +646,8 @@ def reference() -> str:
         if shape is ANY:
             return []
         if "type" in shape:
+            if "default" in shape:
+                return [f"a {shape['type']}, {json.dumps(shape['default'])} if absent"]
             return [f"a {shape['type']}"]
         if "array" in shape:
             return keys_of(shape["array"])
@@ -775,7 +808,7 @@ def json_schema(shape=SCHEMA):
     if shape is ANY:
         return {}
     if "type" in shape:
-        return {"type": shape["type"]}
+        return {k: shape[k] for k in ("type", "default") if k in shape}
     if "array" in shape:
         return {"type": "array", "items": json_schema(shape["array"])}
     if "map" in shape:

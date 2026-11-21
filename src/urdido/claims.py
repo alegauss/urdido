@@ -15,6 +15,7 @@ from urllib.parse import urlsplit
 
 from urdido import keywords
 from urdido.cache import file_hash
+from urdido.declaration import setting
 from urdido.narration import Takes
 from urdido.sources.model import RecordingRefused
 
@@ -181,8 +182,8 @@ def context(declaration, language):
     source = resolve(source, folder)
     script = json.loads((folder / spec["narration"]["script"]).read_text("utf-8-sig"))
     file = folder / spec["claims"]["declaration"]
-    takes = Takes(script, str(folder / spec["narration"]["takes"]), spec["narration"].get("tempo", 1.0))
-    report = inspect(read(file), takes, language, source, folder, action=spec["claims"].get("action", "warn"))
+    takes = Takes(script, str(folder / spec["narration"]["takes"]), setting(spec, "narration", "tempo"))
+    report = inspect(read(file), takes, language, source, folder, action=setting(spec, "claims", "action"))
     return file, report
 
 

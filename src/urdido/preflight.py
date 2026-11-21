@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 from urdido import captions, keywords, media
 from urdido.cards.html import Frame, Theme, resolve
+from urdido.declaration import setting
 from urdido.narration import Takes
 from urdido.sources.illustrated import (
     anchored_frames,
@@ -102,7 +103,7 @@ def illustrated(build):
         check(build.path(highlight_spec["declaration"]), "style", style)
     takes = None
     if script is not None:
-        takes = check(build.here, "narration", lambda: Takes(script, build.path(build.decl["narration"]["takes"]), build.decl["narration"].get("tempo", 1.0)))
+        takes = check(build.here, "narration", lambda: Takes(script, build.path(build.decl["narration"]["takes"]), setting(build.decl, "narration", "tempo")))
     voices, words = {}, {}
     if takes:
         for name in takes.lines:
@@ -280,7 +281,7 @@ def illustrated(build):
             if claim_data is not None:
                 claim_report = check(build.path(build.decl["claims"]["declaration"]), "claims",
                                      lambda: inspect_claims(claim_data, takes, build.language, document, build.here,
-                                                            action=build.decl["claims"].get("action", "warn")))
+                                                            action=setting(build.decl, "claims", "action")))
                 if claim_report is not None:
                     document["_claims_report"] = claim_report
                     check(build.path(build.decl["claims"]["declaration"]), "claims", lambda: enforce_claims(claim_report))

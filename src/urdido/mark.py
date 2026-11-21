@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from html import escape
 from pathlib import Path
 
+from urdido.declaration import setting
 from urdido.errors import DeclarationError
 
 CORNERS = ("top-left", "top-right", "bottom-left", "bottom-right")
@@ -51,16 +52,16 @@ def declared(decl: dict, resolve) -> Mark:
     logo = Path(resolve(decl["logo"]))
     if logo.suffix.lower() not in {".svg", ".png"} or not logo.is_file():
         raise DeclarationError(f"urdido build: [mark] logo must be an existing svg or png, got {logo}")
-    corner = decl.get("corner", "top-left")
+    corner = setting({"mark": decl}, "mark", "corner")
     if corner not in CORNERS:
         raise DeclarationError(f"urdido build: [mark] corner must be one of {', '.join(CORNERS)}, got {corner!r}")
-    margin = decl.get("margin", [70, 50])
+    margin = setting({"mark": decl}, "mark", "margin")
     if not (isinstance(margin, list) and len(margin) == 2 and all(isinstance(v, int) and v >= 0 for v in margin)):
         raise DeclarationError(f"urdido build: [mark] margin must be [x, y] in pixels, got {margin!r}")
-    size = decl.get("size", 44)
+    size = setting({"mark": decl}, "mark", "size")
     if not isinstance(size, int) or not 12 <= size <= 300:
         raise DeclarationError(f"urdido build: [mark] size must be 12 to 300 pixels, got {size!r}")
-    opacity = float(decl.get("opacity", 0.9))
+    opacity = float(setting({"mark": decl}, "mark", "opacity"))
     if not 0 < opacity <= 1:
         raise DeclarationError(f"urdido build: [mark] opacity must be above 0 and at most 1, got {opacity}")
     font = Path(resolve(decl["font"])) if decl.get("font") else None

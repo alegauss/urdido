@@ -11,6 +11,7 @@ from urdido import cache, media
 from urdido import captions as cap
 from urdido.audio import mix
 from urdido.cards import html
+from urdido.declaration import setting
 from urdido.errors import DeclarationError, Refused
 from urdido.narration import Takes
 from urdido.pipelines.finishing import Finishing
@@ -61,7 +62,7 @@ class Scenes(Finishing):
         takes = Takes(
             script,
             self.path(self.decl["narration"]["takes"]),
-            self.decl["narration"].get("tempo", 1.0),
+            setting(self.decl, "narration", "tempo"),
         )
         encoder = os.environ.get("STORY_ENCODER") or (
             "x264" if self.args.cards or self.args.plan else media.detect_encoder()
@@ -379,7 +380,7 @@ class Scenes(Finishing):
             voice,
             str(self.parts),
             sounds=sounds,
-            bed=mix.Bed(bed, video.opening, music.get("reference", -18.0))
+            bed=mix.Bed(bed, video.opening, setting(self.decl, "music", "reference"))
             if os.path.exists(bed)
             else None,
             loudness=mix.Loudness(**self.decl.get("audio", {})),

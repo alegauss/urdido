@@ -20,6 +20,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from urdido.declaration import setting
 from urdido.errors import DeclarationError
 from urdido.sources import RecordingRefused
 
@@ -47,7 +48,7 @@ def roots_of(here: Path, decl: Mapping, env: Mapping[str, str] | None = None) ->
     output = decl.get("output") or {}
     roots = {
         "root": str(here),
-        "video": str((here / output.get("folder", "video")).resolve()),
+        "video": str((here / setting(decl, "output", "folder")).resolve()),
         "recordings": str(here / "recordings"),
     }
     declared = dict(decl.get("roots") or {})
@@ -234,7 +235,7 @@ class Project:
             raise DeclarationError(
                 "urdido build: a side file is refused:\n" + "\n".join(inside)
             )
-        self.parts = self.out / (self.decl.get("output") or {}).get("parts", "parts")
+        self.parts = self.out / setting(self.decl, "output", "parts")
         self.parts.mkdir(parents=True, exist_ok=True)
 
     def _base(self, own: dict):
@@ -336,7 +337,7 @@ class Project:
         """The declared `[video] frame = [width, height]`, 1920x1080 unless said."""
         from urdido.cards import html
 
-        size = (self.decl.get("video") or {}).get("frame", [1920, 1080])
+        size = setting(self.decl, "video", "frame")
         if not (
             isinstance(size, list)
             and len(size) == 2

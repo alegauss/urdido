@@ -8,8 +8,8 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from urdido import captions as cap
-from urdido.audio import mix
 from urdido.cards import html
+from urdido.declaration import setting
 from urdido.errors import Refused
 from urdido.project import Project
 
@@ -55,13 +55,11 @@ class Finishing(Project):
                 highlights=highlights,
                 assets=assets,
                 text_files=texts,
-                peak_ceiling=self.decl.get("audio", {}).get(
-                    "peak", mix.Loudness().peak
-                ),
+                peak_ceiling=setting(self.decl, "audio", "peak"),
                 clips=clips,
-                flash_action=(self.decl.get("qa") or {}).get("flashes", "error"),
-                flash_threshold=(self.decl.get("qa") or {}).get("flash_threshold", 6.0),
-                flash_refuse=(self.decl.get("qa") or {}).get("flash_refuse", 40.0),
+                flash_action=setting(self.decl, "qa", "flashes"),
+                flash_threshold=setting(self.decl, "qa", "flash_threshold"),
+                flash_refuse=setting(self.decl, "qa", "flash_refuse"),
             ),
         )
         self.checked.append(file)

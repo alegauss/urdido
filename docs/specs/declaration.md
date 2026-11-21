@@ -32,7 +32,7 @@ The video's name, its languages and, for a variant, its base.
 - `title_languages`
 - `revision`: a string
 - `base`: a string
-- `frame`: a array
+- `frame`: a array, [1920, 1080] if absent
 
 ## [roots]
 
@@ -44,8 +44,8 @@ Any key, each a name of your own.
 
 Where the build writes: `folder` (`video`) and `parts` inside it.
 
-- `folder`: a string
-- `parts`: a string
+- `folder`: a string, "video" if absent
+- `parts`: a string, "parts" if absent
 
 ## [source]
 
@@ -62,10 +62,10 @@ What the video is made of: its `kind` and what that kind reads.
 - `record_command`
 - `vertical_record_command`
 - `shots`: a string
-- `footage`: a string
-- `lead`: a number
-- `gap`: a number
-- `end`: a number
+- `footage`: a string, "footage" if absent
+- `lead`: a number, 0.4 if absent
+- `gap`: a number, 0.5 if absent
+- `end`: a number, 4.5 if absent
 - `styles`: a string
 - `closing`: *any name*
 - `fonts`: a string
@@ -77,7 +77,7 @@ The script, the folder of bought takes, and an optional tempo.
 
 - `script` (required): a string
 - `takes` (required): a string
-- `tempo`: a number
+- `tempo`: a number, 1.0 if absent
 
 ## [cards]
 
@@ -92,19 +92,19 @@ The cards' declaration (theme and words), and a browser channel.
 The bed under the narration and how far it ducks.
 
 - `bed`: a string
-- `reference`: a number
-- `between`: a number
+- `reference`: a number, -18.0 if absent
+- `between`: a number, 0.4 if absent
 - `under`: a number
-- `ramp`: a number
+- `ramp`: a number, 0.4 if absent
 
 ## [audio]
 
 Loudness target, true-peak ceiling and their margin.
 
-- `target`: a number
-- `peak`: a number
-- `tolerance`: a number
-- `margin`: a number
+- `target`: a number, -14.0 if absent
+- `peak`: a number, -1.0 if absent
+- `tolerance`: a number, 0.3 if absent
+- `margin`: a number, 1.5 if absent
 
 ## [opening]
 
@@ -121,7 +121,7 @@ A chaptered video's opening: animation, footage, photos, site screens.
 
 Which extra cuts a chaptered build makes.
 
-- `teaser`: a boolean
+- `teaser`: a boolean, false if absent
 
 ## [captions]
 
@@ -143,7 +143,7 @@ Word-timed callouts over the picture, and their fonts.
 The narration's claims, their evidence and how strictly they are held.
 
 - `declaration`: a string
-- `action`: a string
+- `action`: a string, "warn" if absent
 
 ## [description]
 
@@ -171,10 +171,10 @@ Encoding, glyph and layout checks over the text a video draws.
 A brand mark in a corner through the whole video.
 
 - `logo`: a string
-- `corner`: a string
-- `margin`: a array
-- `size`: a number
-- `opacity`: a number
+- `corner`: a string, "top-left" if absent
+- `margin`: a array, [70, 50] if absent
+- `size`: a number, 44 if absent
+- `opacity`: a number, 0.9 if absent
 - `font`: a string
 - `background`: a string
 - `text`: a string
@@ -189,9 +189,9 @@ Any key, each a name of your own.
 
 How the final verification treats a flash.
 
-- `flashes`: a string
-- `flash_threshold`: a number
-- `flash_refuse`: a number
+- `flashes`: a string, "error" if absent
+- `flash_threshold`: a number, 6.0 if absent
+- `flash_refuse`: a number, 40.0 if absent
 
 ## [publish]
 

@@ -148,6 +148,28 @@ def test_one_shorts_table_declares_one_cutter_ur48(tmp_path):
         shorts.declared(toml)
 
 
+def test_an_absent_key_reads_the_default_the_schema_holds_ur47():
+    from urdido.audio import mix
+    from urdido.declaration import DEFAULTS, reference, setting
+
+    assert setting(GOOD, "narration", "tempo") == 1.0
+    assert setting({**GOOD, "narration": {"tempo": 1.1}}, "narration", "tempo") == 1.1
+    assert setting(GOOD, "video", "frame") == [1920, 1080]
+    assert setting(GOOD, "narration", "script") == "script.json"
+    assert setting({}, "cards", "channel") is None  # no default: absent stays absent
+    assert "`tempo`: a number, 1.0 if absent" in reference()
+    assert json_schema()["properties"]["qa"]["properties"]["flash_refuse"] == {
+        "type": "number",
+        "default": 40.0,
+    }
+    # The mix's own dataclasses hold the same numbers the schema states.
+    loudness, duck, bed = mix.Loudness(), mix.Duck(), mix.Bed("bed.mp3")
+    assert {k: getattr(loudness, k) for k in DEFAULTS["audio"]} == DEFAULTS["audio"]
+    assert duck.between == DEFAULTS["music"]["between"]
+    assert duck.ramp == DEFAULTS["music"]["ramp"]
+    assert bed.reference == DEFAULTS["music"]["reference"]
+
+
 def test_a_value_of_the_wrong_type_is_refused_ur47():
     bad = {
         **GOOD,
