@@ -301,3 +301,27 @@ without its times.
 
 **Done when** a take bought without word times is named by `check` with the command that
 fixes it, and the build's refusal spells that command for the declaration at hand.
+
+### §UR70 A chaptered video's cold open, cut from its recording
+
+Met on marketing's VM89 (2026-11-23). The Turing WordPress demo's built cut shows the
+opening animation to 0:07, Ana's intro over b-roll, photos and store pages to 0:44, and
+the product working (a Turing search answering) only at 1:08 in chapter 1. To pass the
+20 s opening gate the cut has to lead with the payoff, as the Viglet Shio promo does
+with its cold open (the agent writing, then Publicar tudo), but a chaptered video's
+opening is fixed in `pipelines/chaptered.py`: footage, photos and store screens
+interleaved in that order, at most three screens, and nothing from the recording before
+chapter 1.
+
+Declare a cold open for a chaptered video: `[opening] cold_open = [{ chapter = 1, from =
+"highlight", seconds = 4 }, ...]`, clips cut from the recording itself (each chapter's
+`chapters.json` already records its highlight time), played after the animation and
+before the intro line, under the intro's first words. A declared order for the b-roll
+(`[opening] order = ["screens", "footage", "photos"]`) is the smaller half: a search
+results page as the first screen.
+
+The Viglet Shio promo's `bin/cold-open.mjs` is the same need met by a script in the
+video's folder; once this lands it can be declared instead.
+
+**Done when** the Turing WordPress demo declares a cold open from its recording and the
+built cut shows a search answering before 0:20.
