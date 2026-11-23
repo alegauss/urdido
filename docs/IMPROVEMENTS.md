@@ -263,3 +263,24 @@ today's as stale, which is what would have caught the old Shorts.
 **Done when** one command rebuilds the Viglet Shio promo's pt-BR long cut and its three
 Shorts, a second run rebuilds nothing, and `check` names a Short built before its
 scenes.
+
+### §UR65 A declared language every per-language table must carry
+
+Met on marketing's VM21 (2026-11-23): the Viglet Shio promo declares `languages = {
+"pt-BR", en }` in `video.toml`, but its `demo/cards.json` had words for pt-BR only.
+`urdido check video.toml` answered "passes", and `urdido build --language en` then died
+in `pipelines/scenes.py` with a bare `KeyError: 'en'` on
+`cards["words"][self.language]`, after the English scenes had been filmed and the takes
+bought.
+
+`check` reads the cards declaration already; it should compare its `words` keys against
+the languages `[video] languages` names (and the narration script's languages) and
+refuse each missing one by name: "cards: no words for en (demo/cards.json)". The build
+should raise the same refusal instead of a traceback, so the message names the file to
+fix.
+
+The same comparison fits any per-language table a declaration points at: the narration
+script's lines, `pronounce`, the opening's pace and proof.
+
+**Done when** `urdido check` refuses a declaration whose cards lack a declared language,
+naming the file and the language, and `build` gives that refusal instead of a KeyError.
