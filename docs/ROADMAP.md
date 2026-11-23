@@ -15,6 +15,7 @@
 - ⏳ **UR53** (deps: UR51 ✅, polyweave: PW721) **An explainer's page film and terminal session are recorded by scripts copied into each video** — The page film (find and highlight a quoted sentence) waits on polyweave capture.web; then Scion's bin scripts go. → §UR53
 - 📋 **UR64** (deps: —) **A video's long cut and its Shorts take one build call each, and nothing says a Short is older than its scenes** — The Viglet Shio promo's Shorts stayed cut from scenes replaced on 2026-11-18 while its long cut was current. → §UR64
 - 📋 **UR65** (deps: —) **urdido check passes a declaration whose cards have no words for a declared language, and build dies on a KeyError** — The Viglet Shio promo's English build crashed on cards.json after its scenes were filmed, though check had said it passes. → §UR65
+- 📋 **UR66** (deps: —) **A take bought without word times passes check, and the build's refusal names a module instead of the command** — The Viglet Shio promo's English build stopped on 'run urdido.narration_words' after check passed and ten takes were bought. → §UR66
 
 ## Done when — UR19
 

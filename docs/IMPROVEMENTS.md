@@ -284,3 +284,20 @@ script's lines, `pronounce`, the opening's pace and proof.
 
 **Done when** `urdido check` refuses a declaration whose cards lack a declared language,
 naming the file and the language, and `build` gives that refusal instead of a KeyError.
+
+### §UR66 A bought take is never left without its word times
+
+Met on marketing's VM21 (2026-11-23): after ten English takes of the Viglet Shio promo
+were bought, `urdido build --language en` refused with "chapter-1: missing word times;
+run urdido.narration_words". That names a Python module, not the command a person types
+(`urdido words video.toml --language en`), and nothing before the build said the takes
+had no word times: `check` passed and the purchase ended with "10 take(s) bought".
+
+The refusal should print the exact command, with the declaration and language filled in.
+`urdido check` should list each take whose `words.json` is missing or bound to another
+hash, with the same command. Where urdido drives the purchase (`prepare`), transcribing
+the takes it just bought is part of the same step, so a bought take is never left
+without its times.
+
+**Done when** a take bought without word times is named by `check` with the command that
+fixes it, and the build's refusal spells that command for the declaration at hand.
