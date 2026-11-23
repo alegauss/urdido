@@ -83,7 +83,7 @@ def compose_full(variant: str, tmp_path: Path):
     recording = chaptered_recording(str(webm), str(timeline), language=language, chapters=count)
 
     declaration = load(WORDPRESS / "demo" / "cards.json")
-    theme = html.Theme.load(declaration["theme"], {"turing": str(TURING)})
+    theme = html.Theme.load(declaration["theme"], {"plugin": str(TURING)})
     script = load(NARRATION / script_file)
     words = declaration["words"][story]
     pages = html.pages(

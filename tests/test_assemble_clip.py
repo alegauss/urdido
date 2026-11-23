@@ -95,7 +95,7 @@ def compose_clip(variant: str, tmp_path: Path):
     recording = chaptered_recording(str(webm), str(timeline), language="pt-BR", chapters=8)
 
     declaration = load(WORDPRESS / "demo" / "cards.json")
-    theme = html.Theme.load(declaration["theme"], {"turing": str(TURING)})
+    theme = html.Theme.load(declaration["theme"], {"plugin": str(TURING)})
     script = load(NARRATION / "script.json")
     pages = html.pages(
         theme, frame, declaration["words"]["story"]["pt-BR"],

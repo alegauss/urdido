@@ -2,8 +2,8 @@
 
 The suite came from marketing's `video-maker/` and some tests read the videos beside it
 (`turing/wordpress`, `shio/promo`, `japode/*`) or the golden files that stay there
-(`video-maker/test/golden`). They skip by name where the checkout is absent, until
-UR31 moves them to synthetic fixtures.
+(`turing/wordpress/test/golden`). They skip by name where the checkout is absent,
+until UR39's remainder moves them into marketing beside those videos.
 
 `URDIDO_MARKETING` names the checkout; the default is the sibling layout on the
 owner's desk (`<git>/viglet/marketing` beside `<git>/alegauss/urdido`).
@@ -19,8 +19,8 @@ MARKETING = Path(
     or Path(__file__).resolve().parents[3] / "viglet" / "marketing"
 )
 
-#: The golden files, which stay in marketing (UR39).
-GOLDEN = MARKETING / "video-maker" / "test" / "golden"
+#: The golden files, beside the video they prove (UR39).
+GOLDEN = MARKETING / "turing" / "wordpress" / "test" / "golden"
 
 needs_marketing = pytest.mark.skipif(
     not MARKETING.is_dir(),

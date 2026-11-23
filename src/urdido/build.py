@@ -71,6 +71,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--context-before", type=float, default=0, help="seconds before the preview selection")
     p.add_argument("--context-after", type=float, default=0, help="seconds after the preview selection")
     p.add_argument("--preview-occurrence", type=int, help="1-based spoken-cue occurrence when the phrase repeats")
+    p.add_argument("--root", dest="roots", action="append", metavar="NAME=PATH",
+                   help="replace a root for this run (video, recordings, a declared one); repeatable")
     p.add_argument("--progress", choices=["human", "json", "off"], default="human",
                    help="live stage events: human on stderr or JSONL on stdout; also saved beside the build parts")
     a = p.parse_args(argv)
@@ -81,7 +83,7 @@ def main(argv: list[str] | None = None) -> int:
 OPTIONS = {
     "cut": "full", "vertical": False, "project": False, "cards": False, "plan": False,
     "refresh_screens": False, "revision": None, "preview": None, "context_before": 0.0,
-    "context_after": 0.0, "preview_occurrence": None, "progress": "human",
+    "context_after": 0.0, "preview_occurrence": None, "progress": "human", "roots": None,
 }
 
 

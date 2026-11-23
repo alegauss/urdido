@@ -12,6 +12,7 @@ from __future__ import annotations
 import base64
 import math
 import os
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from urllib.parse import quote
@@ -43,9 +44,18 @@ def font_url(path: str) -> str:
 
 
 def resolve(path: str, roots: Mapping[str, str]) -> str:
-    """A declared path with its `<name>` root replaced."""
+    """A declared path with its `<name>` root replaced; a root the declaration does not
+    declare is refused by name, never left in the path for the file system to reject."""
     for name, root in roots.items():
         path = path.replace(f"<{name}>", root)
+    left = re.match(r"<([\w-]+)>", path)
+    if left:
+        from urdido.errors import DeclarationError
+
+        raise DeclarationError(
+            f"urdido build: {path} starts at <{left.group(1)}>, which the declaration "
+            f"does not declare; add it under [roots] (it has {', '.join(sorted(roots))})"
+        )
     return os.path.normpath(path)
 
 

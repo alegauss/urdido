@@ -82,6 +82,22 @@ def roots_of(here: Path, decl: Mapping, env: Mapping[str, str] | None = None) ->
     return roots
 
 
+def overridden(pairs) -> dict:
+    """Roots replaced for one run (`urdido build --root plugin=../scratch`, UR39): a
+    check that builds a video against scratch copies names them here, so the
+    declaration keeps its own. Any root but `root` itself can be replaced."""
+    out = {}
+    for pair in pairs:
+        name, sep, path = pair.partition("=")
+        if not sep or not name or not path or name == "root":
+            raise DeclarationError(
+                f"urdido build: --root {pair} must be NAME=PATH, for a root other "
+                "than root"
+            )
+        out[name] = str(Path(path).resolve())
+    return out
+
+
 #: What a base folder holds that a variant's view leaves out (UR5).
 NOT_SHARED = {".git", ".urdido", "node_modules", "__pycache__", "video.toml"}
 
@@ -199,6 +215,7 @@ class Project:
             )
             self.variant, self.here = self.here, view
             self.roots.update(root=str(view), recordings=str(view / "recordings"))
+        self.roots.update(overridden(getattr(args, "roots", None) or ()))
         self.out = Path(self.roots["video"])
 
         self.language = args.language

@@ -5,11 +5,12 @@
 ## Block B — The engine extracted (videomaker without marketing)
 
 - 📋 **UR46** (deps: UR22 ✅, UR37 ✅) **Four environment variables still fill undeclared roots, the last root names left in a module** — They were kept for one release so marketing's builds keep working; left longer, the shim becomes a second way to declare a root. → §UR46
+- 📋 **UR63** (deps: —) **A card layer's screenshot now and then fails with Unable to capture screenshot, and the whole build stops** — One browser hiccup costs a full encode, and the traceback names Playwright, not the card. → §UR63
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
-- 📋 **UR39** (deps: UR31 ✅, UR36 ✅) **The golden check proves one marketing video but lives inside the framework, reading the Turing repository** — It belongs to the WordPress demo, and in urdido it would be a test that only runs on one machine. → §UR39
-- 📋 **UR41** (deps: UR37 ✅, UR38 ✅, UR39) **Nothing proves that each published video comes out the same when built by urdido instead of video-maker** — A changed cut found after re-upload costs a published video, and the owner should not be the check. → §UR41
+- ⏳ **UR39** (deps: UR31 ✅, UR36 ✅) **The golden check proves one marketing video but lives inside the framework, reading the Turing repository** — urdido's tests that read marketing's videos and goldens move into marketing, and tests/marketing.py goes. → §UR39
+- 📋 **UR41** (deps: UR37 ✅, UR38 ✅, UR39 ⏳) **Nothing proves that each published video comes out the same when built by urdido instead of video-maker** — A changed cut found after re-upload costs a published video, and the owner should not be the check. → §UR41
 - 📋 **UR42** (deps: UR40 ✅, UR41) **video-maker/ still sits in marketing after every video is built by urdido** — Two copies of the framework drift on the first fix applied to only one of them. → §UR42
 
 ## Block D — Inherited from video-maker (marketing Block B)

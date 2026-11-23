@@ -38,6 +38,27 @@ def test_check_load_and_make_a_plan(cut):  # noqa: F811
     assert list((cut.folder / "video").rglob("*.plan.json"))
 
 
+def test_a_root_replaced_for_one_run_moves_the_output_ur39(cut, tmp_path):  # noqa: F811
+    cut.cards["words"] = {"en": {}}
+    cut.write("cards.json", cut.cards)
+    cut.story.update(description="A fixture.", credits="")
+    cut.write("story.json", cut.story)
+    elsewhere = tmp_path / "scratch-video"
+    assert (
+        urdido.make(
+            cut.declaration,
+            "en",
+            plan=True,
+            progress="off",
+            roots=[f"video={elsewhere}"],
+        )
+        == 0
+    )
+    assert list(elsewhere.rglob("*.plan.json"))
+    with pytest.raises(urdido.DeclarationError, match="NAME=PATH"):
+        urdido.make(cut.declaration, "en", plan=True, roots=["root=."])
+
+
 def test_make_refuses_as_the_command_does(cut):  # noqa: F811
     cut.write("translations.json", {"outro": ["Tchau"]})
     with pytest.raises(PreflightRefused, match="missing take translation"):

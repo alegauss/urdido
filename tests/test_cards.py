@@ -55,7 +55,7 @@ def theme(tmp_path_factory):
 @pytest.mark.parametrize("variant", sorted(VARIANTS))
 def test_pages_equal_the_js_cards(variant):
     DECLARATION = wordpress_declaration()
-    THEME = html.Theme.load(DECLARATION["theme"], {"turing": "turing"}, font=named_font)
+    THEME = html.Theme.load(DECLARATION["theme"], {"plugin": "turing"}, font=named_font)
     story, fixture, script_file = VARIANTS[variant]
     folder = GOLDEN / "expected" / variant
     expected = {f.stem: f.read_bytes().decode("utf-8") for f in (folder / "cards").glob("*.html")}
@@ -149,7 +149,7 @@ def test_a_card_renders_in_a_generated_theme(tmp_path):
 
 
 # The JS build's own card pictures, which the golden check leaves in its work folder.
-GOLDEN_WORK = Path(os.environ.get("URDIDO_GOLDEN_WORK", Path(os.environ.get("TEMP", "/tmp")) / "video-maker-golden"))
+GOLDEN_WORK = Path(os.environ.get("URDIDO_GOLDEN_WORK", Path(os.environ.get("TEMP", "/tmp")) / "urdido-golden"))
 TURING_WORDPRESS = Path(os.environ.get("TURING_WORDPRESS", r"D:\Git\viglet\turing\latest\wordpress"))
 
 
@@ -178,7 +178,7 @@ def test_pictures_match_the_js_cards(variant, tmp_path):
     story, fixture, script_file = VARIANTS[variant]
     plan = load(main_plan(GOLDEN / "expected" / variant))
     frame = html.Frame(plan["size"]["width"], plan["size"]["height"])
-    theme = html.Theme.load(DECLARATION["theme"], {"turing": str(TURING_WORDPRESS)})
+    theme = html.Theme.load(DECLARATION["theme"], {"plugin": str(TURING_WORDPRESS)})
     pages = html.pages(
         theme, frame, DECLARATION["words"][story][plan["language"]],
         captions.chapters_of(load((Path(__file__).parent / "fixtures" / "recordings") / f"{fixture}.json")),
@@ -191,3 +191,12 @@ def test_pictures_match_the_js_cards(variant, tmp_path):
     worst = max((_differing_share(Path(f), js_parts / Path(f).name), Path(f).name) for f in files)
     # Two browsers may anti-alias a few glyph edges apart; a layout or colour change moves far more.
     assert worst[0] < 0.005, worst
+
+
+def test_a_path_at_an_undeclared_root_is_refused_by_name():
+    from urdido.cards.html import resolve
+    from urdido.errors import DeclarationError
+
+    assert resolve("<plugin>/demo/fonts", {"plugin": "/p"}).replace("\\", "/") == "/p/demo/fonts"
+    with pytest.raises(DeclarationError, match="starts at <turing>, which the declaration"):
+        resolve("<turing>/demo/fonts", {"plugin": "/p"})
