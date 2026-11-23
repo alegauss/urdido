@@ -13,6 +13,7 @@
 - ⏳ **UR5** (deps: UR21 ✅, marketing: VM32) **A second cut of a video, to test a new opening, means copying the whole video folder and its declaration** — The review records which variant was uploaded and which retention report it is compared against, once marketing's VM32 review exists. → §UR5
 - 📋 **UR44** (deps: polyweave: PW720) **A retake moves the old take's files aside by hand because voice.lines cannot buy a current take again** — Moving files behind polyweave's back is a workaround that a crash mid-run can leave half done. → §UR44
 - ⏳ **UR53** (deps: UR51 ✅, polyweave: PW721) **An explainer's page film and terminal session are recorded by scripts copied into each video** — The page film (find and highlight a quoted sentence) waits on polyweave capture.web; then Scion's bin scripts go. → §UR53
+- 📋 **UR64** (deps: —) **A video's long cut and its Shorts take one build call each, and nothing says a Short is older than its scenes** — The Viglet Shio promo's Shorts stayed cut from scenes replaced on 2026-11-18 while its long cut was current. → §UR64
 
 ## Done when — UR19
 

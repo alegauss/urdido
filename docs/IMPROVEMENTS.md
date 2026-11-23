@@ -240,3 +240,26 @@ Then marketing drops Scion's and Docker's `bin/film-page.py`, `capture-terminal.
 this ships).
 
 Done when the Scion video's page and terminal shots are made from its declaration.
+
+### §UR64 Every cut in one build, and a stale cut named
+
+Met on marketing's VM20 (2026-11-23): the Viglet Shio promo's scenes were filmed again
+on 2026-11-18 and its long cut rebuilt then, but the three Shorts kept their cuts of
+2026-11-10 and 2026-11-14 because each Short is its own `urdido build ... --cut
+short:<c>` call and nothing said they were older than their inputs. Bringing a language
+up to date took four commands, one per cut, typed by hand in a loop.
+
+Build every cut a declaration names in one call: `urdido build <video.toml> --language
+pt-BR --cut all` (or the default when `[shorts]` is declared) builds the full cut, then
+each Short from `shorts.json`, sharing the planned timeline and the scene parts instead
+of planning once per cut. The answer lists each output with its duration and whether it
+was rebuilt or already current.
+
+Each output's `.qa.json` (or a sibling stamp) already records input hashes; compare them
+with the current inputs and skip a cut whose inputs did not change, so the all-cuts call
+is cheap to repeat. `urdido check` reports a cut whose recorded inputs differ from
+today's as stale, which is what would have caught the old Shorts.
+
+**Done when** one command rebuilds the Viglet Shio promo's pt-BR long cut and its three
+Shorts, a second run rebuilds nothing, and `check` names a Short built before its
+scenes.
