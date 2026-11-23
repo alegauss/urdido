@@ -12,6 +12,8 @@
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
+- ⏸ **UR41** (deps: UR37 ✅, UR38 ✅, UR39 ✅) **Nothing proves that each published video comes out the same when built by urdido instead of video-maker** — set aside (Turing demo must be re-recorded.): The Turing WordPress demo's story and developer cuts, once recorded again on the demo stack. → §UR41
+
 ## Block D — Inherited from video-maker (marketing Block B)
 
 - ⏸ **UR15** (deps: marketing VM3) **The recording driver and the pointer exist in three copies, and the copies already differ** — set aside (Needs the demo stacks up and a commit in Turing.): The story, the walkthrough and Viglet Shio's scenes each carry their own pointer. → §UR15

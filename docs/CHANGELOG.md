@@ -45,6 +45,7 @@
 - ✅ **UR37** **Marketing's npm scripts, READMEs, bin scripts and brand code call python -m videomaker or import videomaker** — Marketing calls urdido everywhere: scripts, READMEs, brand and Scion code; each video plans or stops where video-maker did.
 - ✅ **UR38** **Project scripts and Turing's e2e specs import narration and recording helpers by a relative path into video-maker/** — Marketing's scripts import urdido-record from a root package.json, and Turing's story spec still finds its narration.
 - ✅ **UR39** **The golden check proves one marketing video but lives inside the framework, reading the Turing repository** — The golden check and urdido's tests of marketing's videos live in marketing; urdido's suite reads nothing outside its repository.
+- ✅ **UR41 (the Japode and Shio videos)** **Nothing proves that each published video comes out the same when built by urdido instead of video-maker** — Every Japode and Shio video and Short builds the same on urdido as video-maker, each difference explained.
 
 ## Block D — Inherited from video-maker (marketing Block B)
 
