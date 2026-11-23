@@ -38,6 +38,7 @@
 - ✅ **UR59** **[music] under defaults to 0.2 in a scenes build and 0.07 in an explainer, so one key means two levels** — [music] under defaults by source kind: 0.2, 0.07 for an explainer, both stated in the reference.
 - ✅ **UR62** **A take that says a mapped word as its parts (b2/cafelog as B2 CafeLog) is refused as mispronounced** — A mapped word heard as its own parts joined counts as heard, and a wrong word is still refused.
 - ✅ **UR46** **Four environment variables still fill undeclared roots, the last root names left in a module** — No environment variable fills a root any more: roots are declared, or replaced for one run with --root.
+- ✅ **UR63** **A card layer's screenshot now and then fails with Unable to capture screenshot, and the whole build stops** — A card layer the browser could not capture is drawn again in a fresh page; a second failure is refused by name.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 

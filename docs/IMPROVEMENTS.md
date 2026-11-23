@@ -90,23 +90,6 @@ the key table.
 Done when no module reads a default that the model does not hold, and
 docs/specs/declaration.md names each key's default.
 
-### §UR63 A card layer retried once
-
-Seen in urdido's gate on 2026-11-23, right after Playwright's headless Chromium shell
-was installed in the project's virtualenv. One build of the preview fixture
-(`fixture.en`) failed at `raster failed 0/1 outro-0.png`: `Page.screenshot: Protocol
-error (Page.captureScreenshot): Unable to capture screenshot`, after its fonts had
-loaded. The same test passed alone and in the next two full runs.
-
-A long build draws dozens of card layers, so a one-off browser failure costs a whole
-encode. `urdido.cards.render` should retry a layer's screenshot once, in a fresh page,
-when Chromium reports this protocol error. It should then refuse by name (the layer, the
-card and the browser channel) if the second try fails too, rather than surfacing
-Playwright's traceback.
-
-Done when a raster whose first screenshot raises this error is drawn on the retry, and a
-test with a fake page that fails once proves it.
-
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
 ### §UR41 Every video rebuilt and compared

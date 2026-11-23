@@ -4,8 +4,6 @@
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-- 📋 **UR63** (deps: —) **A card layer's screenshot now and then fails with Unable to capture screenshot, and the whole build stops** — One browser hiccup costs a full encode, and the traceback names Playwright, not the card. → §UR63
-
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
 ## Block D — Inherited from video-maker (marketing Block B)

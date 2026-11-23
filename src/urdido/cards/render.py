@@ -26,6 +26,34 @@ def browser_channel(asked: str | None = None) -> str | None:
     return asked or DECLARED.get() or os.environ.get("E2E_CHANNEL") or None
 
 
+#: What Chromium says now and then when a screenshot fails for no fault of the page (UR63).
+UNCAPTURED = "Unable to capture screenshot"
+
+
+def retried(draw, fresh, layer: str, channel: str | None):
+    """`draw()`, tried once more after `fresh()` (a new page) when the browser could not
+    capture the screenshot; a second failure is refused by name, the layer and the
+    browser, rather than as the browser's traceback. Any other error passes as it is."""
+    from urdido.errors import UrdidoError
+
+    try:
+        return draw()
+    except Exception as first:
+        if UNCAPTURED not in str(first):
+            raise
+    fresh()
+    try:
+        return draw()
+    except Exception as second:
+        if UNCAPTURED not in str(second):
+            raise
+        browser = channel or "Playwright's Chromium"
+        raise UrdidoError(
+            f"urdido build: {browser} could not capture {layer} twice ({UNCAPTURED})",
+            remedy="build again; if it keeps failing, declare another [cards] channel",
+        ) from None
+
+
 def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | None = None) -> list[str]:
     """Write `<layer>.png` for every page in `pages` (and `card-<n>-text.png` for each card)
     to `out_dir`; returns the files in the order written. `channel` names a browser other
@@ -93,6 +121,23 @@ def render(pages: Mapping[str, str], frame: Frame, out_dir: str, channel: str | 
                     if browser is None:
                         browser = p.chromium.launch(channel=channel or None)
                         page = browser.new_page(viewport={"width": frame.width, "height": frame.height})
+
+                    def attempt():
+                        before, before_text = len(findings), len(text_findings)
+                        try:
+                            return draw(content, name, file, outputs)
+                        except Exception:
+                            del findings[before:], text_findings[before_text:]  # a failed try reports nothing
+                            raise
+
+                    def fresh():
+                        nonlocal page
+                        page.close()
+                        page = browser.new_page(viewport={"width": frame.width, "height": frame.height})
+
+                    return retried(attempt, fresh, f"{name}.png", channel)
+
+                def draw(content, name, file, outputs):
                     before = len(findings)
                     before_text = len(text_findings)
                     page.set_content(content)
