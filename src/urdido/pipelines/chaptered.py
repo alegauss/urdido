@@ -88,6 +88,10 @@ class Chaptered(Finishing):
             parts=str(self.parts),
             bed=bed,
             encoder=os.environ.get("STORY_ENCODER") or media.detect_encoder(),
+            # UR71: the declared [audio] (target, peak, margin), as the scenes
+            # pipeline reads it; without it the QA's "increase [audio].margin" had
+            # nothing to act on.
+            loudness=mix.Loudness(**self.decl.get("audio", {})),
         )
         from urdido.cuts.render import Renderer
 
