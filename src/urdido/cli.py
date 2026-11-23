@@ -30,6 +30,7 @@ COMMANDS = {
     "storyboard": ("urdido.storyboard", "edit a storyboard's beats"),
     "instance": ("urdido.instances", "start and stop a product instance"),
     "export": ("urdido.export.resolve", "hand the timeline to DaVinci Resolve"),
+    "retention": ("urdido.retention", "read where a published video's viewers leave"),
     "publish": (
         "urdido.publish.__main__",
         "write the transcript where it is published",
