@@ -26,6 +26,24 @@ from urdido.timeline import Builder
 _CHAPTER = re.compile(r"^chapter-(\d+)$")
 
 
+def anchor_word(spec: str | Mapping, language: str, scene: str = "") -> str | Mapping:
+    """An [anchors] word in the narration's language (UR67).
+
+    `word` is what the take says at the mark: a word (`"console"`), a table naming one occurrence
+    (`{text, occurrence, context}`), or, for a video narrated in more than one language, a table
+    keyed by language whose values are either of those (`{ "pt-BR" = "Aí", en = "Then" }`). A
+    language the table does not name is refused by name, never matched against another's words.
+    """
+    if isinstance(spec, Mapping) and "text" not in spec:
+        if language not in spec:
+            from urdido.sources.model import RecordingRefused
+
+            raise RecordingRefused(f"{scene}: [anchors] word has no {language} entry "
+                                   f"({', '.join(spec) or 'none'})")
+        return spec[language]
+    return spec
+
+
 @dataclass
 class ScenesVideo:
     name: str
@@ -170,7 +188,8 @@ class ScenesVideo:
                 raise RecordingRefused(f"{scene.name}: [anchors] names take {name!r}, not spoken over this "
                                        f"scene ({', '.join(starts)})")
             take, start = starts[name]
-            word = keywords.anchor(Path(take.file), anchor["word"], aliases=keywords.aliases(self.script, self.language))
+            spoken = anchor_word(anchor["word"], self.language, scene.name)
+            word = keywords.anchor(Path(take.file), spoken, aliases=keywords.aliases(self.script, self.language))
             pins.append((float(marks[mark]), start + word, mark))
         try:
             return warp(scene.seconds, need, pins)
