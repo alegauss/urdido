@@ -1,18 +1,11 @@
 """mix.py builds the ducking the goldens record, and mixes to the loudness target (VM5)."""
 
 import json
-import shutil
 from pathlib import Path
 
 import pytest
 
-from golden_plans import main_plan, main_plans
-from marketing import GOLDEN, MARKETING
 from urdido.audio import mix as m
-
-GOLDEN = GOLDEN / "expected"
-WORDPRESS = MARKETING / "turing" / "wordpress"
-PLANS = main_plans(GOLDEN)
 
 
 def load(path: Path):
@@ -23,20 +16,8 @@ def duck_of(music) -> m.Duck:
     return m.Duck(music["duck"]["between"], music["volume"], music["duck"]["ramp"])
 
 
-def local(path: str) -> str:
-    return path.replace("<root>", str(WORDPRESS))
 
 
-@pytest.mark.parametrize("plan_file", PLANS, ids=lambda p: p.parent.name)
-def test_envelope_equals_the_plan(plan_file):
-    plan = load(plan_file)
-    music = plan["music"]
-    bed = m.Bed(music["file"], music["from"])
-    narrated = {language: placed for language, placed in plan["spoken"].items() if placed}
-    assert sorted(music["envelope"]) == sorted(narrated)
-    for language, placed in narrated.items():
-        takes = m.on_bed(m.takes_of(placed), bed)
-        assert m.duck_expression(takes, duck_of(music)) == music["envelope"][language], language
 
 
 def test_gain_follows_the_duck():
@@ -49,26 +30,8 @@ def test_gain_follows_the_duck():
     assert m.duck_expression([], duck) == "0.4-0.200*(0)"
 
 
-GRAPHS = sorted(GOLDEN.glob("*/mix.*.graph.json"))
 
 
-@pytest.mark.parametrize("graph_file", GRAPHS, ids=lambda p: p.parent.name)
-def test_filtergraph_equals_the_one_story_video_ran(graph_file):
-    """The inputs and filtergraph story-video.mjs ran for a narrated language (VM25)."""
-    golden = load(graph_file)
-    language = graph_file.name.split(".")[1]
-    plan = load(main_plan(graph_file.parent))
-    music = plan["music"]
-    built = m.mix_graph(
-        m.takes_of(plan["spoken"][language]),
-        golden["total"],
-        sounds=[m.Sound(s["file"], s["from"], s["at"], s["length"]) for s in plan.get("sounds") or []],
-        bed=m.Bed(music["file"], music["from"]),
-        trim_db=music["trimDb"],
-        duck=duck_of(music),
-    )
-    assert built.inputs == golden["inputs"]
-    assert built.filters == golden["graph"]
 
 
 def test_sounds_come_before_the_bed():
@@ -86,32 +49,10 @@ def test_sounds_come_before_the_bed():
     assert built.filters[3].startswith("[d0][s0][m]amix=inputs=3")
 
 
-CHAPTER = GOLDEN / "chapter-2" / "story-chapter-2.pt-BR.plan.json"
 
 
-def _media_present() -> bool:
-    if not (shutil.which("ffmpeg") and CHAPTER.exists()):
-        return False
-    plan = load(CHAPTER)
-    files = [local(p["file"]) for p in plan["spoken"]["pt-BR"]] + [local(plan["music"]["file"])]
-    return all(Path(f).exists() for f in files)
 
 
-@pytest.mark.skipif(not _media_present(), reason="the narration takes and the bed are not on this machine")
-def test_chapter_mix_lands_on_the_target(tmp_path):
-    plan = load(CHAPTER)
-    music = plan["music"]
-    total = sum(piece["length"] for piece in plan["pieces"])
-    takes = [m.Take(local(t.file), t.at, t.length) for t in m.takes_of(plan["spoken"]["pt-BR"])]
-    bed = m.Bed(local(music["file"]), music["from"])
-    loudness = m.Loudness(music["loudness"]["target"], music["loudness"]["peak"])
-
-    assert m.bed_trim(bed) == pytest.approx(music["trimDb"], abs=0.01)
-    measured = m.voice_track(
-        takes, total, str(tmp_path / "voice.pt-BR.m4a"), str(tmp_path),
-        bed=bed, trim_db=music["trimDb"], duck=duck_of(music), loudness=loudness,
-    )
-    assert abs(measured - loudness.target) <= 0.3
 
 
 def test_a_bed_ending_in_silence_loops_from_where_its_music_stops():

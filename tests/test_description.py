@@ -1,41 +1,14 @@
 """VM52: platform budgets never silently delete attribution obligations."""
-import json
-import tomllib
 from pathlib import Path
 
 import pytest
 
-from marketing import MARKETING, needs_marketing
 from urdido.publish.description import (
     format_description,
     illustrated,
     short_url,
-    units,
     write,
 )
-
-ROOT = MARKETING
-
-
-@needs_marketing
-def test_wordpress_case_fits_with_declared_notes_and_preserves_credits_vm52():
-    root = ROOT / "japode/wordpress"
-    document = json.loads((root / "storyboard.json").read_text(encoding="utf-8"))
-    script = json.loads((root / "narration/script.json").read_text(encoding="utf-8"))
-    options = tomllib.loads((root / "video.toml").read_text(encoding="utf-8"))["description"]
-    chapters = ["0:00 Introdução"] + [f"{i}:00 {c['title']['pt-BR']}" for i, c in enumerate(script["chapters"].values(), 1)]
-    text, proof = illustrated(document, chapters, options, "pt-BR")
-    assert units(text) <= 5000
-    assert text.startswith(document["description"])
-    assert document["title"] + "\n\n" not in text[:100]
-    assert "Tom Marcello" in text and "CC BY-SA 2.0" in text
-    assert "https://creativecommons.org/licenses/by-sa/2.0/" in text
-    assert "24:50–25:10" in text and "sem áudio original" in text
-    assert "Kevin MacLeod" in text and "Wallpaper" in text
-    assert "Apoio: Pixabay" in text and "vinyl-close" not in text
-    used = {b["asset"] for beats in document["scenes"].values() for b in beats if b.get("asset")}
-    assert len(proof["assets"]) == len(used)
-    assert proof["sources"] == document["sources"]
 
 
 def test_an_english_build_writes_an_english_description_ur27():

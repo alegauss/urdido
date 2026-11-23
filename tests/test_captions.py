@@ -12,11 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from golden_plans import main_plan
-from marketing import GOLDEN, MARKETING, needs_marketing
 from urdido import captions as c
-
-NARRATION = MARKETING / "turing" / "wordpress" / "demo" / "narration"
 
 # The WordPress build captions its silent cuts in these two (`finish` in story-video.mjs).
 WORDPRESS_TITLES = ["en", "pt-BR"]
@@ -48,22 +44,6 @@ def expected_captions(folder: Path) -> dict[str, str]:
     }
 
 
-@needs_marketing
-@pytest.mark.parametrize("variant", sorted(VARIANTS))
-def test_variant_captions_equal_the_goldens(variant):
-    fixture, script_file = VARIANTS[variant]
-    folder = GOLDEN / "expected" / variant
-    plan = load(main_plan(folder))
-    chapters = c.chapters_of(load((Path(__file__).parent / "fixtures" / "recordings") / f"{fixture}.json"))
-    script = load(NARRATION / script_file)
-
-    written = c.caption_files(
-        plan, chapters, script, short_cues=teaser_cues(folder), title_languages=WORDPRESS_TITLES,
-    )
-    expected = expected_captions(folder)
-    assert sorted(written) == sorted(expected)
-    for name, text in expected.items():
-        assert_same_captions(written[name], text, name)
 
 
 def assert_same_captions(written: str, expected: str, name: str):

@@ -124,28 +124,6 @@ test with a fake page that fails once proves it.
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
-### §UR39 The golden check moves to the video it proves
-
-`video-maker/test/golden/run.mjs` rebuilds the WordPress demo's variants from
-`turing/wordpress` and `../turing/latest/wordpress`, snapshots the Turing repository's
-`git status`, and diffs against `test/golden/expected/`, using media that is not
-versioned.
-
-Move it to `turing/wordpress/test/golden/` in marketing, running the installed urdido.
-urdido keeps the frozen oracles and its own synthetic end-to-end test.
-
-The tests in urdido that still read marketing check one of its videos, not the
-framework, and move with it (UR31 left them guarded by `needs_marketing`): the golden
-comparisons in `test_captions`, `test_cards`, `test_assemble_clip`,
-`test_assemble_video`, `test_cuts`, `test_goldens`, `test_mix` and `test_timeline`; the
-Viglet Shio promo's terminal chapters (`test_terminal`), scenes (`test_scenes`) and card
-(`test_cards`); and the WordPress description (`test_description`). Once they live in
-marketing, `tests/marketing.py` goes.
-
-**Done when** `node turing/wordpress/test/golden/run.mjs` passes against the installed
-urdido with the expected files unchanged, and urdido's suite runs in CI with no path
-outside this repository.
-
 ### §UR41 Every video rebuilt and compared
 
 Rebuild every declared video with urdido and compare with the last video-maker build:

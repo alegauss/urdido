@@ -12,7 +12,7 @@
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-- ✅ **UR21** **urdido holds none of the videomaker code, and marketing's history of each module would be lost by a copy** — video-maker's 75 commits merged into src/urdido, tests and js under the urdido name; the suite passes here and skips by name without marketing (design recorded in `tests/marketing.py`).
+- ✅ **UR21** **urdido holds none of the videomaker code, and marketing's history of each module would be lost by a copy** — video-maker's 75 commits merged into src/urdido, tests and js under the urdido name; the suite passes here and skipped by name without marketing until UR39.
 - ✅ **UR22** **The build defaults its roots to sibling Turing and Shio checkouts and writes to a fixed video/ folder** — A declaration names its roots in [roots] and its output in [output]; no module holds a sibling path, and a path at an undeclared root is refused (design recorded in `docs/video-maker.md`).
 - ✅ **UR23** **A misspelled or missing key in video.toml fails as a KeyError deep inside the build** — urdido check and every build refuse an unknown video.toml key with its file, table and nearest name, and a missing one; check --schema prints JSON Schema (design recorded in `docs/video-maker.md`).
 - ✅ **UR24** **Library code raises SystemExit and the CLI is an if-chain, so urdido can be neither embedded nor discovered** — urdido --help lists every command; the library raises UrdidoError with a remedy, which only the command line turns into an exit (design recorded in `docs/video-maker.md`).
@@ -44,7 +44,7 @@
 - ✅ **UR40** **Marketing's video-maker gate hook, friction skill and CLAUDE.md rules point at a folder and a Block B that will be gone** — Marketing's gate hook, task skill and CLAUDE.md route framework friction to urdido's UR roadmap.
 - ✅ **UR37** **Marketing's npm scripts, READMEs, bin scripts and brand code call python -m videomaker or import videomaker** — Marketing calls urdido everywhere: scripts, READMEs, brand and Scion code; each video plans or stops where video-maker did.
 - ✅ **UR38** **Project scripts and Turing's e2e specs import narration and recording helpers by a relative path into video-maker/** — Marketing's scripts import urdido-record from a root package.json, and Turing's story spec still finds its narration.
-- ✅ **UR39 (the golden check)** **The golden check proves one marketing video but lives inside the framework, reading the Turing repository** — The golden check runs from turing/wordpress/test/golden on urdido build --root, all five variants unchanged.
+- ✅ **UR39** **The golden check proves one marketing video but lives inside the framework, reading the Turing repository** — The golden check and urdido's tests of marketing's videos live in marketing; urdido's suite reads nothing outside its repository.
 
 ## Block D — Inherited from video-maker (marketing Block B)
 

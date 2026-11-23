@@ -799,10 +799,13 @@ stay held to it.
 
 ## The golden check
 
-`node video-maker/test/golden/run.mjs` rebuilds the WordPress demo's variants (the English and
-pt-BR story, the pt-BR one with its Resolve project, the developer walkthrough, chapter 2 and its
-vertical cut) and diffs them against `test/golden/expected/`. It builds each variant with `python -m
-videomaker build` from the WordPress declarations; a difference means a change moved the video.
+The golden check lives in marketing, beside the video it proves:
+`node turing/wordpress/test/golden/run.mjs` rebuilds the WordPress demo's variants (the English
+and pt-BR story, the pt-BR one with its Resolve project, the developer walkthrough, chapter 2 and
+its vertical cut) and diffs them against its `expected/`. It builds each variant with the
+installed `urdido build`, replacing the plugin, Turing, recordings and video roots with scratch
+copies (`--root`); a difference means a change in urdido moved the video. Marketing's `tests/`
+holds the Python tests that compare urdido's internals with those goldens.
 
 - What it compares: each build's timeline (`parts/<name>.plan.json`; `--plan` stops there), the
   teaser's plan and each narrated language's mix graph, the page each card layer is drawn from (`cards/*.html`, fonts named by

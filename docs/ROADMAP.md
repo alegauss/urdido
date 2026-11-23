@@ -9,8 +9,7 @@
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
-- ⏳ **UR39** (deps: UR31 ✅, UR36 ✅) **The golden check proves one marketing video but lives inside the framework, reading the Turing repository** — urdido's tests that read marketing's videos and goldens move into marketing, and tests/marketing.py goes. → §UR39
-- 📋 **UR41** (deps: UR37 ✅, UR38 ✅, UR39 ⏳) **Nothing proves that each published video comes out the same when built by urdido instead of video-maker** — A changed cut found after re-upload costs a published video, and the owner should not be the check. → §UR41
+- 📋 **UR41** (deps: UR37 ✅, UR38 ✅, UR39 ✅) **Nothing proves that each published video comes out the same when built by urdido instead of video-maker** — A changed cut found after re-upload costs a published video, and the owner should not be the check. → §UR41
 - 📋 **UR42** (deps: UR40 ✅, UR41) **video-maker/ still sits in marketing after every video is built by urdido** — Two copies of the framework drift on the first fix applied to only one of them. → §UR42
 
 ## Block D — Inherited from video-maker (marketing Block B)
@@ -32,12 +31,6 @@
 - **urdido-record installs from the npm registry by name** npm install urdido-record in
   a fresh folder brings the helpers at the Python package's version, and an import of
   urdido-record/terminal-replay resolves.
-
-## Done when — UR39
-
-- **urdido's suite runs in CI with no path outside its repository** With
-  URDIDO_MARKETING pointing nowhere, the gate's summary names no test skipped for the
-  marketing checkout or a sibling repository.
 
 ## Done when — UR5
 
