@@ -19,9 +19,8 @@ declaration or as `$VAR`, and `[output] folder` (default `video`) and
 `[output] parts` (default `parts`, inside it) say where the build writes.
 `<root>`, `<video>` and `<recordings>` exist without declaring them; any other
 root, such as `<plugin>` or `<shio>`, must be declared, and a path at an
-undeclared one is refused by name. For one release STORY_VIDEO_DIR,
-STORY_RECORDINGS, TURING_WORDPRESS and SHIO_REPO still fill an undeclared
-root, with a notice.
+undeclared one is refused by name. No environment variable fills a root;
+`urdido build --root NAME=PATH` replaces one for a single run.
 
 Every service urdido calls goes through `urdido.providers`: voice
 takes, stock footage, reference frames, web capture, safe-area and measured

@@ -20,7 +20,6 @@ def test_the_first_video_builds_as_the_quickstart_says(tmp_path, monkeypatch):
     from urdido.build import main
     from urdido.declaration import main as check
 
-    monkeypatch.delenv("STORY_VIDEO_DIR", raising=False)
     folder = tmp_path / "first-video"
     shutil.copytree(
         EXAMPLE, folder, ignore=shutil.ignore_patterns("video", "narration", "footage")

@@ -23,7 +23,6 @@ def args(**more):
 
 
 def test_a_project_loads_its_declaration_roots_and_folders(tmp_path, monkeypatch):
-    monkeypatch.delenv("STORY_VIDEO_DIR", raising=False)
     project = Project(declared(tmp_path, '[output]\nfolder = "built"\n'), args())
     assert project.name == "demo"
     assert project.parts == (tmp_path / "built" / "parts").resolve()
@@ -36,7 +35,6 @@ def test_a_project_loads_its_declaration_roots_and_folders(tmp_path, monkeypatch
 def test_a_side_file_edited_during_the_build_is_refused(tmp_path, monkeypatch):
     from urdido.sources import RecordingRefused
 
-    monkeypatch.delenv("STORY_VIDEO_DIR", raising=False)
     project = Project(declared(tmp_path), args())
     side = tmp_path / "words.json"
     side.write_text("{}", encoding="utf-8")
@@ -47,7 +45,6 @@ def test_a_side_file_edited_during_the_build_is_refused(tmp_path, monkeypatch):
 
 
 def test_the_build_is_a_project_with_pipelines(tmp_path, monkeypatch):
-    monkeypatch.delenv("STORY_VIDEO_DIR", raising=False)
     build = Build(declared(tmp_path), args())
     assert isinstance(build, Project)
     assert callable(build.chaptered) and callable(build.scenes)

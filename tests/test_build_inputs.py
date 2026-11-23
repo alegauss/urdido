@@ -16,7 +16,6 @@ def fixture(tmp_path):
 
 
 def test_manifest_hashes_actual_bytes_and_refuses_later_edits_vm46(tmp_path, monkeypatch):
-    monkeypatch.setenv("STORY_VIDEO_DIR", str(tmp_path / "video"))
     build = fixture(tmp_path)
     script = tmp_path / "script.json"
     script.write_bytes(b'\xef\xbb\xbf{"intro":"current"}\r\n')

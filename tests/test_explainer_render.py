@@ -85,7 +85,6 @@ def test_an_explainer_renders_with_titles_callouts_captions_and_mix(
 ):
     from urdido.build import main
 
-    monkeypatch.delenv("STORY_VIDEO_DIR", raising=False)
     toml = project(tmp_path)
     assert main([str(toml), "--language", "pt-BR"]) == 0
     video = tmp_path / "video" / "demo.pt-BR.mp4"

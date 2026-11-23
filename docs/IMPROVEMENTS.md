@@ -72,21 +72,6 @@ suppressing. A file leaves both lists once it is clean, and nothing is ever adde
 **Done when** both lists in `pyproject.toml` are gone and `ruff check` and `ruff format
 --check` pass on the whole tree.
 
-### §UR46 The legacy root variables removed
-
-UR22 made every root a declaration's own: `[roots]` names each one, `[output] folder` is
-`<video>`, and `build.roots_of` knows no sibling path. For one release, `LEGACY_ROOTS`
-in `build.py` still lets STORY_VIDEO_DIR, STORY_RECORDINGS, TURING_WORDPRESS and
-SHIO_REPO fill an undeclared root, printing a notice each time. That table is the last
-place a root name lives in a module, and the tests still set STORY_VIDEO_DIR to move a
-build's output into a temporary folder.
-
-After the first release that carries `[roots]`, and once marketing's declarations
-declare their roots (UR37), delete `LEGACY_ROOTS` and its loop, and change the tests
-that set STORY_VIDEO_DIR to declare `[output] folder` in their fixture instead.
-
-Done when no module names a root and no test sets one of the four variables.
-
 ### Â§UR47 The side files and values checked
 
 UR23 gave video.toml a key schema (`urdido.declaration.SCHEMA`). UR56 typed its values

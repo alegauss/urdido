@@ -13,15 +13,14 @@ relative to its folder or start at a root it declares (UR22):
 
     [roots]
     plugin = "../../product/plugin"   # relative to the declaration
-    shio = "$SHIO_REPO"                            # or an environment variable
+    shio = "$SHIO_HOME"                            # or an environment variable it names
 
     [output]
     folder = "video"                               # the default; `parts` defaults to "parts" in it
 
 `<root>` is the declaration's folder, `<video>` the output folder and `<recordings>` the
-folder's recordings/ unless declared; no other root exists unless declared. STORY_VIDEO_DIR,
-STORY_RECORDINGS, TURING_WORDPRESS and SHIO_REPO still fill an undeclared root for one release,
-with a notice.
+folder's recordings/ unless declared; no other root exists unless declared. `--root
+NAME=PATH` replaces one for a single run (a check building against scratch copies).
 """
 
 from __future__ import annotations
@@ -34,7 +33,7 @@ from urdido.errors import Refused
 from urdido.pipelines.chaptered import Chaptered
 from urdido.pipelines.explainer import Explainer
 from urdido.pipelines.scenes import Scenes
-from urdido.project import LEGACY_ROOTS, NEWLINE, TAB, Project, roots_of  # noqa: F401
+from urdido.project import NEWLINE, TAB, Project, roots_of  # noqa: F401
 
 
 class Build(Scenes, Chaptered, Explainer):

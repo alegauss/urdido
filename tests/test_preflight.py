@@ -12,7 +12,6 @@ from urdido.preflight import PreflightRefused, illustrated
 
 @pytest.fixture
 def cut(tmp_path, monkeypatch):
-    monkeypatch.setenv("STORY_VIDEO_DIR", str(tmp_path / "video"))
     monkeypatch.setattr(media, "seconds", lambda file: 3.0)
     monkeypatch.setattr(media, "detect_encoder", lambda: pytest.fail("encoder detection ran before validation"))
     monkeypatch.setattr(media, "ffmpeg", lambda args: pytest.fail("render subprocess started"))

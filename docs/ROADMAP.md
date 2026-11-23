@@ -4,7 +4,6 @@
 
 ## Block B — The engine extracted (videomaker without marketing)
 
-- 📋 **UR46** (deps: UR22 ✅, UR37 ✅) **Four environment variables still fill undeclared roots, the last root names left in a module** — They were kept for one release so marketing's builds keep working; left longer, the shim becomes a second way to declare a root. → §UR46
 - 📋 **UR63** (deps: —) **A card layer's screenshot now and then fails with Unable to capture screenshot, and the whole build stops** — One browser hiccup costs a full encode, and the traceback names Playwright, not the card. → §UR63
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)

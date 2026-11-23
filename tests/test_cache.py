@@ -117,7 +117,6 @@ fonts="fonts"
 [captions.safe_area]
 action="off"
 ''', encoding="utf-8")
-    monkeypatch.setenv("STORY_VIDEO_DIR", str(tmp_path / "video"))
     monkeypatch.setenv("STORY_ENCODER", "x264")
     actual = media.ffmpeg
     encoded = []

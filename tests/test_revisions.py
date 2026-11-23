@@ -50,7 +50,6 @@ def test_build_promotes_only_after_entire_build_succeeds_vm40(tmp_path, monkeypa
     declaration = tmp_path / "video.toml"
     declaration.write_text('[video]\nname="test"\nlanguages={en="eng"}\nrevision="v1"\n'
                            '[source]\nkind="scenes"\nlisting="scenes.json"\n', encoding="utf-8")
-    monkeypatch.setenv("STORY_VIDEO_DIR", str(tmp_path / "video"))
 
     def render(self):
         self.checked.append(package(self.revision))
@@ -77,7 +76,6 @@ def test_plan_does_not_reserve_or_promote_revision_vm40(tmp_path, monkeypatch):
     declaration = tmp_path / "video.toml"
     declaration.write_text('[video]\nname="test"\nlanguages={en="eng"}\nrevision="v1"\n'
                            '[source]\nkind="scenes"\nlisting="scenes.json"\n', encoding="utf-8")
-    monkeypatch.setenv("STORY_VIDEO_DIR", str(tmp_path / "video"))
     monkeypatch.setattr(build.Build, "scenes", lambda self: 0)
     assert build.main([str(declaration), "--language", "en", "--plan"]) == 0
     assert not (tmp_path / "video/revisions").exists()

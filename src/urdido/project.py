@@ -14,7 +14,6 @@ import argparse
 import hashlib
 import json
 import os
-import sys
 import tomllib
 from collections.abc import Mapping
 from pathlib import Path
@@ -26,26 +25,16 @@ from urdido.sources import RecordingRefused
 
 TAB, NEWLINE = chr(9), chr(10)
 
-#: The environment variables that filled a root before `[roots]` (UR22), kept for one
-#: release.
-LEGACY_ROOTS = {
-    "video": "STORY_VIDEO_DIR",
-    "recordings": "STORY_RECORDINGS",
-    "plugin": "TURING_WORDPRESS",
-    "shio": "SHIO_REPO",
-}
-
 
 def roots_of(here: Path, decl: Mapping, env: Mapping[str, str] | None = None) -> dict:
     """The roots a declaration's `<name>` paths start at, all declared or inside its
     folder.
 
     `[roots]` names each one, as a path relative to the declaration or as `$VAR` /
-    `${VAR}`; `[output] folder` is `<video>`. An undeclared legacy root is still read
-    from its old environment variable, with a notice; an undeclared one with no variable
-    does not exist."""
+    `${VAR}`; `[output] folder` is `<video>`. A root nothing declares does not exist,
+    and no environment variable fills one (`urdido build --root` replaces one for a
+    single run)."""
     env = os.environ if env is None else env
-    output = decl.get("output") or {}
     roots = {
         "root": str(here),
         "video": str((here / setting(decl, "output", "folder")).resolve()),
@@ -66,19 +55,6 @@ def roots_of(here: Path, decl: Mapping, env: Mapping[str, str] | None = None) ->
                 )
             value = env[variable]
         roots[name] = str((here / value).resolve())
-    for name, variable in LEGACY_ROOTS.items():
-        if (
-            name in declared
-            or (name == "video" and "folder" in output)
-            or not env.get(variable)
-        ):
-            continue
-        roots[name] = str(Path(env[variable]).resolve())
-        print(
-            f"urdido build: {variable} is deprecated; declare [roots] {name}"
-            + (" or [output] folder" if name == "video" else ""),
-            file=sys.stderr,
-        )
     return roots
 
 

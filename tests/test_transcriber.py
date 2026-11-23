@@ -47,7 +47,6 @@ def test_there_is_no_default_language(tmp_path):
 def test_the_command_reads_takes_and_language_from_the_declaration(
     tmp_path, monkeypatch, capsys
 ):
-    monkeypatch.delenv("STORY_VIDEO_DIR", raising=False)
     script = {
         "intro": {"pt-BR": "Olá mundo"},
         "chapters": {},

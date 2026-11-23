@@ -94,7 +94,6 @@ track="por"
 action="off"
 ''', encoding="utf-8")
     out = tmp_path / "video"
-    monkeypatch.setenv("STORY_VIDEO_DIR", str(out))
     monkeypatch.setenv("STORY_ENCODER", "x264")
     args = [str(declaration), "--language", "en"]
     assert main([*args, "--preview", "beat:outro-stable"]) == 0

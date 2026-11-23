@@ -36,19 +36,23 @@ def test_an_unset_variable_or_a_reserved_name_is_refused(tmp_path):
         roots_of(tmp_path, {"roots": {"video": "x"}}, env={})
 
 
-def test_a_legacy_variable_fills_an_undeclared_root_with_a_notice(tmp_path, capsys):
-    env = {"TURING_WORDPRESS": str(tmp_path / "wp"), "SHIO_REPO": str(tmp_path / "s")}
+def test_no_environment_variable_fills_an_undeclared_root_ur46(tmp_path):
+    env = {
+        "STORY_VIDEO_DIR": str(tmp_path / "elsewhere"),
+        "STORY_RECORDINGS": str(tmp_path / "r"),
+        "TURING_WORDPRESS": str(tmp_path / "wp"),
+        "SHIO_REPO": str(tmp_path / "s"),
+    }
     roots = roots_of(tmp_path, {"roots": {"shio": "mine"}}, env=env)
-    assert roots["plugin"] == str((tmp_path / "wp").resolve())
-    assert roots["shio"] == str((tmp_path / "mine").resolve())  # the declaration wins
-    err = capsys.readouterr().err
-    assert "TURING_WORDPRESS is deprecated; declare [roots] plugin" in err
-    assert "SHIO_REPO" not in err
+    assert roots == {
+        "root": str(tmp_path),
+        "video": str((tmp_path / "video").resolve()),
+        "recordings": str(tmp_path / "recordings"),
+        "shio": str((tmp_path / "mine").resolve()),
+    }
 
 
-def test_a_path_at_an_undeclared_root_is_refused_by_name(tmp_path, monkeypatch):
-    monkeypatch.delenv("TURING_WORDPRESS", raising=False)
-    monkeypatch.delenv("STORY_VIDEO_DIR", raising=False)
+def test_a_path_at_an_undeclared_root_is_refused_by_name(tmp_path):
     toml = tmp_path / "video.toml"
     toml.write_text(
         '[video]\nname = "demo"\nlanguages = { en = "eng" }\n'

@@ -12,7 +12,6 @@ SOURCE = Path(__file__).resolve().parents[1] / "src" / "urdido"
 
 
 def build(tmp_path, monkeypatch):
-    monkeypatch.delenv("STORY_VIDEO_DIR", raising=False)
     monkeypatch.delenv("STORE_URL", raising=False)
     toml = tmp_path / "video.toml"
     toml.write_text(

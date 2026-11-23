@@ -51,7 +51,6 @@ def variant(folder):
 
 @pytest.fixture
 def pair(tmp_path, monkeypatch):
-    monkeypatch.delenv("STORY_VIDEO_DIR", raising=False)
     base(tmp_path / "wordpress")
     toml = variant(tmp_path / "wordpress2")
     return tmp_path, Project(
@@ -102,7 +101,6 @@ def test_a_fix_in_the_base_reaches_the_variant_on_the_next_build(pair, monkeypat
 
 
 def test_a_missing_base_or_a_chain_of_variants_is_refused(tmp_path, monkeypatch):
-    monkeypatch.delenv("STORY_VIDEO_DIR", raising=False)
     args = SimpleNamespace(language="en", cut="full", vertical=False)
     lone = tmp_path / "lone"
     lone.mkdir()
