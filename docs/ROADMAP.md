@@ -9,8 +9,6 @@
 
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
-- 📋 **UR42** (deps: UR40 ✅, UR41 ✅) **video-maker/ still sits in marketing after every video is built by urdido** — Two copies of the framework drift on the first fix applied to only one of them. → §UR42
-
 ## Block D — Inherited from video-maker (marketing Block B)
 
 - 📋 **UR3** (deps: marketing: VM28) **Published videos have no end screen or cards pointing to the next video on the subject** — A viewer who finishes the Docker video is not offered the Scion one, and the end screen should point at the continuation, not the newest upload. → §UR3

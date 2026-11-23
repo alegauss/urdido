@@ -13,6 +13,7 @@
 ## Block C — Adoption in marketing (video-maker replaced by urdido)
 
 - ⏸ **UR41** (deps: UR37 ✅, UR38 ✅, UR39 ✅) **Nothing proves that each published video comes out the same when built by urdido instead of video-maker** — set aside (Turing demo must be re-recorded.): The Turing WordPress demo's story and developer cuts, once recorded again on the demo stack. → §UR41
+- ⏸ **UR42** (deps: UR40 ✅, UR41 ✅) **video-maker/ still sits in marketing after every video is built by urdido** — set aside (Owner: spike renders, scripts.): The owner decides on video-maker/spikes/out renders, six untracked .polyweave scripts importing it, visibility's CLAUDE.md. → §UR42
 
 ## Block D — Inherited from video-maker (marketing Block B)
 
