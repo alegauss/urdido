@@ -185,15 +185,30 @@ def chapter_lines(script: dict, spoken: list[dict], language: str, lead: float =
     return lines
 
 
+def in_language(value, language: str, field: str):
+    """UR68: a declared text, or a table of them keyed by language, in `language`; a table
+    that lacks the language is refused by name rather than answered in another one."""
+    if isinstance(value, dict):
+        if language not in value:
+            raise ValueError(f"description: {field} has no {language} entry ({', '.join(value) or 'none'})")
+        return value[language]
+    return value
+
+
 def scenes(script: dict, plan: dict, language: str, options: dict) -> tuple[str, dict]:
-    """UR9: a filmed-scenes video's description, its chapters measured off the cut."""
-    if not options.get("summary"):
+    """UR9: a filmed-scenes video's description, its chapters measured off the cut. Its
+    `summary`, `notes`, `generated` and each source's `label` may be keyed by language (UR68)."""
+    summary = in_language(options.get("summary"), language, "summary")
+    if not summary:
         raise ValueError("description: a scenes video declares [description] summary")
     words = strings(language, options.get("strings"))
     chapters = chapter_lines(script, plan["spoken"][language], language, words=words)
-    sources = [{"label": s["label"], "url": s["url"]} for s in options.get("sources", [])]
-    text = format_description(options["summary"], chapters, [], sources=sources,
-                              notes=options.get("notes", ""), generated=options.get("generated", ""),
+    sources = [{"label": in_language(s["label"], language, "source label"),
+                "url": in_language(s["url"], language, "source url")}
+               for s in options.get("sources", [])]
+    text = format_description(summary, chapters, [], sources=sources,
+                              notes=in_language(options.get("notes", ""), language, "notes"),
+                              generated=in_language(options.get("generated", ""), language, "generated"),
                               words=words)
     return text, {"chapters": chapters, "sources": sources}
 

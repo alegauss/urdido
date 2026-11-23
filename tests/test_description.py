@@ -133,3 +133,18 @@ def test_a_scenes_video_writes_its_description_from_the_declaration_ur9():
     assert record["chapters"][0] == "0:00 Abertura"
     with pytest.raises(ValueError, match="summary"):
         scenes(SCRIPT, plan, "pt-BR", {})
+
+
+def test_a_scenes_description_is_declared_per_language_ur68():
+    from urdido.publish.description import scenes
+
+    plan = {"spoken": {"pt-BR": [{"file": "chapter-1.mp3", "at": 5.0}, {"file": "chapter-2.mp3", "at": 61.0}]}}
+    options = {"summary": {"pt-BR": "O Shio em três minutos.", "en": "Shio in three minutes."},
+               "notes": {"pt-BR": "Mais em shio.dev", "en": "More at shio.dev"},
+               "sources": [{"label": {"pt-BR": "Código", "en": "Code"}, "url": "https://github.com/openviglet/shio"}]}
+    text, _ = scenes(SCRIPT, plan, "pt-BR", options)
+    assert text.startswith("O Shio em três minutos.\n")
+    assert "Mais em shio.dev" in text and "Código: https://github.com/openviglet/shio" in text
+    assert "More at" not in text
+    with pytest.raises(ValueError, match="summary has no pt-BR entry"):
+        scenes(SCRIPT, plan, "pt-BR", {"summary": {"en": "Shio in three minutes."}})
