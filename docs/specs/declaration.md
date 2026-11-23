@@ -116,6 +116,7 @@ A chaptered video's opening: animation, footage, photos, site screens.
 - `photos`
 - `store`
 - `screens`: `path`, `scroll`, `follow`
+- `cold_open`: `chapter`, `seconds`
 
 ## [cuts]
 

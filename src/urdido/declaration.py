@@ -121,6 +121,7 @@ SCHEMA = table(
                 "photos": ANY,
                 "store": ANY,
                 "screens": array(table({"path": ANY, "scroll": ANY, "follow": ANY})),
+                "cold_open": array(table({"chapter": ANY, "seconds": ANY})),
             }
         ),
         "cuts": table({"teaser": ANY}),

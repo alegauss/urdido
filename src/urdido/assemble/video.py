@@ -49,6 +49,10 @@ class FullVideo(ClipVideo):
     intro: Intro | None = None
     broll: Sequence[str] = field(default_factory=list)  # footage, photos and pages, in turn
     footage: Sequence[str] = field(default_factory=list)  # the b-roll clips alone
+    # UR70: moments of the recording the opening shows first, under the intro's line, so
+    # the product is seen working before the chapters: `{chapter, seconds}`, each the
+    # `seconds` leading up to and just past that chapter's best moment.
+    cold_open: Sequence[dict] = field(default_factory=list)
     title_seconds: float = 3
     shot_seconds: float = 4
     final_seconds: float = 6
@@ -72,21 +76,40 @@ class FullVideo(ClipVideo):
         ])
         return file
 
-    def footage_shot(self, video: str, length: float, name: str) -> str:
+    def footage_shot(self, video: str, length: float, name: str, skip: float = 2) -> str:
         """Footage from a few seconds in, where a clip has settled, looped if it is too short."""
         file = self.part(name)
         w, h = self.frame.width, self.frame.height
         mediamod.ffmpeg([
-            "-stream_loop", "-1", "-ss", "2", "-i", video, "-t", fixed(length, 3), "-vf",
+            "-stream_loop", "-1", "-ss", fixed(skip, 3), "-i", video, "-t", fixed(length, 3), "-vf",
             f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},fps=30,format=yuv420p",
             *self.media.video_codec(20), "-an", file,
         ])
         return file
 
     def shot(self, source: str, length: float, n: int, name: str) -> str:
+        if source in getattr(self, "_cold", ()):
+            return self.footage_shot(source, length, name, skip=0)
         return self.footage_shot(source, length, name) if source.endswith(".mp4") else self.ken_burns(
             source, length, n, name
         )
+
+    def cold_moments(self) -> list[tuple[int, float, float]]:
+        """UR70: each declared cold-open moment as (chapter, start, end) in the recording.
+
+        A moment ends just past the chapter's best moment (its highlight, else its end), so
+        the result is on screen, and starts `seconds` before that, never before the chapter."""
+        moments = []
+        for entry in self.cold_open:
+            n, seconds = entry.get("chapter"), entry.get("seconds", self.shot_seconds)
+            if isinstance(n, bool) or not isinstance(n, int) or not 1 <= n <= len(self.chapters):
+                raise ValueError(f"[opening] cold_open: chapter {n!r} is not one of 1 to {len(self.chapters)}")
+            if isinstance(seconds, bool) or not isinstance(seconds, (int, float)) or seconds <= 0:
+                raise ValueError(f"[opening] cold_open: chapter {n} needs a positive seconds")
+            chapter = self.chapters[n - 1]
+            end = min(chapter.clip.end, chapter.clip.start + self.best(chapter) + 0.5)
+            moments.append((n, max(chapter.clip.start, end - seconds), end))
+        return moments
 
     # -- the video -------------------------------------------------------------------------------
 
@@ -161,7 +184,12 @@ class FullVideo(ClipVideo):
             [lambda n=n, c=c: chapter_clip(n, c) for n, c in enumerate(self.chapters, 1)]
         )
 
-        opening_shots = title_card(0, "intro", self.broll)
+        cold = [
+            self.media.cut(f"cold-open-{k}.mp4", ["-ss", fixed(a, 3), "-to", fixed(z, 3), "-i", self.webm])
+            for k, (_, a, z) in enumerate(self.cold_moments())
+        ]
+        self._cold = set(cold)
+        opening_shots = title_card(0, "intro", [*cold, *self.broll])
         for i, chapter in enumerate(self.chapters):
             n = i + 1
             clip = chapter_clips[i]

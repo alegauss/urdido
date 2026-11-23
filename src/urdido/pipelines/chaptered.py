@@ -145,7 +145,10 @@ class Chaptered(Finishing):
             ):
                 if source:
                     broll.append(source)
-        video = FullVideo(**common, intro=intro, broll=broll, footage=footage)
+        video = FullVideo(
+            **common, intro=intro, broll=broll, footage=footage,
+            cold_open=opening.get("cold_open") or [],
+        )
         builder = video.compose()
         plan_file = self.write_plan(self.name, plan_of(builder.timeline))
         if self.args.plan:
