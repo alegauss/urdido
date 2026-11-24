@@ -343,3 +343,26 @@ prints is what the review in visibility's drafts quotes.
 
 **Done when** `urdido funnel` reproduces the VM32 review's table and verdict
 (impressions first, for the Scion, Docker and WordPress videos) from the same export.
+
+### §UR74 Dissolves as OTIO transitions in the Resolve project
+
+Met on marketing's VM14 (2026-11-24). The Turing WordPress demo's Resolve project
+(`urdido build video.toml --language pt-BR --project`) holds 60 clips and 8 chapter
+markers, and 40 of the clips carry a `dissolve` (in/out seconds) in their `videomaker`
+metadata, which the MP4 render reads. The `.otio` has no `otio.schema.Transition` at
+all, so DaVinci Resolve, which reads only the timeline's own schema, imports straight
+cuts where the video dissolves.
+
+When the project is exported (`urdido/export/resolve.py`), turn each clip's declared
+dissolve into an OTIO `Transition` (`SMPTE_Dissolve`) between it and its neighbour on
+the same track, with in/out offsets from the metadata, trimming the neighbouring clips'
+ranges by the overlap as OTIO expects. The source of truth stays the MP4's timeline; the
+transition is how the copy says it. A dissolve against a gap (the opening card fading
+in) becomes a transition from the gap, or is reported as a limit of the copy in the
+README if Resolve refuses it.
+
+A test reads the exported `.otio` and counts one transition per declared dissolve, with
+the neighbours' durations still summing to the timeline's length.
+
+**Done when** the WordPress demo's project imports into Resolve 21 with its dissolves in
+place (marketing VM14 checks it).

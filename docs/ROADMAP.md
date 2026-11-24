@@ -18,6 +18,7 @@
 - 📋 **UR66** (deps: —) **A take bought without word times passes check, and the build's refusal names a module instead of the command** — The Viglet Shio promo's English build stopped on 'run urdido.narration_words' after check passed and ten takes were bought. → §UR66
 - 📋 **UR72** (deps: —) **A chaptered video has one recording folder for every language, so recording one language overwrites the other** — The Turing WordPress demo's English recording replaces the pt-BR story.webm, and the pt-BR cut was kept only by a copy made by hand. → §UR72
 - 📋 **UR73** (deps: —) **Nothing reads Studio's content export, so a funnel review computes viewed share and its first broken link by hand** — Marketing's VM32 review of the Japode videos needed a scratch script to find that impressions are the first broken link. → §UR73
+- 📋 **UR74** (deps: —) **The Resolve project export keeps dissolves only in clip metadata, so Resolve imports straight cuts** — The Turing WordPress demo's project holds 40 dissolves as metadata and no OTIO transition, so its Resolve import cannot show them. → §UR74
 
 ## Done when — UR19
 
