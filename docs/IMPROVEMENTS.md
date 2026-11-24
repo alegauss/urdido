@@ -301,3 +301,22 @@ without its times.
 
 **Done when** a take bought without word times is named by `check` with the command that
 fixes it, and the build's refusal spells that command for the declaration at hand.
+
+### §UR72 A recording folder per language
+
+Met on marketing's VM89 (2026-11-24). The Turing WordPress demo records one chaptered
+story per language (the pt-BR store, then the English one), and `chapters.json` records
+which language it holds, but `[source] folder = "<recordings>/story"` is one folder for
+both. Recording English overwrites the pt-BR `story.webm`, so the pt-BR cut can be
+rebuilt only until the next English recording. The session copied `recordings/story` to
+`recordings/story-pt-BR` by hand before recording English.
+
+Let `[source] folder` (and `vertical_folder`) be a table keyed by language, as UR67 and
+UR68 did for anchors and descriptions: `folder = { en = "<recordings>/story-en", "pt-BR"
+= "<recordings>/story-pt-BR" }`. The build reads the folder of the language it builds,
+and the check refuses a recording whose `chapters.json` language is not the one its
+folder is declared for. The recording side (the plugin's `tests/e2e/marketing.mjs`)
+needs the same per-language folder, which is the Turing repository's half.
+
+**Done when** both languages' recordings live side by side and each language's cut
+builds from its own, with no copy by hand.
