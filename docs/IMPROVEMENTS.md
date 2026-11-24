@@ -320,3 +320,26 @@ needs the same per-language folder, which is the Turing repository's half.
 
 **Done when** both languages' recordings live side by side and each language's cut
 builds from its own, with no copy by hand.
+
+### §UR73 The funnel read from Studio's content export
+
+Met on marketing's VM32 (2026-11-24). The funnel review of the Japode videos read
+Studio's content export (`Dados da tabela.csv`: duration, views, watch hours,
+subscribers, thumbnail impressions and click-through per video) with a script written in
+the session's scratchpad, because urdido reads the retention curve (UR69) but not the
+rest of the funnel.
+
+Add `urdido funnel <content.csv>`, beside `urdido retention`: for each video, the
+average percentage viewed (watch hours / views / duration), the views that came from
+thumbnails (impressions × click-through), subscribers per view, and the first broken
+link read in order, with the thresholds youtube-agent-pro and claude-youtube give
+(impressions under about 1,000 in the first week, click-through under 3 to 4%, average
+viewed under 40%, subscribers per view under 0.1%). A Short (60 s or less) is read
+without click-through. With the traffic-sources export it also names a source above 60
+to 80% of the views.
+
+The thresholds are heuristics: the report says which one it applied, and the text it
+prints is what the review in visibility's drafts quotes.
+
+**Done when** `urdido funnel` reproduces the VM32 review's table and verdict
+(impressions first, for the Scion, Docker and WordPress videos) from the same export.
